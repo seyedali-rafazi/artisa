@@ -1,0 +1,144 @@
+"use client"
+
+import React, { createContext, useContext } from "react"
+
+type LanguageContextType = {
+  dir: "rtl"
+  t: (key: string) => string
+}
+
+const translations: Record<string, string> = {
+  // Header
+  brandName: "آرتیسا",
+  brandSubtitle: "گالری آنلاین تابلو و هنر دیواری",
+  searchPlaceholder: "جستجوی تابلو، هنر دیواری...",
+  loginSignup: "ورود | ثبت نام",
+  cart: "سبد خرید",
+  compare: "مقایسه",
+  trackOrder: "پیگیری سفارش",
+  home: "خانه",
+  categories: "دسته‌بندی آثار",
+  amazingOffers: "پیشنهادات ویژه",
+  bestSellers: "پرفروش‌ترین‌ها",
+  newArrivals: "جدیدترین آثار",
+  blog: "مجله هنر",
+  contactUs: "تماس با ما",
+  aboutUs: "درباره ما",
+
+  // Banner / Slider
+  sliderTitle1: "هنر را به دیوارت بیاور",
+  sliderDesc1: "مجموعه‌ای از تابلوهای نقاشی اورجینال با تخفیف ویژه تا ۴۰٪",
+  sliderTitle2: "سبک خانه‌ات را تعریف کن",
+  sliderDesc2: "آثار هنری دیواری منحصربه‌فرد از هنرمندان ایرانی",
+  sliderBtn: "مشاهده آثار",
+
+  // Services
+  serviceDelivery: "ارسال مطمئن آثار هنری",
+  serviceDeliveryDesc: "بسته‌بندی تخصصی و تحویل درب منزل",
+  serviceSupport: "پشتیبانی ۲۴/۷",
+  serviceSupportDesc: "مشاوره هنری آنلاین در تمام روزهای هفته",
+  serviceGuarantee: "ضمانت اصالت اثر",
+  serviceGuaranteeDesc: "گواهی اصالت برای تمام آثار اورجینال",
+  servicePayment: "پرداخت در محل",
+  servicePaymentDesc: "امکان پرداخت وجه پس از تحویل اثر",
+
+  // Specials
+  specialOffersTitle: "آثار ویژه با قیمت استثنایی",
+  specialOffersSubtitle: "فرصت محدود برای تهیه آثار هنری اورجینال",
+  viewAll: "مشاهده همه",
+  timeLeft: "زمان باقی‌مانده:",
+
+  // Categories
+  categoriesTitle: "دسته‌بندی آثار هنری",
+  categoryPainting: "تابلو نقاشی",
+  categoryWallArt: "هنر دیواری",
+  categorySculpture: "مجسمه و دکوری",
+  categoryFrame: "قاب و فریم",
+  categoryModernArt: "هنر مدرن",
+  categoryGift: "هدایای هنری",
+
+  // Best Sellers
+  bestSellersTitle: "پرفروش‌ترین آثار آرتیسا",
+  bestSellersSubtitle: "انتخاب‌های محبوب هنردوستان در این ماه",
+
+  // Blog
+  blogTitle: "مجله هنر آرتیسا",
+  blogSubtitle: "مقالات، ایده‌ها و راهنمای چیدمان هنری برای خانه شما",
+  readMore: "ادامه مطلب",
+
+  // Product details
+  productDetails: "جزئیات اثر",
+  addToCart: "افزودن به سبد خرید",
+  addedToCart: "به سبد خرید اضافه شد",
+  installment: "خرید اقساطی",
+  installmentDesc: "امکان خرید در اقساط ۳ تا ۱۲ ماه بدون ضامن",
+  vendor: "هنرمند / گالری:",
+  rating: "امتیاز:",
+  comments: "نظرات خریداران",
+  addComment: "ثبت نظر",
+
+  // Cart & Checkout
+  cartTitle: "سبد خرید شما",
+  emptyCart: "سبد خرید شما خالی است!",
+  totalPrice: "مبلغ کل:",
+  checkoutBtn: "ادامه جهت ثبت سفارش",
+  addressInfo: "اطلاعات ارسال",
+  fullName: "نام و نام خانوادگی",
+  phoneNumber: "شماره تماس",
+  postalCode: "کد پستی",
+  address: "آدرس دقیق پستی",
+  paymentMethod: "روش پرداخت",
+  onlinePayment: "پرداخت آنلاین بانکی",
+  cardPayment: "کارت به کارت",
+  completeOrder: "ثبت و پرداخت نهایی",
+  orderSuccess: "سفارش شما با موفقیت ثبت شد!",
+  orderId: "کد سفارش:",
+  trackBtn: "رهگیری سفارش",
+
+  // Compare
+  compareTitle: "مقایسه آثار",
+  compareEmpty: "اثری برای مقایسه انتخاب نشده است (حداکثر ۳ اثر)",
+  clearAll: "پاک کردن همه",
+
+  // FAQ
+  faqTitle: "سوالات متداول",
+  faqSubtitle: "پاسخ به رایج‌ترین سوالات شما درباره خرید آثار هنری",
+
+  // Track Order
+  trackOrderTitle: "رهگیری وضعیت سفارش",
+  trackInputPlaceholder: "شماره سفارش خود را وارد کنید...",
+  trackSubmit: "بررسی وضعیت",
+  orderStatus: "وضعیت سفارش:",
+  statusReceived: "سفارش ثبت شده",
+  statusProcessing: "در حال آماده‌سازی و بسته‌بندی",
+  statusShipped: "تحویل به پست/پیک",
+  statusDelivered: "تحویل داده شده",
+
+  // Footer
+  newsletterTitle: "عضویت در خبرنامه آرتیسا",
+  newsletterDesc: "از جدیدترین آثار و رویدادهای هنری باخبر شوید",
+  subscribeBtn: "عضویت",
+  footerAbout: "گالری آنلاین آرتیسا از سال ۱۴۰۵ با هدف در دسترس قرار دادن آثار هنری اورجینال برای علاقه‌مندان هنر فعالیت می‌کند. ما پل ارتباطی بین هنرمندان ایرانی و هنردوستان سراسر کشور هستیم.",
+  quickLinks: "دسترسی سریع",
+  customerService: "خدمات مشتریان",
+  copyright: "© ۱۴۰۵ کلیه حقوق برای گالری آرتیسا محفوظ است."
+}
+
+const LanguageContext = createContext<LanguageContextType>({
+  dir: "rtl",
+  t: (key: string) => translations[key] ?? key,
+})
+
+export function LanguageProvider({ children }: { children: React.ReactNode }) {
+  const t = (key: string): string => translations[key] ?? key
+
+  return (
+    <LanguageContext.Provider value={{ dir: "rtl", t }}>
+      {children}
+    </LanguageContext.Provider>
+  )
+}
+
+export function useLanguage() {
+  return useContext(LanguageContext)
+}
