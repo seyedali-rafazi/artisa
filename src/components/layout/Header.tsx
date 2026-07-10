@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useState } from "react"
+import React, { useEffect, useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useLanguage } from "../LanguageContext"
@@ -31,6 +31,26 @@ export default function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [searchInput, setSearchInput] = useState("")
 
+  useEffect(() => {
+    if (!mobileMenuOpen) return
+
+    const scrollY = window.scrollY
+    document.body.style.position = "fixed"
+    document.body.style.top = `-${scrollY}px`
+    document.body.style.left = "0"
+    document.body.style.right = "0"
+    document.body.style.overflow = "hidden"
+
+    return () => {
+      document.body.style.position = ""
+      document.body.style.top = ""
+      document.body.style.left = ""
+      document.body.style.right = ""
+      document.body.style.overflow = ""
+      window.scrollTo(0, scrollY)
+    }
+  }, [mobileMenuOpen])
+
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setSearchQuery(searchInput)
@@ -48,6 +68,7 @@ export default function Header() {
   ]
 
   return (
+    <>
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md">
       {/* Main Header Row */}
       <div className="flex h-16 w-full items-center justify-between px-4 md:h-20 md:px-8">
@@ -226,81 +247,104 @@ export default function Header() {
           </div>
         </div>
       </nav>
+    </header>
 
-      {/* Mobile Drawer Slide-out menu */}
-      {mobileMenuOpen && (
-        <div className="fixed inset-0 top-16 z-40 flex flex-col bg-background/95 backdrop-blur-md px-6 py-6 md:hidden">
-          {/* Mobile Search input */}
-          <form onSubmit={handleSearchSubmit} className="mb-6">
-            <div className="relative">
-              <Input
-                type="text"
-                placeholder={t("searchPlaceholder")}
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                className="w-full pr-10 pl-4 py-2 rounded-xl bg-muted/40 border-border text-sm"
-                dir="rtl"
-              />
-              <button 
-                type="submit" 
-                className="absolute top-1/2 -translate-y-1/2 cursor-pointer text-muted-foreground left-3"
-              >
-                <Search className="size-4" />
-              </button>
-            </div>
-          </form>
+    {/* Mobile drawer — rendered outside header to avoid backdrop-blur transparency */}
+    <div className="fixed inset-0 z-[60] md:hidden pointer-events-none">
+      <button
+        type="button"
+        onClick={() => setMobileMenuOpen(false)}
+        className={`fixed inset-0 bg-black/30 transition-opacity duration-300 ${mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+        aria-hidden="true"
+      />
 
-          {/* Menu links */}
-          <div className="flex flex-col gap-4 text-base font-bold">
-            <Link
-              href="/"
-              onClick={() => { setMobileMenuOpen(false); setSearchQuery(""); }}
-              className="flex items-center text-start py-2 border-b border-border/40 hover:text-primary"
+      <div
+        className={`fixed inset-y-0 right-0 z-[60] flex w-full max-w-sm flex-col overflow-y-auto border-l border-border bg-white p-6 pt-4 shadow-2xl transition-transform duration-300 ease-in-out ${mobileMenuOpen ? "translate-x-0 pointer-events-auto" : "translate-x-full"}`}
+        aria-label="Mobile menu"
+      >
+        <div className="mb-4 flex items-center justify-between">
+          <span className="text-lg font-extrabold tracking-tight text-foreground">{t("brandName")}</span>
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen(false)}
+            className="rounded-md p-1.5 hover:bg-muted"
+            aria-label="Close menu"
+          >
+            <X className="size-6" />
+          </button>
+        </div>
+
+        {/* Mobile Search input */}
+        <form onSubmit={handleSearchSubmit} className="mb-6">
+          <div className="relative">
+            <Input
+              type="text"
+              placeholder={t("searchPlaceholder")}
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              className="w-full pr-10 pl-4 py-2 rounded-xl bg-muted/40 border-border text-sm"
+              dir="rtl"
+            />
+            <button 
+              type="submit" 
+              className="absolute top-1/2 -translate-y-1/2 cursor-pointer text-muted-foreground left-3"
             >
-              {t("home")}
-            </Link>
-            <Link
-              href="/"
-              onClick={() => { setSearchQuery("special"); setMobileMenuOpen(false); }}
-              className="flex items-center text-start py-2 border-b border-border/40 text-primary"
-            >
-              {t("amazingOffers")}
-            </Link>
-            <Link
-              href="/blog"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center text-start py-2 border-b border-border/40 hover:text-primary"
-            >
-              {t("blog")}
-            </Link>
-            <Link
-              href="/faq"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center text-start py-2 border-b border-border/40 hover:text-primary"
-            >
-              {t("faqTitle")}
-            </Link>
-            <Link
-              href="/track-order"
-              onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center text-start py-2 border-b border-border/40 hover:text-primary"
-            >
-              {t("trackOrder")}
-            </Link>
+              <Search className="size-4" />
+            </button>
           </div>
+        </form>
 
-          {/* Utility links at the bottom of drawer */}
-          <div className="mt-auto flex flex-col gap-4 border-t border-border pt-6">
-            <div className="flex justify-around text-xs text-muted-foreground">
-              <Link href="/about-us" onClick={() => setMobileMenuOpen(false)} className="cursor-pointer hover:text-primary">{t("aboutUs")}</Link>
-              <span>•</span>
-              <Link href="/contact-us" onClick={() => setMobileMenuOpen(false)} className="cursor-pointer hover:text-primary">{t("contactUs")}</Link>
-              <span>•</span>
-              <span>021-88888888</span>
-            </div>
+        {/* Menu links */}
+        <div className="flex flex-col gap-4 text-base font-bold">
+          <Link
+            href="/"
+            onClick={() => { setMobileMenuOpen(false); setSearchQuery(""); }}
+            className="flex items-center text-start py-2 border-b border-border/40 hover:text-primary"
+          >
+            {t("home")}
+          </Link>
+          <Link
+            href="/"
+            onClick={() => { setSearchQuery("special"); setMobileMenuOpen(false); }}
+            className="flex items-center text-start py-2 border-b border-border/40 text-primary"
+          >
+            {t("amazingOffers")}
+          </Link>
+          <Link
+            href="/blog"
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center text-start py-2 border-b border-border/40 hover:text-primary"
+          >
+            {t("blog")}
+          </Link>
+          <Link
+            href="/faq"
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center text-start py-2 border-b border-border/40 hover:text-primary"
+          >
+            {t("faqTitle")}
+          </Link>
+          <Link
+            href="/track-order"
+            onClick={() => setMobileMenuOpen(false)}
+            className="flex items-center text-start py-2 border-b border-border/40 hover:text-primary"
+          >
+            {t("trackOrder")}
+          </Link>
+        </div>
+
+        {/* Utility links at the bottom of drawer */}
+        <div className="mt-auto flex flex-col gap-4 border-t border-border pt-6">
+          <div className="flex justify-around text-xs text-muted-foreground">
+            <Link href="/about-us" onClick={() => setMobileMenuOpen(false)} className="cursor-pointer hover:text-primary">{t("aboutUs")}</Link>
+            <span>•</span>
+            <Link href="/contact-us" onClick={() => setMobileMenuOpen(false)} className="cursor-pointer hover:text-primary">{t("contactUs")}</Link>
+            <span>•</span>
+            <span>021-88888888</span>
           </div>
         </div>
-      )}
-    </header>
+      </div>
+    </div>
+    </>
   )
 }
