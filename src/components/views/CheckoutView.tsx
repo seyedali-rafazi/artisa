@@ -70,10 +70,10 @@ export default function CheckoutView() {
         </div>
 
         <div className="flex w-full gap-4">
-          <Button asChild variant="outline" className="flex-1 rounded-xl cursor-pointer">
+          <Button variant="outline" className="flex-1 rounded-xl cursor-pointer">
             <Link href="/">بازگشت به خانه</Link>
           </Button>
-          <Button asChild className="flex-1 rounded-xl cursor-pointer">
+          <Button className="flex-1 rounded-xl cursor-pointer">
             <Link href="/track-order">{t("trackBtn")}</Link>
           </Button>
         </div>
@@ -85,7 +85,7 @@ export default function CheckoutView() {
     return (
       <div className="max-w-7xl mx-auto px-4 py-20 flex flex-col items-center justify-center text-center">
         <h2 className="text-base font-bold text-foreground mb-4">سبد خرید شما خالی است!</h2>
-        <Button asChild className="rounded-xl">
+        <Button className="rounded-xl">
           <Link href="/">بازگشت به خانه</Link>
         </Button>
       </div>

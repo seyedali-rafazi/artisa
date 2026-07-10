@@ -39,7 +39,7 @@ export default function ProductDetailsView() {
         <p className="text-muted-foreground text-sm font-semibold mb-4">
           هیچ محصولی انتخاب نشده است.
         </p>
-        <Button asChild className="rounded-xl">
+        <Button className="rounded-xl">
           <Link href="/">بازگشت به خانه</Link>
         </Button>
       </div>

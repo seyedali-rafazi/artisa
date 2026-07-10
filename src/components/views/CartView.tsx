@@ -27,7 +27,7 @@ export default function CartView() {
         <p className="text-xs text-muted-foreground mb-6">
           می‌توانید برای مشاهده محصولات جدید به صفحه اصلی بازگردید.
         </p>
-        <Button asChild className="rounded-xl font-bold cursor-pointer">
+        <Button className="rounded-xl font-bold cursor-pointer">
           <Link href="/">شروع خرید</Link>
         </Button>
       </div>
@@ -118,7 +118,7 @@ export default function CartView() {
               <span className="text-primary">{formatPrice(subtotal)}</span>
             </div>
 
-            <Button asChild className="w-full py-3 rounded-xl font-extrabold cursor-pointer transition-transform hover:scale-[1.02]">
+            <Button className="w-full py-3 rounded-xl font-extrabold cursor-pointer transition-transform hover:scale-[1.02]">
               <Link href="/checkout">{t("checkoutBtn")}</Link>
             </Button>
           </div>
