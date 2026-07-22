@@ -156,10 +156,14 @@ export default function Header() {
 
           {/* User Profile / Login */}
           {user ? (
-            <div className="flex items-center gap-2 border border-border rounded-full py-1 px-3 bg-muted/20">
+            <Link
+              href="/profile"
+              className="flex items-center gap-2 border border-border rounded-full py-1 px-3 bg-muted/20 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer"
+              title="پروفایل کاربری"
+            >
               <User className="size-4 text-primary" />
               <span className="text-xs font-semibold max-w-[80px] truncate">{user.name}</span>
-            </div>
+            </Link>
           ) : (
             <Button
               variant="outline"
