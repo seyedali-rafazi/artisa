@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react"
 import Link from "next/link"
+import { useSearchParams, useRouter } from "next/navigation"
 import { useLanguage } from "../LanguageContext"
 import { useApp } from "../AppContext"
 import { Button } from "../ui/button"
@@ -113,17 +114,28 @@ function ToastNotification({ toast, onClose }: { toast: Toast; onClose: () => vo
 
 export default function ProfileView() {
   const { t } = useLanguage()
-  const { user, setShowLogin } = useApp()
+  const { user } = useApp()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const tabParam = searchParams.get("tab") as Tab | null
+
   const [activeTab, setActiveTab] = useState<Tab>("profile")
   const [toast, setToast] = useState<Toast | null>(null)
   const [loading] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
+
+  useEffect(() => {
+    if (tabParam && ["profile", "password", "addresses", "orders", "cart", "wishlist", "settings"].includes(tabParam)) {
+      setActiveTab(tabParam)
+    }
+  }, [tabParam])
 
   const showToast = (t: Toast) => setToast(t)
 
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab)
     setDrawerOpen(false)
+    router.push(`/profile?tab=${tab}`)
   }
 
   // ── Unauthenticated state ────────────────────────────────────────────────

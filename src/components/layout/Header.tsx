@@ -186,7 +186,7 @@ export default function Header() {
                   {/* Nav Links */}
                   <div className="flex flex-col gap-0.5 text-xs font-medium">
                     <Link
-                      href="/profile"
+                      href="/profile?tab=profile"
                       onClick={() => setProfileMenuOpen(false)}
                       className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-foreground hover:bg-muted hover:text-primary transition-colors"
                     >
@@ -194,7 +194,7 @@ export default function Header() {
                       <span>پروفایل کاربری</span>
                     </Link>
                     <Link
-                      href="/profile"
+                      href="/profile?tab=orders"
                       onClick={() => setProfileMenuOpen(false)}
                       className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-foreground hover:bg-muted hover:text-primary transition-colors"
                     >
@@ -202,7 +202,7 @@ export default function Header() {
                       <span>سفارش‌های من</span>
                     </Link>
                     <Link
-                      href="/profile"
+                      href="/profile?tab=wishlist"
                       onClick={() => setProfileMenuOpen(false)}
                       className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-foreground hover:bg-muted hover:text-primary transition-colors"
                     >
@@ -210,7 +210,7 @@ export default function Header() {
                       <span>علاقه‌مندی‌ها</span>
                     </Link>
                     <Link
-                      href="/profile"
+                      href="/profile?tab=addresses"
                       onClick={() => setProfileMenuOpen(false)}
                       className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-foreground hover:bg-muted hover:text-primary transition-colors"
                     >

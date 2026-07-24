@@ -10,6 +10,8 @@ const vazirmatn = Vazirmatn({
   weight: ["100", "200", "300", "400", "500", "700", "800", "900"],
   variable: "--font-vazirmatn",
   display: "swap",
+  fallback: ["Tahoma", "sans-serif"],
+  adjustFontFallback: false,
 });
 
 export const metadata: Metadata = {
