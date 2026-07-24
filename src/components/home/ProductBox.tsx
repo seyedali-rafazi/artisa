@@ -7,8 +7,6 @@ import { Button } from "../ui/button"
 import { 
   Star, 
   ShoppingCart, 
-  RefreshCw, 
-  Check, 
   Heart 
 } from "lucide-react"
 
@@ -19,13 +17,10 @@ interface ProductBoxProps {
 export default function ProductBox({ product }: ProductBoxProps) {
   const { 
     addToCart, 
-    toggleCompare, 
-    compareList, 
     cart, 
     setSelectedProduct 
   } = useApp()
 
-  const isInCompare = !!compareList.find((p) => p.id === product.id)
   const isInCart = !!cart.find((item) => item.id === product.id)
 
   const discountPercent = product.oldPrice
@@ -43,11 +38,6 @@ export default function ProductBox({ product }: ProductBoxProps) {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation()
     addToCart(product)
-  }
-
-  const handleCompareClick = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    toggleCompare(product)
   }
 
   return (
@@ -74,17 +64,6 @@ export default function ProductBox({ product }: ProductBoxProps) {
 
         {/* Floating Icons Overlay */}
         <div className="absolute bottom-3 left-3 z-10 flex flex-col gap-2 transition-all duration-300 opacity-0 group-hover:opacity-100">
-          {/* Compare Button */}
-          <button
-            onClick={handleCompareClick}
-            className={`flex size-8 items-center justify-center rounded-xl bg-white/95 dark:bg-neutral-800/95 text-foreground hover:bg-primary hover:text-primary-foreground shadow-md transition-all ${
-              isInCompare ? "bg-primary text-primary-foreground" : ""
-            }`}
-            title="مقایسه"
-          >
-            {isInCompare ? <Check className="size-4" /> : <RefreshCw className="size-4" />}
-          </button>
-          
           {/* Wishlist Button */}
           <button
             onClick={(e) => { e.stopPropagation(); alert("به علاقه‌مندی‌ها اضافه شد"); }}

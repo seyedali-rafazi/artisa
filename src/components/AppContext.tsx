@@ -75,9 +75,6 @@ interface AppContextType {
   removeFromCart: (productId: string) => void
   updateCartQty: (productId: string, qty: number) => void
   clearCart: () => void
-  compareList: Product[]
-  toggleCompare: (product: Product) => void
-  clearCompare: () => void
   selectedProduct: Product | null
   setSelectedProduct: (product: Product | null) => void
   searchQuery: string
@@ -135,7 +132,6 @@ const MOCK_ORDERS: Order[] = [
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [currentView, setCurrentView] = useState<View>("home")
   const [cart, setCart] = useState<CartItem[]>([])
-  const [compareList, setCompareList] = useState<Product[]>([])
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [showLogin, setShowLogin] = useState(false)
@@ -194,22 +190,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
 
   const clearCart = () => setCart([])
 
-  const toggleCompare = (product: Product) => {
-    setCompareList((prev) => {
-      const exists = prev.find((p) => p.id === product.id)
-      if (exists) {
-        return prev.filter((p) => p.id !== product.id)
-      }
-      if (prev.length >= 3) {
-        alert("You can compare up to 3 products only.")
-        return prev
-      }
-      return [...prev, product]
-    })
-  }
-
-  const clearCompare = () => setCompareList([])
-
   const addAddress = (address: Omit<Address, "id">) => {
     const newAddr: Address = { ...address, id: `addr-${Date.now()}` }
     setAddresses((prev) => {
@@ -258,9 +238,6 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         removeFromCart,
         updateCartQty,
         clearCart,
-        compareList,
-        toggleCompare,
-        clearCompare,
         selectedProduct,
         setSelectedProduct,
         searchQuery,

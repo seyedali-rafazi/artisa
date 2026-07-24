@@ -43,28 +43,30 @@ export default function ProfileInfo({ onToast }: Props) {
   return (
     <div className="flex flex-col gap-6">
       {/* Avatar + Name Row */}
-      <div className="flex items-center gap-4">
-        <div className="flex size-16 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary text-2xl font-extrabold select-none">
-          {avatar}
-        </div>
-        <div className="flex flex-col gap-0.5">
-          <h2 className="text-base font-extrabold text-foreground">{user.name}</h2>
-          <span className="text-xs text-muted-foreground">{user.email}</span>
-          <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">
-            <Shield className="size-3" />
-            {user.role ?? t("defaultRole")}
-          </span>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-4 min-w-0">
+          <div className="flex size-16 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary text-2xl font-extrabold select-none">
+            {avatar}
+          </div>
+          <div className="flex flex-col gap-0.5 min-w-0">
+            <h2 className="text-base font-extrabold text-foreground truncate">{user.name}</h2>
+            <span className="text-xs text-muted-foreground truncate">{user.email}</span>
+            <span className="mt-1 inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-0.5 text-[10px] font-bold text-primary w-fit">
+              <Shield className="size-3" />
+              {user.role ?? t("defaultRole")}
+            </span>
+          </div>
         </div>
         {!editing && (
           <Button
             variant="outline"
             size="sm"
             onClick={() => setEditing(true)}
-            className="mr-auto rounded-xl gap-1.5 cursor-pointer"
+            className="self-start sm:self-center shrink-0 rounded-xl gap-1.5 cursor-pointer max-w-full"
             aria-label={t("editProfile")}
           >
             <Edit2 className="size-3.5" />
-            {t("editProfile")}
+            <span>{t("editProfile")}</span>
           </Button>
         )}
       </div>

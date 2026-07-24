@@ -13,6 +13,8 @@ export default function LoginDialog() {
   const [isRegister, setIsRegister] = useState(false)
   const [name, setName] = useState("")
 
+  const [phone, setPhone] = useState("")
+
   if (!showLogin) return null
 
   const handleSubmit = (e: React.FormEvent) => {
@@ -23,12 +25,14 @@ export default function LoginDialog() {
     const userName = isRegister ? name : email.split("@")[0]
     setUser({
       name: userName || "کاربر",
-      email: email
+      email: email,
+      phone: phone || undefined
     })
     setShowLogin(false)
     setEmail("")
     setPassword("")
     setName("")
+    setPhone("")
   }
 
   return (
@@ -62,18 +66,32 @@ export default function LoginDialog() {
         {/* Input Form */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           {isRegister && (
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-bold text-muted-foreground">نام و نام خانوادگی</label>
-              <Input
-                type="text"
-                placeholder="مثال: علی رضایی"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                required
-                className="rounded-xl text-xs sm:text-sm"
-                dir="rtl"
-              />
-            </div>
+            <>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-muted-foreground">نام و نام خانوادگی</label>
+                <Input
+                  type="text"
+                  placeholder="مثال: علی رضایی"
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  required
+                  className="rounded-xl text-xs sm:text-sm"
+                  dir="rtl"
+                />
+              </div>
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-muted-foreground">شماره موبایل</label>
+                <Input
+                  type="tel"
+                  placeholder="09121234567"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
+                  className="rounded-xl text-xs sm:text-sm"
+                  dir="ltr"
+                />
+              </div>
+            </>
           )}
 
           <div className="flex flex-col gap-1.5">

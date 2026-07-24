@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useEffect, useState } from "react"
+import React, { useEffect, useState, useRef } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { useLanguage } from "../LanguageContext"
@@ -11,10 +11,14 @@ import {
   Search, 
   ShoppingCart, 
   User, 
-  RefreshCw, 
   Menu, 
   X, 
-  ChevronDown
+  ChevronDown,
+  ShoppingBag,
+  Heart,
+  MapPin,
+  LogOut,
+  LogIn
 } from "lucide-react"
 
 export default function Header() {
@@ -22,14 +26,27 @@ export default function Header() {
   const { t } = useLanguage()
   const { 
     cart, 
-    compareList, 
     user, 
+    setUser,
     setShowLogin,
     setSearchQuery 
   } = useApp()
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false)
   const [searchInput, setSearchInput] = useState("")
+
+  const profileMenuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (profileMenuRef.current && !profileMenuRef.current.contains(event.target as Node)) {
+        setProfileMenuOpen(false)
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => document.removeEventListener("mousedown", handleClickOutside)
+  }, [])
 
   useEffect(() => {
     if (!mobileMenuOpen) return
@@ -57,7 +74,6 @@ export default function Header() {
   }
 
   const cartItemsCount = cart.reduce((acc, item) => acc + item.quantity, 0)
-  const compareCount = compareList.length
 
   const categories = [
     { key: "categoryPainting", filter: "تابلو نقاشی" },
@@ -124,22 +140,8 @@ export default function Header() {
           </div>
         </form>
 
-        {/* Action icons (Cart, Compare, User) */}
-        <div className="flex items-center gap-2 md:gap-4">
-          {/* Compare Button */}
-          <Link
-            href="/checkout"
-            className="relative flex size-10 items-center justify-center rounded-full hover:bg-muted/80 text-foreground transition-all cursor-pointer"
-            title={t("compare")}
-          >
-            <RefreshCw className="size-5" />
-            {compareCount > 0 && (
-              <span className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
-                {compareCount}
-              </span>
-            )}
-          </Link>
-
+        {/* Action icons (Cart, Profile Popup) */}
+        <div className="flex items-center gap-2 md:gap-3">
           {/* Cart Button */}
           <Link
             href="/cart"
@@ -154,36 +156,94 @@ export default function Header() {
             )}
           </Link>
 
-          {/* User Profile / Login */}
+          {/* User Profile / Login Button */}
           {user ? (
+            <div className="relative" ref={profileMenuRef}>
+              <button
+                onClick={() => setProfileMenuOpen(!profileMenuOpen)}
+                className="flex items-center gap-1.5 px-2.5 py-1.5 md:px-3 md:py-2 rounded-full border border-border bg-muted/20 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer text-foreground"
+                title="پروفایل کاربری"
+                aria-label="منوی پروفایل"
+              >
+                <User className="size-5 text-primary" />
+                <ChevronDown className={`size-3.5 text-muted-foreground transition-transform duration-200 ${profileMenuOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              {/* Profile Popup Dropdown */}
+              {profileMenuOpen && (
+                <div className="absolute left-0 mt-2 w-60 rounded-2xl border border-border bg-background p-2.5 shadow-2xl z-50 animate-in fade-in zoom-in-95 duration-150" dir="rtl">
+                  {/* User Info Header */}
+                  <div className="flex items-center gap-3 p-2.5 border-b border-border/60 mb-1 bg-muted/10 rounded-xl">
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary text-sm font-extrabold">
+                      {user.name.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs font-extrabold text-foreground truncate">{user.name}</span>
+                      <span className="text-[10px] text-muted-foreground truncate">{user.email}</span>
+                    </div>
+                  </div>
+
+                  {/* Nav Links */}
+                  <div className="flex flex-col gap-0.5 text-xs font-medium">
+                    <Link
+                      href="/profile"
+                      onClick={() => setProfileMenuOpen(false)}
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-foreground hover:bg-muted hover:text-primary transition-colors"
+                    >
+                      <User className="size-4 text-muted-foreground" />
+                      <span>پروفایل کاربری</span>
+                    </Link>
+                    <Link
+                      href="/profile"
+                      onClick={() => setProfileMenuOpen(false)}
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-foreground hover:bg-muted hover:text-primary transition-colors"
+                    >
+                      <ShoppingBag className="size-4 text-muted-foreground" />
+                      <span>سفارش‌های من</span>
+                    </Link>
+                    <Link
+                      href="/profile"
+                      onClick={() => setProfileMenuOpen(false)}
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-foreground hover:bg-muted hover:text-primary transition-colors"
+                    >
+                      <Heart className="size-4 text-muted-foreground" />
+                      <span>علاقه‌مندی‌ها</span>
+                    </Link>
+                    <Link
+                      href="/profile"
+                      onClick={() => setProfileMenuOpen(false)}
+                      className="flex items-center gap-2.5 rounded-xl px-3 py-2 text-foreground hover:bg-muted hover:text-primary transition-colors"
+                    >
+                      <MapPin className="size-4 text-muted-foreground" />
+                      <span>آدرس‌های من</span>
+                    </Link>
+                  </div>
+
+                  {/* Logout Button */}
+                  <div className="border-t border-border/60 mt-1 pt-1">
+                    <button
+                      onClick={() => {
+                        setUser(null)
+                        setProfileMenuOpen(false)
+                      }}
+                      className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"
+                    >
+                      <LogOut className="size-4" />
+                      <span>خروج از حساب</span>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
             <Link
-              href="/profile"
-              className="flex items-center gap-2 border border-border rounded-full py-1 px-3 bg-muted/20 hover:border-primary hover:bg-primary/5 transition-all cursor-pointer"
-              title="پروفایل کاربری"
+              href="/login"
+              className="flex items-center gap-1.5 rounded-full border border-border bg-muted/20 px-3.5 py-1.5 text-xs font-extrabold text-foreground hover:border-primary hover:bg-primary/5 hover:text-primary transition-all cursor-pointer shadow-sm"
+              title={t("loginSignup")}
             >
               <User className="size-4 text-primary" />
-              <span className="text-xs font-semibold max-w-[80px] truncate">{user.name}</span>
-            </Link>
-          ) : (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setShowLogin(true)}
-              className="hidden gap-1.5 rounded-full md:flex cursor-pointer text-xs"
-            >
-              <User className="size-4" />
               <span>{t("loginSignup")}</span>
-            </Button>
-          )}
-
-          {/* Mobile login trigger */}
-          {!user && (
-            <button
-              onClick={() => setShowLogin(true)}
-              className="flex size-10 items-center justify-center rounded-full hover:bg-muted md:hidden"
-            >
-              <User className="size-5" />
-            </button>
+            </Link>
           )}
         </div>
       </div>

@@ -4,7 +4,6 @@ import React from "react"
 import Header from "./Header"
 import Footer from "./Footer"
 import LoginDialog from "../dialogs/LoginDialog"
-import CompareBar from "../home/CompareBar"
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
@@ -18,7 +17,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <Footer />
 
       <LoginDialog />
-      <CompareBar />
     </div>
   )
 }

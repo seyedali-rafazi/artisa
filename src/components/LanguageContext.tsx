@@ -14,7 +14,6 @@ const translations: Record<string, string> = {
   searchPlaceholder: "جستجوی تابلو، هنر دیواری...",
   loginSignup: "ورود | ثبت نام",
   cart: "سبد خرید",
-  compare: "مقایسه",
   trackOrder: "پیگیری سفارش",
   home: "خانه",
   categories: "دسته‌بندی آثار",
@@ -95,9 +94,6 @@ const translations: Record<string, string> = {
   orderId: "کد سفارش:",
   trackBtn: "رهگیری سفارش",
 
-  // Compare
-  compareTitle: "مقایسه آثار",
-  compareEmpty: "اثری برای مقایسه انتخاب نشده است (حداکثر ۳ اثر)",
   clearAll: "پاک کردن همه",
 
   // FAQ

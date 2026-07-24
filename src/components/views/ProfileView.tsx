@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useEffect } from "react"
+import Link from "next/link"
 import { useLanguage } from "../LanguageContext"
 import { useApp } from "../AppContext"
 import { Button } from "../ui/button"
@@ -134,13 +135,14 @@ export default function ProfileView() {
         </div>
         <h1 className="text-base font-extrabold text-foreground">{t("profileTitle")}</h1>
         <p className="text-xs text-muted-foreground max-w-xs">{t("loginToViewProfile")}</p>
-        <Button
-          onClick={() => setShowLogin(true)}
-          className="gap-2 rounded-xl cursor-pointer font-bold"
-        >
-          <User className="size-4" />
-          {t("goToLogin")}
-        </Button>
+        <Link href="/login">
+          <Button
+            className="gap-2 rounded-xl cursor-pointer font-bold"
+          >
+            <User className="size-4" />
+            {t("goToLogin")}
+          </Button>
+        </Link>
       </div>
     )
   }
