@@ -1,70 +1,87 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #151617;
+  /* Main site background & foreground */
+  --background: #FCFAF9;
+  --foreground: #3B332C;
+  --heading: #1F1D1B;
   
-  --card: #f0f1f1;
-  --card-foreground: #151617;
+  /* Product cards & card containers */
+  --card: #F7F2EE;
+  --card-foreground: #3B332C;
   
-  --popover: #ffffff;
-  --popover-foreground: #151617;
+  /* Popover / Modals / Dropdowns */
+  --popover: #FCFAF9;
+  --popover-foreground: #3B332C;
   
-  --primary: #dc2655;
+  /* Primary Gold accents & buttons */
+  --primary: #C8A86A;
+  --primary-hover: #B89252;
+  --primary-dark: #A98443;
   --primary-foreground: #ffffff;
   
-  --secondary: #f0f1f1;
-  --secondary-foreground: #151617;
+  /* Secondary (Warm White) */
+  --secondary: #F6F1ED;
+  --secondary-foreground: #1F1D1B;
   
-  --muted: #edeff3;
-  --muted-foreground: #676f71;
+  /* Muted backgrounds & secondary text */
+  --muted: #F6F1ED;
+  --muted-foreground: #766B61;
   
-  --accent: #dc2655;
+  /* Accent & Destructive */
+  --accent: #C8A86A;
   --accent-foreground: #ffffff;
   
   --destructive: #ed2e2e;
   --destructive-foreground: #ffffff;
   
-  --border: #c2c5c6;
-  --input: #c2c5c6;
-  --ring: #dc2655;
+  /* Borders, lines, and inputs */
+  --border: #E6DDD3;
+  --border-light: #EEE7DF;
+  --input: #E6DDD3;
+  --ring: #C8A86A;
   
   --radius: 0.75rem;
 }
 
 .dark {
-  --background: #151617;
-  --foreground: #ffffff;
+  --background: #191716;
+  --foreground: #F6F1ED;
+  --heading: #FCFAF9;
   
-  --card: #292c2d;
-  --card-foreground: #ffffff;
+  --card: #24201D;
+  --card-foreground: #F6F1ED;
   
-  --popover: #151617;
-  --popover-foreground: #ffffff;
+  --popover: #191716;
+  --popover-foreground: #F6F1ED;
   
-  --primary: #dc2655;
-  --primary-foreground: #ffffff;
+  --primary: #C8A86A;
+  --primary-hover: #B89252;
+  --primary-dark: #A98443;
+  --primary-foreground: #191716;
   
-  --secondary: #292c2d;
-  --secondary-foreground: #ffffff;
+  --secondary: #2B2623;
+  --secondary-foreground: #F6F1ED;
   
-  --muted: #3e4344;
-  --muted-foreground: #a4a9aa;
+  --muted: #25211E;
+  --muted-foreground: #A4988C;
   
-  --accent: #dc2655;
-  --accent-foreground: #ffffff;
+  --accent: #C8A86A;
+  --accent-foreground: #191716;
   
   --destructive: #ed2e2e;
   --destructive-foreground: #ffffff;
   
-  --border: #3e4344;
-  --input: #3e4344;
-  --ring: #dc2655;
+  --border: #3D352E;
+  --border-light: #2E2823;
+  --input: #3D352E;
+  --ring: #C8A86A;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-heading: var(--heading);
   
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
@@ -73,6 +90,8 @@
   --color-popover-foreground: var(--popover-foreground);
   
   --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-dark: var(--primary-dark);
   --color-primary-foreground: var(--primary-foreground);
   
   --color-secondary: var(--secondary);
@@ -88,6 +107,7 @@
   --color-destructive-foreground: var(--destructive-foreground);
   
   --color-border: var(--border);
+  --color-border-light: var(--border-light);
   --color-input: var(--input);
   --color-ring: var(--ring);
   
@@ -110,5 +130,8 @@
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    color: var(--heading);
   }
 }

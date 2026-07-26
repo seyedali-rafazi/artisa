@@ -44,7 +44,7 @@ export default function ProductBox({ product }: ProductBoxProps) {
     <Link
       href={`/product/${product.id}`}
       onClick={handleProductClick}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-border/40 bg-background shadow-sm hover:shadow-lg hover:border-primary/20 transition-all duration-300 cursor-pointer"
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm hover:shadow-md hover:border-primary/40 transition-all duration-300 cursor-pointer"
     >
       {/* Product Image and Overlay Tags */}
       <div className="relative aspect-square w-full bg-muted/20 overflow-hidden">
