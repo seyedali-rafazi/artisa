@@ -17,6 +17,10 @@ const vazirmatn = Vazirmatn({
 export const metadata: Metadata = {
   title: "آرتیسا | گالری آنلاین تابلو و هنر دیواری",
   description: "خرید آنلاین تابلو نقاشی اورجینال، هنر دیواری، مجسمه و اکسسوری‌های هنری از هنرمندان ایرانی با گواهی اصالت و ارسال مطمئن به سراسر کشور.",
+  icons: {
+    icon: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 export default function RootLayout({

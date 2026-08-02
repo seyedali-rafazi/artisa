@@ -20,7 +20,7 @@ export default function HeroSlider() {
       titleKey: "sliderTitle2",
       descKey: "sliderDesc2",
       bgImage: "/Second-baner.webp",
-      accent: "bg-amber-600"
+      accent: "bg-primary-hover"
     }
   ]
 

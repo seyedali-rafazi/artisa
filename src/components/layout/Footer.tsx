@@ -2,6 +2,7 @@
 
 import React, { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useLanguage } from "../LanguageContext"
 import { Input } from "../ui/input"
 import { Button } from "../ui/button"
@@ -56,10 +57,14 @@ export default function Footer() {
       <div className="max-w-7xl mx-auto px-4 py-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
         {/* Brand details */}
         <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-2">
-            <div className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold text-lg">
-              A
-            </div>
+          <div className="flex items-center gap-2.5">
+            <Image
+              src="/logo.png"
+              alt={t("brandName")}
+              width={120}
+              height={120}
+              className="h-12 w-auto object-contain"
+            />
             <span className="text-lg font-black text-foreground">{t("brandName")}</span>
           </div>
           <p className="text-xs text-muted-foreground leading-5">

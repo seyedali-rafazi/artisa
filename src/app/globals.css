@@ -1,32 +1,32 @@
 @import "tailwindcss";
 
 :root {
-  /* Main site background & foreground */
-  --background: #FCFAF9;
-  --foreground: #3B332C;
-  --heading: #1F1D1B;
+  /* Soft cream surfaces (not brown) */
+  --background: #FFFBF7;
+  --foreground: #2A2622;
+  --heading: #1A1816;
   
   /* Product cards & card containers */
-  --card: #F7F2EE;
-  --card-foreground: #3B332C;
+  --card: #FFF8F0;
+  --card-foreground: #2A2622;
   
   /* Popover / Modals / Dropdowns */
-  --popover: #FCFAF9;
-  --popover-foreground: #3B332C;
+  --popover: #FFFBF7;
+  --popover-foreground: #2A2622;
   
   /* Primary Gold accents & buttons */
-  --primary: #C8A86A;
+  --primary: #f4c66b;
   --primary-hover: #B89252;
   --primary-dark: #A98443;
   --primary-foreground: #ffffff;
   
-  /* Secondary (Warm White) */
-  --secondary: #F6F1ED;
-  --secondary-foreground: #1F1D1B;
+  /* Secondary (Cream) */
+  --secondary: #F9F3EB;
+  --secondary-foreground: #1A1816;
   
   /* Muted backgrounds & secondary text */
-  --muted: #F6F1ED;
-  --muted-foreground: #766B61;
+  --muted: #F9F3EB;
+  --muted-foreground: #7A7168;
   
   /* Accent & Destructive */
   --accent: #C8A86A;
@@ -36,9 +36,9 @@
   --destructive-foreground: #ffffff;
   
   /* Borders, lines, and inputs */
-  --border: #E6DDD3;
-  --border-light: #EEE7DF;
-  --input: #E6DDD3;
+  --border: #EDE6DC;
+  --border-light: #F3EEE6;
+  --input: #EDE6DC;
   --ring: #C8A86A;
   
   --radius: 0.75rem;

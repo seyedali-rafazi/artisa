@@ -2,6 +2,7 @@
 
 import React, { useState } from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { useApp } from "@/components/AppContext"
 import { Button } from "@/components/ui/button"
@@ -97,7 +98,7 @@ export default function LoginPage() {
     <div dir="rtl" className="min-h-[85vh] flex items-center justify-center py-10 px-4 relative overflow-hidden">
       {/* Background Decorative Blur Orbs */}
       <div className="absolute -top-20 -right-20 size-80 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-20 -left-20 size-80 rounded-full bg-amber-500/10 blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-20 -left-20 size-80 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
 
       <div className="w-full max-w-md relative z-10">
         {/* Back to Home Link */}
@@ -114,9 +115,14 @@ export default function LoginPage() {
           
           {/* Logo & Header */}
           <div className="flex flex-col items-center text-center mb-6">
-            <div className="flex size-14 items-center justify-center rounded-2xl bg-gradient-to-tr from-primary to-amber-500 text-primary-foreground font-black text-2xl shadow-lg shadow-primary/30 mb-3">
-              A
-            </div>
+            <Image
+              src="/logo.png"
+              alt="آرتیسا"
+              width={200}
+              height={200}
+              className="h-24 w-auto object-contain mb-4"
+              priority
+            />
             <h1 className="text-xl sm:text-2xl font-black text-foreground tracking-tight">
               {isSignup ? "عضویت در آرتیسا" : "ورود به حساب کاربری"}
             </h1>
