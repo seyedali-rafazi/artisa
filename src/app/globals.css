@@ -115,8 +115,8 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-sm: calc(var(--radius) - 4px);
   
-  --font-sans: var(--font-vazirmatn), system-ui, sans-serif;
-  --font-mono: var(--font-vazirmatn), monospace;
+  --font-sans: var(--font-vazirmatn), Tahoma, system-ui, sans-serif;
+  --font-mono: var(--font-vazirmatn), Tahoma, monospace;
 }
 
 @layer base {
@@ -126,12 +126,13 @@
   body {
     background-color: var(--background);
     color: var(--foreground);
-    font-family: var(--font-sans);
+    font-family: var(--font-vazirmatn), Tahoma, system-ui, sans-serif;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
   h1, h2, h3, h4, h5, h6 {
     color: var(--heading);
+    font-family: var(--font-vazirmatn), Tahoma, system-ui, sans-serif;
   }
 }

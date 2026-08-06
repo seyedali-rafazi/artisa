@@ -10,19 +10,19 @@ import { useRouter } from "next/navigation"
 
 export default function AccountSettings() {
   const { t } = useLanguage()
-  const { setUser } = useApp()
+  const { logout } = useApp()
   const router = useRouter()
   const [confirmLogout, setConfirmLogout] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
   const handleLogout = () => {
-    setUser(null)
+    logout()
     setConfirmLogout(false)
     router.push("/")
   }
 
   const handleDeleteAccount = () => {
-    setUser(null)
+    logout()
     setConfirmDelete(false)
     router.push("/")
   }

@@ -51,7 +51,7 @@ export default function Header() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
   const { t } = useLanguage();
-  const { cart, user, setUser, searchQuery, setSearchQuery } = useApp();
+  const { cart, user, logout, searchQuery, setSearchQuery } = useApp();
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -269,7 +269,7 @@ export default function Header() {
                     <div className="border-t border-border/60 mt-1 pt-1">
                       <button
                         onClick={() => {
-                          setUser(null);
+                          logout();
                           setProfileMenuOpen(false);
                         }}
                         className="flex w-full items-center gap-2.5 rounded-xl px-3 py-2 text-xs font-bold text-destructive hover:bg-destructive/10 transition-colors cursor-pointer"

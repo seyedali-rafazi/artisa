@@ -4,36 +4,68 @@ import React, { useState } from "react"
 import { useApp } from "../AppContext"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
-import { X, Lock, Mail, UserCheck } from "lucide-react"
+import { X, Lock, Mail, UserCheck, AlertCircle } from "lucide-react"
+import { useLogin, useRegister } from "@/hooks/useAuth"
 
 export default function LoginDialog() {
-  const { showLogin, setShowLogin, setUser } = useApp()
+  const { showLogin, setShowLogin } = useApp()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isRegister, setIsRegister] = useState(false)
   const [name, setName] = useState("")
-
   const [phone, setPhone] = useState("")
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
+
+  const loginMutation = useLogin()
+  const registerMutation = useRegister()
 
   if (!showLogin) return null
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    setErrorMessage(null)
+
     if (!email || !password) return
-    
-    // Simulate login
-    const userName = isRegister ? name : email.split("@")[0]
-    setUser({
-      name: userName || "کاربر",
-      email: email,
-      phone: phone || undefined
-    })
-    setShowLogin(false)
+
+    if (isRegister) {
+      if (!name) return
+      registerMutation.mutate(
+        { name, email, password, phone: phone || undefined },
+        {
+          onSuccess: () => {
+            setShowLogin(false)
+            resetForm()
+          },
+          onError: (err: any) => {
+            setErrorMessage(err?.message || "خطا در ثبت نام")
+          },
+        }
+      )
+    } else {
+      loginMutation.mutate(
+        { email, password },
+        {
+          onSuccess: () => {
+            setShowLogin(false)
+            resetForm()
+          },
+          onError: (err: any) => {
+            setErrorMessage(err?.message || "ایمیل یا رمز عبور اشتباه است")
+          },
+        }
+      )
+    }
+  }
+
+  const resetForm = () => {
     setEmail("")
     setPassword("")
     setName("")
     setPhone("")
+    setErrorMessage(null)
   }
+
+  const isPending = loginMutation.isPending || registerMutation.isPending
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
@@ -43,7 +75,7 @@ export default function LoginDialog() {
       >
         {/* Close Button */}
         <button
-          onClick={() => setShowLogin(false)}
+          onClick={() => { setShowLogin(false); setErrorMessage(null); }}
           className="absolute top-4 left-4 cursor-pointer text-muted-foreground hover:text-primary transition-colors"
           aria-label="Close"
         >
@@ -62,6 +94,13 @@ export default function LoginDialog() {
             {isRegister ? "حساب کاربری جدید بسازید" : "خوش آمدید! مشخصات خود را وارد کنید"}
           </span>
         </div>
+
+        {errorMessage && (
+          <div className="flex items-center gap-2 p-3 rounded-xl bg-destructive/10 text-destructive text-xs font-bold">
+            <AlertCircle className="size-4 shrink-0" />
+            <span>{errorMessage}</span>
+          </div>
+        )}
 
         {/* Input Form */}
         <form onSubmit={handleSubmit} className="flex flex-col gap-4">
@@ -86,7 +125,6 @@ export default function LoginDialog() {
                   placeholder="09121234567"
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  required
                   className="rounded-xl text-xs sm:text-sm"
                   dir="ltr"
                 />
@@ -126,10 +164,18 @@ export default function LoginDialog() {
             </div>
           </div>
 
-          <Button type="submit" className="w-full gap-2 rounded-xl font-bold cursor-pointer mt-2">
+          <Button
+            type="submit"
+            disabled={isPending}
+            className="w-full gap-2 rounded-xl font-bold cursor-pointer mt-2"
+          >
             <UserCheck className="size-4" />
             <span>
-              {isRegister ? "ثبت نام" : "ورود"}
+              {isPending
+                ? "در حال پردازش..."
+                : isRegister
+                ? "ثبت نام"
+                : "ورود"}
             </span>
           </Button>
         </form>
@@ -140,7 +186,7 @@ export default function LoginDialog() {
             <span>
               قبلاً ثبت نام کرده‌اید؟{" "}
               <button 
-                onClick={() => setIsRegister(false)}
+                onClick={() => { setIsRegister(false); setErrorMessage(null); }}
                 className="text-primary font-bold hover:underline cursor-pointer"
               >
                 ورود به حساب
@@ -150,7 +196,7 @@ export default function LoginDialog() {
             <span>
               کاربر جدید هستید؟{" "}
               <button 
-                onClick={() => setIsRegister(true)}
+                onClick={() => { setIsRegister(true); setErrorMessage(null); }}
                 className="text-primary font-bold hover:underline cursor-pointer"
               >
                 ایجاد حساب کاربری

@@ -10,35 +10,58 @@ import {
   Truck, 
   Home, 
   CheckCircle2, 
-  CircleDot
+  CircleDot,
+  AlertCircle
 } from "lucide-react"
+import { useTrackOrder } from "@/hooks/useOrders"
 
 export default function TrackOrderView() {
   const { t } = useLanguage()
   const [orderIdInput, setOrderIdInput] = useState("")
-  const [searchedOrder, setSearchedOrder] = useState<string | null>(null)
+  const [searchedOrder, setSearchedOrder] = useState<string>("")
   
-  // Fake tracking steps state
-  const trackingSteps = [
+  const { data: trackData, isLoading, isError, error } = useTrackOrder(searchedOrder)
+
+  const handleTrackSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (orderIdInput.trim()) {
+      let formattedId = orderIdInput.trim()
+      if (!formattedId.startsWith("ORD-") && !formattedId.startsWith("ord-")) {
+        formattedId = `ORD-${formattedId}`
+      }
+      setSearchedOrder(formattedId)
+    }
+  }
+
+  const iconMap: Record<string, any> = {
+    statusReceived: FileCheck,
+    statusProcessing: Settings,
+    statusShipped: Truck,
+    statusDelivered: Home,
+  }
+
+  const defaultSteps = [
     { title: "statusReceived", desc: "سفارش در سیستم ثبت شده است", icon: FileCheck, completed: true },
     { title: "statusProcessing", desc: "اثر هنری با بسته‌بندی تخصصی گالری در حال آماده‌سازی", icon: Settings, completed: true },
     { title: "statusShipped", desc: "تحویل به پست پیشتاز یا پیک اختصاصی گالری", icon: Truck, completed: false },
     { title: "statusDelivered", desc: "اثر هنری درب منزل تحویل داده شده است", icon: Home, completed: false }
   ]
 
-  const handleTrackSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (orderIdInput.trim()) {
-      setSearchedOrder(orderIdInput.trim())
-    }
-  }
+  const trackingSteps = trackData?.steps
+    ? trackData.steps.map(step => ({
+        title: step.title,
+        desc: step.desc,
+        icon: iconMap[step.title] || FileCheck,
+        completed: step.completed
+      }))
+    : defaultSteps
 
   return (
     <div className="max-w-xl mx-auto px-4 py-12">
       <div className="text-center mb-10">
         <h1 className="text-xl md:text-2xl font-black text-foreground mb-2">{t("trackOrderTitle")}</h1>
         <p className="text-xs text-muted-foreground">
-          شماره سفارش ۶ رقمی دریافتی پیامک شده را جهت رهگیری وارد کنید.
+          شماره سفارش (مانند ORD-10042 یا کد ۶ رقمی) دریافتی را جهت رهگیری وارد کنید.
         </p>
       </div>
 
@@ -53,17 +76,24 @@ export default function TrackOrderView() {
           dir="ltr"
           required
         />
-        <Button type="submit" className="rounded-xl font-bold cursor-pointer shrink-0">
-          {t("trackSubmit")}
+        <Button type="submit" disabled={isLoading} className="rounded-xl font-bold cursor-pointer shrink-0">
+          {isLoading ? "در حال جستجو..." : t("trackSubmit")}
         </Button>
       </form>
 
+      {isError && (
+        <div className="flex items-center gap-2 p-4 rounded-2xl bg-destructive/10 text-destructive text-xs font-bold mb-6">
+          <AlertCircle className="size-5 shrink-0" />
+          <span>{(error as any)?.message || "سفارشی با این کد یافت نشد"}</span>
+        </div>
+      )}
+
       {/* Tracking results view */}
-      {searchedOrder && (
+      {searchedOrder && !isError && (
         <div className="border border-border/40 bg-muted/10 rounded-3xl p-6 md:p-8 animate-fade-in shadow-sm">
           <div className="flex justify-between items-center border-b border-border pb-4 mb-6">
             <span className="text-xs font-bold text-muted-foreground">{t("orderId")}</span>
-            <span className="text-sm font-black text-foreground tracking-widest">{searchedOrder}</span>
+            <span className="text-sm font-black text-foreground tracking-widest">{trackData?.orderId || searchedOrder}</span>
           </div>
 
           {/* Vertical Timeline */}
@@ -91,7 +121,7 @@ export default function TrackOrderView() {
                     <span className={`text-xs md:text-sm font-black ${
                       step.completed ? "text-foreground" : "text-muted-foreground"
                     }`}>
-                      {t(step.title)}
+                      {t(step.title) || step.title}
                     </span>
                     <span className="text-[10px] md:text-xs text-muted-foreground">
                       {step.desc}

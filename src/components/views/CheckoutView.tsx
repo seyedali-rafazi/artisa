@@ -6,11 +6,13 @@ import { useLanguage } from "../LanguageContext"
 import { useApp } from "../AppContext"
 import { Input } from "../ui/input"
 import { Button } from "../ui/button"
-import { CheckCircle2, ChevronLeft } from "lucide-react"
+import { CheckCircle2, ChevronLeft, AlertCircle } from "lucide-react"
+import { useCreateOrder } from "@/hooks/useOrders"
 
 export default function CheckoutView() {
   const { t } = useLanguage()
   const { cart, clearCart } = useApp()
+  const createOrderMutation = useCreateOrder()
   
   // Forms state
   const [fullName, setFullName] = useState("")
@@ -18,6 +20,7 @@ export default function CheckoutView() {
   const [postalCode, setPostalCode] = useState("")
   const [address, setAddress] = useState("")
   const [paymentMethod, setPaymentMethod] = useState("online")
+  const [errorMessage, setErrorMessage] = useState<string | null>(null)
 
   // Success view state
   const [orderSuccess, setOrderSuccess] = useState(false)
@@ -31,16 +34,39 @@ export default function CheckoutView() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    setErrorMessage(null)
+
     if (!fullName || !phone || !address) {
-      alert("لطفا فیلدهای اجباری را پر کنید")
+      setErrorMessage("لطفا فیلدهای اجباری را پر کنید")
       return
     }
-    
-    // Simulate order registration
-    const fakeOrderNum = Math.floor(100000 + Math.random() * 900000).toString()
-    setOrderNumber(fakeOrderNum)
-    setOrderSuccess(true)
-    clearCart()
+
+    createOrderMutation.mutate(
+      {
+        fullName,
+        phone,
+        postalCode,
+        address,
+        paymentMethod,
+        items: cart.map((item) => ({
+          id: item.id,
+          name: item.name,
+          price: item.price,
+          quantity: item.quantity,
+          image: item.image,
+        })),
+      },
+      {
+        onSuccess: (data) => {
+          setOrderNumber(data.id)
+          setOrderSuccess(true)
+          clearCart()
+        },
+        onError: (err: any) => {
+          setErrorMessage(err?.message || "خطا در ثبت سفارش")
+        },
+      }
+    )
   }
 
   if (orderSuccess) {
@@ -107,6 +133,13 @@ export default function CheckoutView() {
       </div>
 
       <h1 className="text-xl md:text-2xl font-black text-foreground mb-8">{t("addressInfo")}</h1>
+
+      {errorMessage && (
+        <div className="flex items-center gap-2 p-4 rounded-2xl bg-destructive/10 text-destructive text-xs font-bold mb-6">
+          <AlertCircle className="size-5 shrink-0" />
+          <span>{errorMessage}</span>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Address and Shipping details */}
@@ -241,9 +274,10 @@ export default function CheckoutView() {
 
             <Button
               type="submit"
+              disabled={createOrderMutation.isPending}
               className="w-full py-3 rounded-xl font-extrabold cursor-pointer hover:scale-[1.02] transition-transform"
             >
-              {t("completeOrder")}
+              {createOrderMutation.isPending ? "در حال ثبت سفارش..." : t("completeOrder")}
             </Button>
           </div>
         </div>

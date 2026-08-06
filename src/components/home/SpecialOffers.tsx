@@ -2,12 +2,13 @@
 
 import React, { useState, useEffect } from "react"
 import { useLanguage } from "../LanguageContext"
-import { MOCK_PRODUCTS } from "@/data/products"
 import ProductBox from "./ProductBox"
 import { Timer } from "lucide-react"
+import { useProducts } from "@/hooks/useProducts"
 
 export default function SpecialOffers() {
   const { t } = useLanguage()
+  const { data: apiData, isLoading } = useProducts({ isSpecial: true })
   const [timeLeft, setTimeLeft] = useState({ hrs: 12, mins: 34, secs: 56 })
 
   useEffect(() => {
@@ -35,10 +36,14 @@ export default function SpecialOffers() {
     return () => clearInterval(countdown)
   }, [])
 
-  const specialProducts = MOCK_PRODUCTS.filter((p) => p.isSpecial)
+  const specialProducts = apiData?.items || []
 
   const translateNum = (n: number) => {
     return n.toString().padStart(2, "0").replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[parseInt(d)])
+  }
+
+  if (!isLoading && specialProducts.length === 0) {
+    return null
   }
 
   return (
@@ -82,11 +87,19 @@ export default function SpecialOffers() {
       </div>
 
       {/* Grid of Special Products */}
-      <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-        {specialProducts.map((product) => (
-          <ProductBox key={product.id} product={product} />
-        ))}
-      </div>
+      {isLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+          {[1, 2, 3, 4].map((i) => (
+            <div key={i} className="h-64 rounded-2xl bg-neutral-200 dark:bg-neutral-800 animate-pulse" />
+          ))}
+        </div>
+      ) : (
+        <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+          {specialProducts.map((product) => (
+            <ProductBox key={product.id} product={product} />
+          ))}
+        </div>
+      )}
     </section>
   )
 }

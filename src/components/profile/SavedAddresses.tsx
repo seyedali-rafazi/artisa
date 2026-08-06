@@ -2,11 +2,17 @@
 
 import React, { useState } from "react"
 import { useLanguage } from "../LanguageContext"
-import { useApp, Address } from "../AppContext"
+import { Address } from "../AppContext"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
-import { MapPin, Plus, Edit2, Trash2, Star, StarOff, X, Check } from "lucide-react"
+import { MapPin, Plus, Trash2, Star, StarOff, X, Check } from "lucide-react"
 import ConfirmDialog from "../dialogs/ConfirmDialog"
+import {
+  useAddresses,
+  useCreateAddress,
+  useSetDefaultAddress,
+  useDeleteAddress,
+} from "@/hooks/useAddresses"
 
 interface Toast {
   message: string
@@ -17,7 +23,7 @@ interface Props {
   onToast: (toast: Toast) => void
 }
 
-type FormMode = "add" | "edit" | null
+type FormMode = "add" | null
 
 const EMPTY_FORM: Omit<Address, "id"> = {
   title: "",
@@ -32,52 +38,78 @@ const EMPTY_FORM: Omit<Address, "id"> = {
 
 export default function SavedAddresses({ onToast }: Props) {
   const { t } = useLanguage()
-  const { addresses, addAddress, updateAddress, deleteAddress, setDefaultAddress } = useApp()
+  const { data: apiAddresses, isLoading } = useAddresses()
+  const createAddressMutation = useCreateAddress()
+  const setDefaultAddressMutation = useSetDefaultAddress()
+  const deleteAddressMutation = useDeleteAddress()
+
   const [formMode, setFormMode] = useState<FormMode>(null)
-  const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState<Omit<Address, "id">>(EMPTY_FORM)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
 
+  const addresses = apiAddresses || []
+
   const openAdd = () => {
     setForm(EMPTY_FORM)
-    setEditingId(null)
     setFormMode("add")
-  }
-
-  const openEdit = (address: Address) => {
-    const { id, ...rest } = address
-    setForm(rest)
-    setEditingId(id)
-    setFormMode("edit")
   }
 
   const handleSave = () => {
     if (!form.title || !form.fullName || !form.phone || !form.addressLine) return
-    if (formMode === "edit" && editingId) {
-      updateAddress(editingId, form)
-      onToast({ message: "آدرس با موفقیت ویرایش شد.", type: "success" })
-    } else {
-      addAddress(form)
-      onToast({ message: "آدرس جدید اضافه شد.", type: "success" })
-    }
-    setFormMode(null)
-    setEditingId(null)
-    setForm(EMPTY_FORM)
+
+    createAddressMutation.mutate(
+      {
+        title: form.title,
+        fullName: form.fullName,
+        phone: form.phone,
+        province: form.province || "",
+        city: form.city || "",
+        postalCode: form.postalCode || "",
+        addressLine: form.addressLine,
+        isDefault: form.isDefault,
+      },
+      {
+        onSuccess: () => {
+          onToast({ message: "آدرس جدید اضافه شد.", type: "success" })
+          setFormMode(null)
+          setForm(EMPTY_FORM)
+        },
+        onError: (err: any) => {
+          onToast({ message: err?.message || "خطا در افزودن آدرس", type: "error" })
+        },
+      }
+    )
   }
 
   const handleDelete = (id: string) => {
-    deleteAddress(id)
-    setConfirmDelete(null)
-    onToast({ message: "آدرس حذف شد.", type: "success" })
+    deleteAddressMutation.mutate(id, {
+      onSuccess: () => {
+        setConfirmDelete(null)
+        onToast({ message: "آدرس حذف شد.", type: "success" })
+      },
+    })
   }
 
   const handleSetDefault = (id: string) => {
-    setDefaultAddress(id)
-    onToast({ message: "آدرس پیش‌فرض تغییر کرد.", type: "success" })
+    setDefaultAddressMutation.mutate(id, {
+      onSuccess: () => {
+        onToast({ message: "آدرس پیش‌فرض تغییر کرد.", type: "success" })
+      },
+    })
   }
 
   const update = (key: keyof Omit<Address, "id">, value: string | boolean) => {
     setForm((prev) => ({ ...prev, [key]: value }))
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-3">
+        {[1, 2].map((i) => (
+          <div key={i} className="h-20 rounded-2xl bg-neutral-200 dark:bg-neutral-800 animate-pulse" />
+        ))}
+      </div>
+    )
   }
 
   return (
@@ -139,14 +171,6 @@ export default function SavedAddresses({ onToast }: Props) {
                 </button>
               )}
               <button
-                onClick={() => openEdit(addr)}
-                className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary transition-colors cursor-pointer"
-                aria-label={t("editAddress")}
-              >
-                <Edit2 className="size-3.5" />
-                {t("editAddress")}
-              </button>
-              <button
                 onClick={() => setConfirmDelete(addr.id)}
                 className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
                 aria-label={t("deleteAddress")}
@@ -159,13 +183,11 @@ export default function SavedAddresses({ onToast }: Props) {
         ))}
       </div>
 
-      {/* Add / Edit Form */}
+      {/* Add Form */}
       {formMode !== null && (
         <div className="rounded-2xl border border-border/50 bg-muted/10 p-4 flex flex-col gap-4">
           <div className="flex items-center justify-between">
-            <h4 className="text-sm font-extrabold text-foreground">
-              {formMode === "add" ? t("addAddress") : t("editAddress")}
-            </h4>
+            <h4 className="text-sm font-extrabold text-foreground">{t("addAddress")}</h4>
             <button
               onClick={() => setFormMode(null)}
               className="text-muted-foreground hover:text-foreground cursor-pointer"
@@ -212,9 +234,14 @@ export default function SavedAddresses({ onToast }: Props) {
           </label>
 
           <div className="flex gap-3">
-            <Button size="sm" onClick={handleSave} className="gap-1.5 rounded-xl cursor-pointer">
+            <Button
+              size="sm"
+              onClick={handleSave}
+              disabled={createAddressMutation.isPending}
+              className="gap-1.5 rounded-xl cursor-pointer"
+            >
               <Check className="size-3.5" />
-              {t("saveChanges")}
+              {createAddressMutation.isPending ? "در حال ثبت..." : t("saveChanges")}
             </Button>
             <Button size="sm" variant="outline" onClick={() => setFormMode(null)} className="gap-1.5 rounded-xl cursor-pointer">
               <X className="size-3.5" />

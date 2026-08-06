@@ -4,7 +4,7 @@ import React, { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { useApp } from "@/components/AppContext"
+import { useLogin, useRegister } from "@/hooks/useAuth"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { 
@@ -22,7 +22,8 @@ import {
 
 export default function LoginPage() {
   const router = useRouter()
-  const { setUser } = useApp()
+  const loginMutation = useLogin()
+  const registerMutation = useRegister()
 
   const [isSignup, setIsSignup] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -39,34 +40,38 @@ export default function LoginPage() {
   const [errorMsg, setErrorMsg] = useState("")
   const [successMsg, setSuccessMsg] = useState("")
 
+  const isPending = loginMutation.isPending || registerMutation.isPending
+
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setErrorMsg("")
+    setSuccessMsg("")
 
     if (!loginIdentifier.trim() || !loginPassword.trim()) {
       setErrorMsg("لطفاً تمامی فیلدها را پر کنید.")
       return
     }
 
-    setSuccessMsg("ورود با موفقیت انجام شد. در حال انتقال...")
-    
-    // Update user state
-    setUser({
-      name: loginIdentifier.includes("@") ? loginIdentifier.split("@")[0] : loginIdentifier,
-      email: loginIdentifier.includes("@") ? loginIdentifier : `${loginIdentifier}@example.com`,
-      phone: !loginIdentifier.includes("@") ? loginIdentifier : "09123456789",
-      role: "مشتری",
-      createdAt: "۱۴۰۵/۰۵/۰۳"
-    })
-
-    setTimeout(() => {
-      router.push("/")
-    }, 1000)
+    loginMutation.mutate(
+      { email: loginIdentifier.trim(), password: loginPassword },
+      {
+        onSuccess: () => {
+          setSuccessMsg("ورود با موفقیت انجام شد. در حال انتقال...")
+          setTimeout(() => {
+            router.push("/profile")
+          }, 800)
+        },
+        onError: (err: any) => {
+          setErrorMsg(err?.message || "ایمیل یا رمز عبور اشتباه است")
+        },
+      }
+    )
   }
 
   const handleSignupSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setErrorMsg("")
+    setSuccessMsg("")
 
     if (!signupUsername.trim() || !signupEmail.trim() || !signupPhone.trim() || !signupPassword.trim()) {
       setErrorMsg("لطفاً تمامی فیلدهای ثبت‌نام را تکمیل کنید.")
@@ -78,20 +83,25 @@ export default function LoginPage() {
       return
     }
 
-    setSuccessMsg("حساب کاربری شما با موفقیت ایجاد شد! در حال انتقال...")
-
-    // Update user state with all 4 required fields
-    setUser({
-      name: signupUsername.trim(),
-      email: signupEmail.trim(),
-      phone: signupPhone.trim(),
-      role: "مشتری",
-      createdAt: new Date().toLocaleDateString("fa-IR")
-    })
-
-    setTimeout(() => {
-      router.push("/profile")
-    }, 1000)
+    registerMutation.mutate(
+      {
+        name: signupUsername.trim(),
+        email: signupEmail.trim(),
+        password: signupPassword,
+        phone: signupPhone.trim(),
+      },
+      {
+        onSuccess: () => {
+          setSuccessMsg("حساب کاربری شما با موفقیت ایجاد شد! در حال انتقال...")
+          setTimeout(() => {
+            router.push("/profile")
+          }, 800)
+        },
+        onError: (err: any) => {
+          setErrorMsg(err?.message || "خطا در ثبت‌نام. ممکن است ایمیل قبلا ثبت شده باشد.")
+        },
+      }
+    )
   }
 
   return (
@@ -230,9 +240,10 @@ export default function LoginPage() {
               <Button 
                 type="submit" 
                 size="lg" 
+                disabled={isPending}
                 className="w-full rounded-2xl font-extrabold text-sm gap-2 cursor-pointer shadow-lg shadow-primary/25 mt-2"
               >
-                <span>ورود به حساب کاربری</span>
+                <span>{isPending ? "در حال پردازش..." : "ورود به حساب کاربری"}</span>
               </Button>
             </form>
           )}
@@ -321,10 +332,11 @@ export default function LoginPage() {
               <Button 
                 type="submit" 
                 size="lg" 
+                disabled={isPending}
                 className="w-full rounded-2xl font-extrabold text-sm gap-2 cursor-pointer shadow-lg shadow-primary/25 mt-2"
               >
                 <Sparkles className="size-4" />
-                <span>ثبت‌نام و ایجاد حساب</span>
+                <span>{isPending ? "در حال ثبت‌نام..." : "ثبت‌نام و ایجاد حساب"}</span>
               </Button>
             </form>
           )}

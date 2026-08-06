@@ -2,10 +2,11 @@
 
 import React, { useState } from "react"
 import { useLanguage } from "../LanguageContext"
-import { useApp, User } from "../AppContext"
+import { useApp } from "../AppContext"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import { User as UserIcon, Mail, Phone, Calendar, Shield, Edit2, Check, X } from "lucide-react"
+import { useUpdateProfile } from "@/hooks/useAuth"
 
 interface Toast {
   message: string
@@ -18,18 +19,30 @@ interface Props {
 
 export default function ProfileInfo({ onToast }: Props) {
   const { t } = useLanguage()
-  const { user, setUser } = useApp()
+  const { user } = useApp()
   const [editing, setEditing] = useState(false)
   const [name, setName] = useState(user?.name ?? "")
   const [phone, setPhone] = useState(user?.phone ?? "")
+
+  const updateProfileMutation = useUpdateProfile()
 
   if (!user) return null
 
   const handleSave = () => {
     if (!name.trim()) return
-    setUser({ ...user, name: name.trim(), phone: phone.trim() || undefined } as User)
-    setEditing(false)
-    onToast({ message: t("profileUpdateSuccess"), type: "success" })
+
+    updateProfileMutation.mutate(
+      { name: name.trim(), phone: phone.trim() || undefined },
+      {
+        onSuccess: () => {
+          setEditing(false)
+          onToast({ message: t("profileUpdateSuccess"), type: "success" })
+        },
+        onError: (err: any) => {
+          onToast({ message: err?.message || "خطا در بروزرسانی پروفایل", type: "error" })
+        },
+      }
+    )
   }
 
   const handleCancel = () => {
@@ -61,7 +74,11 @@ export default function ProfileInfo({ onToast }: Props) {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => setEditing(true)}
+            onClick={() => {
+              setName(user.name)
+              setPhone(user.phone ?? "")
+              setEditing(true)
+            }}
             className="self-start sm:self-center shrink-0 rounded-xl gap-1.5 cursor-pointer max-w-full"
             aria-label={t("editProfile")}
           >
@@ -104,9 +121,14 @@ export default function ProfileInfo({ onToast }: Props) {
             </div>
           </div>
           <div className="flex gap-3">
-            <Button size="sm" onClick={handleSave} className="gap-1.5 rounded-xl cursor-pointer">
+            <Button
+              size="sm"
+              onClick={handleSave}
+              disabled={updateProfileMutation.isPending}
+              className="gap-1.5 rounded-xl cursor-pointer"
+            >
               <Check className="size-3.5" />
-              {t("saveChanges")}
+              {updateProfileMutation.isPending ? "در حال ذخیره..." : t("saveChanges")}
             </Button>
             <Button size="sm" variant="outline" onClick={handleCancel} className="gap-1.5 rounded-xl cursor-pointer">
               <X className="size-3.5" />

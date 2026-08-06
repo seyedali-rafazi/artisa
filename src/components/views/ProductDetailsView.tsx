@@ -4,34 +4,32 @@ import React, { useState } from "react"
 import Link from "next/link"
 import { useLanguage } from "../LanguageContext"
 import { useApp } from "../AppContext"
-import { MOCK_PRODUCTS } from "@/data/products"
 import { Button } from "../ui/button"
 import { 
   Star, 
   ShoppingCart, 
-  Check, 
   ShieldCheck, 
   Truck, 
   CreditCard,
   MessageSquare,
   ChevronLeft
 } from "lucide-react"
-
-interface CommentItem {
-  name: string
-  text: string
-  rating: number
-  date: string
-}
+import { useProductComments, usePostComment } from "@/hooks/useComments"
+import { useProducts } from "@/hooks/useProducts"
 
 export default function ProductDetailsView() {
   const { t } = useLanguage()
-  const { selectedProduct, addToCart, cart, setSelectedProduct } = useApp()
+  const { selectedProduct, addToCart, cart, setSelectedProduct, user } = useApp()
   const [commentText, setCommentText] = useState("")
-  const [commentsList, setCommentsList] = useState<CommentItem[]>([
-    { name: "زهرا رحیمی", text: "بسیار باکیفیت و زیباست، دقیقا مثل عکسشه. پیشنهاد میکنم بخرید.", rating: 5, date: "۱۴۰۵/۰۳/۱۲" },
-    { name: "بابک راد", text: "بسته‌بندی تخصصی داشت. ارسالش هم سریع و مطمئن بود. ممنون از آرتیسا.", rating: 4, date: "۱۴۰۵/۰۳/۱۸" }
-  ])
+
+  const productId = selectedProduct?.id || ""
+  const { data: apiComments, isLoading: isCommentsLoading } = useProductComments(productId)
+  const postCommentMutation = usePostComment(productId)
+
+  const { data: categoryProductsData } = useProducts({
+    category: selectedProduct?.category,
+    limit: 4,
+  })
 
   if (!selectedProduct) {
     return (
@@ -46,6 +44,13 @@ export default function ProductDetailsView() {
     )
   }
 
+  const commentsList = (apiComments || []).map(c => ({
+    name: c.userName || "کاربر مهمان",
+    text: c.text,
+    rating: c.rating || 5,
+    date: c.date || "",
+  }))
+
   const isInCart = !!cart.find((item) => item.id === selectedProduct.id)
 
   const formatPrice = (amount: number) => {
@@ -59,19 +64,24 @@ export default function ProductDetailsView() {
   const handlePostComment = (e: React.FormEvent) => {
     e.preventDefault()
     if (!commentText.trim()) return
-    const newComment = {
-      name: "کاربر مهمان",
-      text: commentText,
-      rating: 5,
-      date: "۱۴۰۵/۰۴/۰۹"
-    }
-    setCommentsList([newComment, ...commentsList])
-    setCommentText("")
+
+    postCommentMutation.mutate(
+      {
+        text: commentText,
+        rating: 5,
+        name: user?.name,
+      },
+      {
+        onSuccess: () => {
+          setCommentText("")
+        },
+      }
+    )
   }
 
-  // Find similar products in the same category (excluding current)
-  const similarProducts = MOCK_PRODUCTS.filter(
-    (p) => p.category === selectedProduct.category && p.id !== selectedProduct.id
+  // Similar products from same category
+  const similarProducts = (categoryProductsData?.items || []).filter(
+    (p) => p.id !== selectedProduct.id
   ).slice(0, 3)
 
   return (
@@ -226,33 +236,46 @@ export default function ProductDetailsView() {
             dir="rtl"
           />
           <div className="flex justify-end">
-            <Button type="submit" size="sm" className="rounded-xl font-bold cursor-pointer">
-              {t("addComment")}
+            <Button
+              type="submit"
+              size="sm"
+              disabled={postCommentMutation.isPending}
+              className="rounded-xl font-bold cursor-pointer"
+            >
+              {postCommentMutation.isPending ? "در حال ثبت..." : t("addComment")}
             </Button>
           </div>
         </form>
 
         {/* Comment list */}
-        <div className="flex flex-col gap-4 max-w-3xl">
-          {commentsList.map((comm, idx) => (
-            <div key={idx} className="p-5 border border-border/40 rounded-2xl bg-muted/10">
-              <div className="flex items-center justify-between gap-4 mb-2">
-                <div className="flex items-center gap-2">
-                  <div className="flex size-7 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-xs uppercase">
-                    {comm.name.charAt(0)}
+        {isCommentsLoading ? (
+          <div className="flex flex-col gap-4 max-w-3xl">
+            <div className="h-20 rounded-2xl bg-neutral-200 dark:bg-neutral-800 animate-pulse" />
+          </div>
+        ) : commentsList.length > 0 ? (
+          <div className="flex flex-col gap-4 max-w-3xl">
+            {commentsList.map((comm, idx) => (
+              <div key={idx} className="p-5 border border-border/40 rounded-2xl bg-muted/10">
+                <div className="flex items-center justify-between gap-4 mb-2">
+                  <div className="flex items-center gap-2">
+                    <div className="flex size-7 items-center justify-center rounded-full bg-primary/10 text-primary font-bold text-xs uppercase">
+                      {comm.name.charAt(0)}
+                    </div>
+                    <span className="text-xs font-extrabold text-foreground">
+                      {comm.name}
+                    </span>
                   </div>
-                  <span className="text-xs font-extrabold text-foreground">
-                    {comm.name}
-                  </span>
+                  {comm.date && <span className="text-[10px] text-muted-foreground font-semibold">{comm.date}</span>}
                 </div>
-                <span className="text-[10px] text-muted-foreground font-semibold">{comm.date}</span>
+                <p className="text-xs sm:text-sm text-muted-foreground leading-6">
+                  {comm.text}
+                </p>
               </div>
-              <p className="text-xs sm:text-sm text-muted-foreground leading-6">
-                {comm.text}
-              </p>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-xs text-muted-foreground font-semibold">هنوز نظری برای این محصول ثبت نشده است.</p>
+        )}
       </div>
 
       {/* Similar products */}

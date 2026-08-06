@@ -5,6 +5,7 @@ import { useLanguage } from "../LanguageContext"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import { Lock, Eye, EyeOff, Check } from "lucide-react"
+import { useChangePassword } from "@/hooks/useAuth"
 
 interface Toast {
   message: string
@@ -25,9 +26,12 @@ export default function ChangePasswordForm({ onToast }: Props) {
   const [showConfirm, setShowConfirm] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  const changePasswordMutation = useChangePassword()
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
+
     if (newPwd.length < 6) {
       setError(t("passwordTooShort"))
       return
@@ -36,11 +40,21 @@ export default function ChangePasswordForm({ onToast }: Props) {
       setError(t("passwordMismatch"))
       return
     }
-    // Simulate password change (mock)
-    setCurrentPwd("")
-    setNewPwd("")
-    setConfirmPwd("")
-    onToast({ message: t("passwordUpdateSuccess"), type: "success" })
+
+    changePasswordMutation.mutate(
+      { currentPassword: currentPwd, newPassword: newPwd },
+      {
+        onSuccess: () => {
+          setCurrentPwd("")
+          setNewPwd("")
+          setConfirmPwd("")
+          onToast({ message: t("passwordUpdateSuccess"), type: "success" })
+        },
+        onError: (err: any) => {
+          setError(err?.message || "رمز عبور فعلی نامعتبر است")
+        },
+      }
+    )
   }
 
   return (
@@ -78,9 +92,14 @@ export default function ChangePasswordForm({ onToast }: Props) {
         </p>
       )}
 
-      <Button type="submit" size="sm" className="self-start gap-1.5 rounded-xl cursor-pointer">
+      <Button
+        type="submit"
+        size="sm"
+        disabled={changePasswordMutation.isPending}
+        className="self-start gap-1.5 rounded-xl cursor-pointer"
+      >
         <Check className="size-3.5" />
-        {t("saveChanges")}
+        {changePasswordMutation.isPending ? "در حال ثبت..." : t("saveChanges")}
       </Button>
     </form>
   )

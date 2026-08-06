@@ -1,6 +1,8 @@
 "use client"
 
-import React, { createContext, useContext, useState } from "react"
+import React, { createContext, useContext, useState, useEffect } from "react"
+import { useUserProfile, useLogout } from "@/hooks/useAuth"
+import { useWishlist, useToggleWishlist } from "@/hooks/useWishlist"
 
 export interface CartItem {
   id: string
@@ -58,6 +60,7 @@ export interface Order {
 }
 
 export interface User {
+  id?: string
   name: string
   email: string
   phone?: string
@@ -83,6 +86,7 @@ interface AppContextType {
   setShowLogin: (show: boolean) => void
   user: User | null
   setUser: (user: User | null) => void
+  logout: () => void
   addresses: Address[]
   addAddress: (address: Omit<Address, "id">) => void
   updateAddress: (id: string, address: Omit<Address, "id">) => void
@@ -93,64 +97,52 @@ interface AppContextType {
   toggleWishlist: (product: Product) => void
 }
 
-const AppContext = createContext<AppContextType | undefined>(undefined)
-
-const MOCK_ORDERS: Order[] = [
-  {
-    id: "ORD-10042",
-    date: "۱۴۰۵/۰۳/۱۵",
-    status: "delivered",
-    totalPrice: 5050000,
-    paymentStatus: "paid",
-    items: [
-      { id: "p1", name: "تابلو نقاشی رنگ‌روغن «افق طلایی»", price: 3200000, quantity: 1, image: "https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?auto=format&fit=crop&w=400&q=80" },
-      { id: "p2", name: "تابلو آبرنگ «باغ در سپیده‌دم»", price: 1850000, quantity: 1, image: "https://images.unsplash.com/photo-1549887534-1541e9326642?auto=format&fit=crop&w=400&q=80" },
-    ],
-  },
-  {
-    id: "ORD-10038",
-    date: "۱۴۰۵/۰۲/۲۸",
-    status: "shipped",
-    totalPrice: 680000,
-    paymentStatus: "paid",
-    items: [
-      { id: "p3", name: "دیوارکوب ماکرامه گره‌دار بوهو", price: 680000, quantity: 1, image: "https://images.unsplash.com/photo-1611486212557-88be5ff6f941?auto=format&fit=crop&w=400&q=80" },
-    ],
-  },
-  {
-    id: "ORD-10029",
-    date: "۱۴۰۵/۰۱/۱۰",
-    status: "processing",
-    totalPrice: 2750000,
-    paymentStatus: "paid",
-    items: [
-      { id: "p4", name: "تابلو مینیاتور «شاهنامه»", price: 2750000, quantity: 1, image: "https://images.unsplash.com/photo-1580137189272-c9379f8864fd?auto=format&fit=crop&w=400&q=80" },
-    ],
-  },
-]
-
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [currentView, setCurrentView] = useState<View>("home")
-  const [cart, setCart] = useState<CartItem[]>([])
+  const [cart, setCart] = useState<CartItem[]>(() => {
+    if (typeof window !== "undefined") {
+      try {
+        const saved = localStorage.getItem("artisa_cart")
+        return saved ? JSON.parse(saved) : []
+      } catch {
+        return []
+      }
+    }
+    return []
+  })
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [showLogin, setShowLogin] = useState(false)
-  const [user, setUser] = useState<User | null>(null)
-  const [addresses, setAddresses] = useState<Address[]>([
-    {
-      id: "addr-1",
-      title: "خانه",
-      fullName: "کاربر نمونه",
-      phone: "09121234567",
-      province: "تهران",
-      city: "تهران",
-      postalCode: "1234567890",
-      addressLine: "خیابان ولیعصر، کوچه گلستان، پلاک ۱۲، واحد ۳",
-      isDefault: true,
-    },
-  ])
-  const [orders] = useState<Order[]>(MOCK_ORDERS)
-  const [wishlist, setWishlist] = useState<Product[]>([])
+  const [addresses, setAddresses] = useState<Address[]>([])
+
+  // User Profile Query from TanStack Query
+  const { data: userProfileData } = useUserProfile()
+  const logoutMutation = useLogout()
+
+  const user: User | null = userProfileData
+    ? {
+        id: userProfileData.id,
+        name: userProfileData.name,
+        email: userProfileData.email,
+        phone: userProfileData.phone,
+        createdAt: userProfileData.createdAt,
+        role: userProfileData.role,
+      }
+    : null
+
+  // Backend Wishlist Sync
+  const { data: backendWishlist } = useWishlist()
+  const toggleWishlistMutation = useToggleWishlist()
+  const [localWishlist, setLocalWishlist] = useState<Product[]>([])
+
+  const wishlist = user ? backendWishlist || [] : localWishlist
+
+  // Save Cart to LocalStorage
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("artisa_cart", JSON.stringify(cart))
+    }
+  }, [cart])
 
   const addToCart = (product: Product) => {
     setCart((prev) => {
@@ -165,7 +157,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         {
           id: product.id,
           name: product.name,
-          nameEn: product.nameEn,
+          nameEn: product.nameEn || product.name,
           price: product.price,
           quantity: 1,
           image: product.image,
@@ -188,7 +180,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     )
   }
 
-  const clearCart = () => setCart([])
+  const clearCart = () => {
+    setCart([])
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("artisa_cart")
+    }
+  }
 
   const addAddress = (address: Omit<Address, "id">) => {
     const newAddr: Address = { ...address, id: `addr-${Date.now()}` }
@@ -221,11 +218,19 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }
 
   const toggleWishlist = (product: Product) => {
-    setWishlist((prev) => {
-      const exists = prev.find((p) => p.id === product.id)
-      if (exists) return prev.filter((p) => p.id !== product.id)
-      return [...prev, product]
-    })
+    if (user) {
+      toggleWishlistMutation.mutate(product.id)
+    } else {
+      setLocalWishlist((prev) => {
+        const exists = prev.find((p) => p.id === product.id)
+        if (exists) return prev.filter((p) => p.id !== product.id)
+        return [...prev, product]
+      })
+    }
+  }
+
+  const logout = () => {
+    logoutMutation.mutate()
   }
 
   return (
@@ -245,13 +250,14 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         showLogin,
         setShowLogin,
         user,
-        setUser,
+        setUser: () => {},
+        logout,
         addresses,
         addAddress,
         updateAddress,
         deleteAddress,
         setDefaultAddress,
-        orders,
+        orders: [],
         wishlist,
         toggleWishlist,
       }}
@@ -260,6 +266,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     </AppContext.Provider>
   )
 }
+
+const AppContext = createContext<AppContextType | undefined>(undefined)
 
 export function useApp() {
   const context = useContext(AppContext)

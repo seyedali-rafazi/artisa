@@ -2,10 +2,11 @@
 
 import React, { useState } from "react"
 import { useLanguage } from "../LanguageContext"
-import { useApp, Order } from "../AppContext"
+import { Order } from "../AppContext"
 import { Package, ChevronDown, ChevronUp } from "lucide-react"
+import { useUserOrders } from "@/hooks/useOrders"
 
-const STATUS_STYLES: Record<Order["status"], string> = {
+const STATUS_STYLES: Record<string, string> = {
   pending: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
   processing: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
   shipped: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400",
@@ -13,7 +14,7 @@ const STATUS_STYLES: Record<Order["status"], string> = {
   cancelled: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
 }
 
-const PAYMENT_STYLES: Record<Order["paymentStatus"], string> = {
+const PAYMENT_STYLES: Record<string, string> = {
   paid: "text-emerald-600 dark:text-emerald-400",
   unpaid: "text-destructive",
   refunded: "text-amber-600 dark:text-amber-400",
@@ -21,30 +22,49 @@ const PAYMENT_STYLES: Record<Order["paymentStatus"], string> = {
 
 export default function OrderHistory() {
   const { t } = useLanguage()
-  const { orders } = useApp()
+  const { data: apiOrders, isLoading } = useUserOrders()
   const [expanded, setExpanded] = useState<string | null>(null)
+
+  const orders = (apiOrders || []).map(o => ({
+    id: o.id,
+    date: o.date,
+    status: (o.status || "processing") as Order["status"],
+    totalPrice: o.totalPrice,
+    paymentStatus: (o.paymentStatus || "paid") as Order["paymentStatus"],
+    items: o.items || [],
+  }))
 
   const formatPrice = (amount: number) =>
     `${amount.toLocaleString("fa-IR")} تومان`
 
-  const statusLabel = (s: Order["status"]) => {
-    const map: Record<Order["status"], string> = {
-      pending: t("statusPending"),
-      processing: t("statusProcessing"),
-      shipped: t("statusShipped"),
-      delivered: t("statusDelivered"),
-      cancelled: t("statusCancelled"),
+  const statusLabel = (s: string) => {
+    const map: Record<string, string> = {
+      pending: t("statusPending") || "در انتظار",
+      processing: t("statusProcessing") || "در حال پردازش",
+      shipped: t("statusShipped") || "ارسال شده",
+      delivered: t("statusDelivered") || "تحویل شده",
+      cancelled: t("statusCancelled") || "لغو شده",
     }
-    return map[s]
+    return map[s] || s
   }
 
-  const paymentLabel = (s: Order["paymentStatus"]) => {
-    const map: Record<Order["paymentStatus"], string> = {
-      paid: t("paymentPaid"),
-      unpaid: t("paymentUnpaid"),
-      refunded: t("paymentRefunded"),
+  const paymentLabel = (s: string) => {
+    const map: Record<string, string> = {
+      paid: t("paymentPaid") || "پرداخت شده",
+      unpaid: t("paymentUnpaid") || "پرداخت نشده",
+      refunded: t("paymentRefunded") || "استرداد شده",
     }
-    return map[s]
+    return map[s] || s
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex flex-col gap-3">
+        {[1, 2].map((i) => (
+          <div key={i} className="h-16 rounded-2xl bg-neutral-200 dark:bg-neutral-800 animate-pulse" />
+        ))}
+      </div>
+    )
   }
 
   if (orders.length === 0) {
@@ -89,10 +109,10 @@ export default function OrderHistory() {
               </div>
 
               <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${STATUS_STYLES[order.status]}`}>
+                <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${STATUS_STYLES[order.status] || STATUS_STYLES.processing}`}>
                   {statusLabel(order.status)}
                 </span>
-                <span className={`text-[10px] font-bold ${PAYMENT_STYLES[order.paymentStatus]}`}>
+                <span className={`text-[10px] font-bold ${PAYMENT_STYLES[order.paymentStatus] || PAYMENT_STYLES.paid}`}>
                   {paymentLabel(order.paymentStatus)}
                 </span>
                 <span className="text-xs font-extrabold text-primary">

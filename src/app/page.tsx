@@ -8,33 +8,35 @@ import CategoriesGrid from "@/components/home/CategoriesGrid"
 import SpecialOffers from "@/components/home/SpecialOffers"
 import BlogSection from "@/components/home/BlogSection"
 import ProductBox from "@/components/home/ProductBox"
-import { MOCK_PRODUCTS } from "@/data/products"
 import { X, Search } from "lucide-react"
+import { useProducts } from "@/hooks/useProducts"
 
 function MainAppContent() {
   const { searchQuery, setSearchQuery } = useApp()
   const { t } = useLanguage()
 
-  // Filter products based on search or category filter
-  const filteredProducts = MOCK_PRODUCTS.filter((prod) => {
-    if (!searchQuery) return true
-    
-    // Category match
-    if (searchQuery === prod.category) return true
+  // Dynamic backend fetch for search / category filtering
+  const isSpecialSearch = searchQuery === "special"
+  const isCategorySearch = ["تابلو نقاشی", "هنر دیواری", "مجسمه و دکوری", "قاب و فریم", "هنر مدرن"].includes(searchQuery)
 
-    // Amazing offers quick tag match
-    if (searchQuery === "special" && prod.isSpecial) return true
+  const { data: searchApiData, isLoading: isSearchLoading } = useProducts(
+    searchQuery
+      ? {
+          search: !isSpecialSearch && !isCategorySearch ? searchQuery : undefined,
+          category: isCategorySearch ? searchQuery : undefined,
+          isSpecial: isSpecialSearch ? true : undefined,
+          limit: 50,
+        }
+      : {}
+  )
 
-    // General text search
-    const query = searchQuery.toLowerCase()
-    return (
-      prod.name.toLowerCase().includes(query) ||
-      prod.description?.toLowerCase().includes(query) ||
-      prod.category.toLowerCase().includes(query)
-    )
+  const { data: bestSellersApiData, isLoading: isBestSellersLoading } = useProducts({
+    isBestSeller: true,
+    limit: 8,
   })
 
-  const bestSellers = MOCK_PRODUCTS.filter((p) => p.isBestSeller)
+  const filteredProducts = searchApiData?.items || []
+  const bestSellers = bestSellersApiData?.items || []
 
   return (
     <div className="flex flex-col gap-12">
@@ -59,7 +61,13 @@ function MainAppContent() {
             </button>
           </div>
 
-          {filteredProducts.length > 0 ? (
+          {isSearchLoading ? (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="h-64 rounded-2xl bg-neutral-200 dark:bg-neutral-800 animate-pulse" />
+              ))}
+            </div>
+          ) : filteredProducts.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
               {filteredProducts.map((product) => (
                 <ProductBox key={product.id} product={product} />
@@ -85,11 +93,24 @@ function MainAppContent() {
               <p className="text-xs text-muted-foreground">{t("bestSellersSubtitle")}</p>
               <div className="h-1 w-12 bg-primary rounded-full mt-1" />
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-              {bestSellers.map((product) => (
-                <ProductBox key={product.id} product={product} />
-              ))}
-            </div>
+
+            {isBestSellersLoading ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="h-64 rounded-2xl bg-neutral-200 dark:bg-neutral-800 animate-pulse" />
+                ))}
+              </div>
+            ) : bestSellers.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
+                {bestSellers.map((product) => (
+                  <ProductBox key={product.id} product={product} />
+                ))}
+              </div>
+            ) : (
+              <div className="p-8 text-center text-xs text-muted-foreground font-semibold border border-border/40 rounded-2xl">
+                محصولی در بخش پرفروش‌ترین‌ها یافت نشد.
+              </div>
+            )}
           </section>
 
           <BlogSection />
