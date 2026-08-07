@@ -73,6 +73,7 @@ async function refreshAccessToken(): Promise<string | null> {
   try {
     const res = await fetch(`${BASE_URL}/api/v1/auth/refresh`, {
       method: 'POST',
+      credentials: 'include',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ refresh_token: refreshToken }),
     });
@@ -128,12 +129,19 @@ export async function fetchApi<T = any>(
   };
 
   const response = await fetch(url, {
+    credentials: 'include',
     ...customOptions,
     headers,
   });
 
   // Handle 401 Unauthorized with Automatic Refresh Token
-  if (response.status === 401 && !_isRetry && !endpoint.includes('/auth/login') && !endpoint.includes('/auth/register')) {
+  if (
+    response.status === 401 &&
+    !_isRetry &&
+    !endpoint.includes('/auth/login') &&
+    !endpoint.includes('/auth/register') &&
+    !endpoint.includes('/auth/google')
+  ) {
     if (isRefreshing) {
       return new Promise((resolve, reject) => {
         failedQueue.push({ resolve, reject });

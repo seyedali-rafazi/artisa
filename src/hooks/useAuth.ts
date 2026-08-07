@@ -7,6 +7,9 @@ export interface UserProfile {
   email: string;
   phone?: string;
   role?: string;
+  avatar?: string;
+  provider?: string;
+  email_verified?: boolean;
   createdAt?: string;
 }
 
@@ -33,6 +36,25 @@ export function useLogin() {
   return useMutation({
     mutationFn: (credentials: { email: string; password: string }) =>
       api.post<AuthResponse>('/api/v1/auth/login', credentials),
+    onSuccess: (data) => {
+      if (data?.token) {
+        setAuthTokens(data.token, data.refresh_token);
+        queryClient.setQueryData(['user-profile'], data.user);
+        queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+        queryClient.invalidateQueries({ queryKey: ['wishlist'] });
+        queryClient.invalidateQueries({ queryKey: ['user-orders'] });
+        queryClient.invalidateQueries({ queryKey: ['addresses'] });
+      }
+    },
+  });
+}
+
+export function useGoogleLoginAuth() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (credential: string) =>
+      api.post<AuthResponse>('/api/v1/auth/google', { credential }),
     onSuccess: (data) => {
       if (data?.token) {
         setAuthTokens(data.token, data.refresh_token);

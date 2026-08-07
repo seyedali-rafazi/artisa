@@ -4,8 +4,10 @@ import React, { useState } from "react"
 import { useApp } from "../AppContext"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
-import { X, Lock, Mail, UserCheck, AlertCircle } from "lucide-react"
-import { useLogin, useRegister } from "@/hooks/useAuth"
+import { X, Lock, Mail, UserCheck, AlertCircle, Loader2 } from "lucide-react"
+import { useLogin, useRegister, useGoogleLoginAuth } from "@/hooks/useAuth"
+import GoogleLoginButton from "../auth/GoogleLoginButton"
+import { CredentialResponse } from "@react-oauth/google"
 
 export default function LoginDialog() {
   const { showLogin, setShowLogin } = useApp()
@@ -18,6 +20,7 @@ export default function LoginDialog() {
 
   const loginMutation = useLogin()
   const registerMutation = useRegister()
+  const googleAuthMutation = useGoogleLoginAuth()
 
   if (!showLogin) return null
 
@@ -57,6 +60,23 @@ export default function LoginDialog() {
     }
   }
 
+  const handleGoogleSuccess = (credentialResponse: CredentialResponse) => {
+    if (!credentialResponse.credential) {
+      setErrorMessage("توکن گوگلی دریافت نشد")
+      return
+    }
+    setErrorMessage(null)
+    googleAuthMutation.mutate(credentialResponse.credential, {
+      onSuccess: () => {
+        setShowLogin(false)
+        resetForm()
+      },
+      onError: (err: any) => {
+        setErrorMessage(err?.message || "خطا در ورود با گوگل")
+      },
+    })
+  }
+
   const resetForm = () => {
     setEmail("")
     setPassword("")
@@ -65,7 +85,7 @@ export default function LoginDialog() {
     setErrorMessage(null)
   }
 
-  const isPending = loginMutation.isPending || registerMutation.isPending
+  const isPending = loginMutation.isPending || registerMutation.isPending || googleAuthMutation.isPending
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
@@ -83,7 +103,7 @@ export default function LoginDialog() {
         </button>
 
         {/* Dialog Header */}
-        <div className="text-center mt-2 mb-2 flex flex-col items-center">
+        <div className="text-center mt-2 mb-1 flex flex-col items-center">
           <div className="flex size-12 items-center justify-center rounded-2xl bg-primary/10 text-primary mb-3">
             <Lock className="size-6" />
           </div>
@@ -102,8 +122,32 @@ export default function LoginDialog() {
           </div>
         )}
 
+        {/* Google Sign In Option */}
+        <div className="flex flex-col items-center gap-2">
+          <GoogleLoginButton
+            onSuccess={handleGoogleSuccess}
+            onError={() => setErrorMessage("ارتباط با حساب گوگل ناموفق بود")}
+            disabled={isPending}
+          />
+          {googleAuthMutation.isPending && (
+            <div className="flex items-center gap-2 text-xs text-primary font-semibold">
+              <Loader2 className="size-4 animate-spin" />
+              <span>در حال اعتبارسنجی با گوگل...</span>
+            </div>
+          )}
+        </div>
+
+        {/* Divider */}
+        <div className="relative flex items-center justify-center my-0.5">
+          <div className="border-t border-border/40 w-full" />
+          <span className="bg-background px-3 text-[10px] font-semibold text-muted-foreground shrink-0">
+            یا با ایمیل
+          </span>
+          <div className="border-t border-border/40 w-full" />
+        </div>
+
         {/* Input Form */}
-        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-3.5">
           {isRegister && (
             <>
               <div className="flex flex-col gap-1.5">
@@ -167,9 +211,13 @@ export default function LoginDialog() {
           <Button
             type="submit"
             disabled={isPending}
-            className="w-full gap-2 rounded-xl font-bold cursor-pointer mt-2"
+            className="w-full gap-2 rounded-xl font-bold cursor-pointer mt-1"
           >
-            <UserCheck className="size-4" />
+            {isPending ? (
+              <Loader2 className="size-4 animate-spin" />
+            ) : (
+              <UserCheck className="size-4" />
+            )}
             <span>
               {isPending
                 ? "در حال پردازش..."
@@ -181,7 +229,7 @@ export default function LoginDialog() {
         </form>
 
         {/* Footer switch trigger */}
-        <div className="text-center text-[10px] text-muted-foreground border-t border-border/40 pt-4 mt-2">
+        <div className="text-center text-[10px] text-muted-foreground border-t border-border/40 pt-3 mt-1">
           {isRegister ? (
             <span>
               قبلاً ثبت نام کرده‌اید؟{" "}

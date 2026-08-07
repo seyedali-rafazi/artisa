@@ -5,6 +5,7 @@ import { LanguageProvider } from "@/components/LanguageContext";
 import { AppProvider } from "@/components/AppContext";
 import AppShell from "@/components/layout/AppShell";
 import QueryProvider from "@/components/providers/QueryProvider";
+import GoogleAuthProvider from "@/components/providers/GoogleAuthProvider";
 
 const vazirmatn = localFont({
   src: [
@@ -56,11 +57,13 @@ export default function RootLayout({
     <html lang="fa" dir="rtl" className={`h-full antialiased ${vazirmatn.variable}`}>
       <body className="min-h-full flex flex-col font-sans">
         <QueryProvider>
-          <LanguageProvider>
-            <AppProvider>
-              <AppShell>{children}</AppShell>
-            </AppProvider>
-          </LanguageProvider>
+          <GoogleAuthProvider>
+            <LanguageProvider>
+              <AppProvider>
+                <AppShell>{children}</AppShell>
+              </AppProvider>
+            </LanguageProvider>
+          </GoogleAuthProvider>
         </QueryProvider>
       </body>
     </html>

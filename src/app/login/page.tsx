@@ -4,7 +4,9 @@ import React, { useState } from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
-import { useLogin, useRegister } from "@/hooks/useAuth"
+import { useLogin, useRegister, useGoogleLoginAuth } from "@/hooks/useAuth"
+import GoogleLoginButton from "@/components/auth/GoogleLoginButton"
+import { CredentialResponse } from "@react-oauth/google"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { 
@@ -17,13 +19,15 @@ import {
   ArrowRight, 
   CheckCircle2, 
   Sparkles,
-  ShieldCheck
+  ShieldCheck,
+  Loader2
 } from "lucide-react"
 
 export default function LoginPage() {
   const router = useRouter()
   const loginMutation = useLogin()
   const registerMutation = useRegister()
+  const googleAuthMutation = useGoogleLoginAuth()
 
   const [isSignup, setIsSignup] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
@@ -40,7 +44,27 @@ export default function LoginPage() {
   const [errorMsg, setErrorMsg] = useState("")
   const [successMsg, setSuccessMsg] = useState("")
 
-  const isPending = loginMutation.isPending || registerMutation.isPending
+  const isPending = loginMutation.isPending || registerMutation.isPending || googleAuthMutation.isPending
+
+  const handleGoogleSuccess = (credentialResponse: CredentialResponse) => {
+    if (!credentialResponse.credential) {
+      setErrorMsg("توکن گوگلی دریافت نشد")
+      return
+    }
+    setErrorMsg("")
+    setSuccessMsg("")
+    googleAuthMutation.mutate(credentialResponse.credential, {
+      onSuccess: () => {
+        setSuccessMsg("ورود با گوگل با موفقیت انجام شد. در حال انتقال...")
+        setTimeout(() => {
+          router.push("/profile")
+        }, 800)
+      },
+      onError: (err: any) => {
+        setErrorMsg(err?.message || "خطا در ورود با گوگل")
+      },
+    })
+  }
 
   const handleLoginSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -183,6 +207,30 @@ export default function LoginPage() {
             </div>
           )}
 
+          {/* Google Sign In Option */}
+          <div className="flex flex-col items-center gap-2 mb-4">
+            <GoogleLoginButton
+              onSuccess={handleGoogleSuccess}
+              onError={() => setErrorMsg("ارتباط با حساب گوگل ناموفق بود")}
+              disabled={isPending}
+            />
+            {googleAuthMutation.isPending && (
+              <div className="flex items-center gap-2 text-xs text-primary font-semibold">
+                <Loader2 className="size-4 animate-spin" />
+                <span>در حال اعتبارسنجی با گوگل...</span>
+              </div>
+            )}
+          </div>
+
+          {/* Divider */}
+          <div className="relative flex items-center justify-center mb-6">
+            <div className="border-t border-border/40 w-full" />
+            <span className="bg-background px-3 text-[10px] font-semibold text-muted-foreground shrink-0">
+              یا با ایمیل
+            </span>
+            <div className="border-t border-border/40 w-full" />
+          </div>
+
           {/* ─────────────────── LOGIN FORM ─────────────────── */}
           {!isSignup && (
             <form onSubmit={handleLoginSubmit} className="flex flex-col gap-4">
@@ -243,6 +291,7 @@ export default function LoginPage() {
                 disabled={isPending}
                 className="w-full rounded-2xl font-extrabold text-sm gap-2 cursor-pointer shadow-lg shadow-primary/25 mt-2"
               >
+                {isPending ? <Loader2 className="size-4 animate-spin" /> : null}
                 <span>{isPending ? "در حال پردازش..." : "ورود به حساب کاربری"}</span>
               </Button>
             </form>
@@ -335,7 +384,11 @@ export default function LoginPage() {
                 disabled={isPending}
                 className="w-full rounded-2xl font-extrabold text-sm gap-2 cursor-pointer shadow-lg shadow-primary/25 mt-2"
               >
-                <Sparkles className="size-4" />
+                {isPending ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Sparkles className="size-4" />
+                )}
                 <span>{isPending ? "در حال ثبت‌نام..." : "ثبت‌نام و ایجاد حساب"}</span>
               </Button>
             </form>
