@@ -12,6 +12,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const router = useRouter();
   const { data: user, isLoading, isError } = useUserProfile();
   const [collapsed, setCollapsed] = useState(false);
+  const [mobileOpen, setMobileOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -56,12 +57,17 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="min-h-screen bg-muted/20 text-foreground flex" dir="rtl">
       {/* Sidebar */}
-      <AdminSidebar collapsed={collapsed} onToggleCollapse={() => setCollapsed(!collapsed)} />
+      <AdminSidebar
+        collapsed={collapsed}
+        onToggleCollapse={() => setCollapsed(!collapsed)}
+        mobileOpen={mobileOpen}
+        onMobileClose={() => setMobileOpen(false)}
+      />
 
       {/* Main Content Area */}
-      <div className={`flex-1 transition-all duration-300 flex flex-col ${collapsed ? 'mr-20' : 'mr-64'}`}>
-        <AdminHeader />
-        <main className="p-6 flex-1">{children}</main>
+      <div className={`flex-1 transition-all duration-300 flex flex-col mr-0 ${collapsed ? 'md:mr-20' : 'md:mr-64'}`}>
+        <AdminHeader onMobileMenuToggle={() => setMobileOpen(!mobileOpen)} />
+        <main className="p-3 sm:p-6 flex-1 overflow-x-hidden">{children}</main>
       </div>
     </div>
   );

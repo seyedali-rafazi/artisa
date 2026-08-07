@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import Image from 'next/image';
+import ProductImage from '@/components/ui/ProductImage';
 import {
   useAdminProducts,
   useArchiveProduct,
@@ -126,7 +126,7 @@ export default function AdminProductsPage() {
                   <tr key={product.id} className="hover:bg-muted/20 transition-colors">
                     <td className="p-3">
                       <div className="relative size-12 rounded-xl overflow-hidden border border-border shrink-0">
-                        <Image src={product.image || '/placeholder.png'} alt={product.name} fill className="object-cover" unoptimized />
+                        <ProductImage src={product.image} alt={product.name} fill className="object-cover" />
                       </div>
                     </td>
                     <td className="p-3">

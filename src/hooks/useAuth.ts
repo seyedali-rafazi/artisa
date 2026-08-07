@@ -136,6 +136,9 @@ export function useLogout() {
       removeAuthToken();
       queryClient.setQueryData(['user-profile'], null);
       queryClient.clear();
+      if (typeof window !== 'undefined') {
+        window.location.href = '/';
+      }
     },
   });
 }

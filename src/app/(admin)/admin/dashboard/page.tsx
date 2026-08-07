@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
+import ProductImage from '@/components/ui/ProductImage';
 import { useAdminDashboard } from '@/hooks/useAdmin';
 import {
   DollarSign,
@@ -110,47 +110,47 @@ export default function AdminDashboardPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-6" dir="rtl">
-      {/* KPI Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+    <div className="flex flex-col gap-4 sm:gap-6" dir="rtl">
+      {/* KPI Cards Grid - Responsive from 2 cols on mobile to 5 cols on desktop */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         {kpiCards.map((kpi, idx) => {
           const Icon = kpi.icon;
           return (
             <div
               key={idx}
-              className="rounded-3xl border border-border/60 bg-background/95 backdrop-blur-xl p-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
+              className="rounded-2xl sm:rounded-3xl border border-border/60 bg-background/95 backdrop-blur-xl p-3 sm:p-4 shadow-sm hover:shadow-md transition-all flex flex-col justify-between"
             >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-[11px] font-bold text-muted-foreground">{kpi.title}</span>
-                <div className={`p-2 rounded-2xl ${kpi.color}`}>
-                  <Icon className="size-4" />
+              <div className="flex items-center justify-between mb-2 gap-1">
+                <span className="text-[10px] sm:text-[11px] font-bold text-muted-foreground truncate">{kpi.title}</span>
+                <div className={`p-1.5 sm:p-2 rounded-xl sm:rounded-2xl shrink-0 ${kpi.color}`}>
+                  <Icon className="size-3.5 sm:size-4" />
                 </div>
               </div>
-              <span className="text-base sm:text-lg font-black text-foreground">{kpi.value}</span>
+              <span className="text-xs sm:text-base font-black text-foreground tracking-tight">{kpi.value}</span>
             </div>
           );
         })}
       </div>
 
       {/* Analytics & Best Sellers Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* Best Selling Products */}
-        <div className="lg:col-span-2 rounded-3xl border border-border/60 bg-background/95 backdrop-blur-xl p-6 shadow-sm flex flex-col gap-4">
+        <div className="lg:col-span-2 rounded-2xl sm:rounded-3xl border border-border/60 bg-background/95 backdrop-blur-xl p-4 sm:p-6 shadow-sm flex flex-col gap-4">
           <div className="flex items-center justify-between border-b border-border/40 pb-3">
-            <h2 className="text-sm font-black text-foreground flex items-center gap-2">
+            <h2 className="text-xs sm:text-sm font-black text-foreground flex items-center gap-2">
               <Sparkles className="size-4 text-primary" />
               <span>پرفروش‌ترین محصولات</span>
             </h2>
             <Link
               href="/admin/products"
-              className="text-xs font-bold text-primary hover:underline flex items-center gap-1"
+              className="text-[11px] sm:text-xs font-bold text-primary hover:underline flex items-center gap-1"
             >
-              <span>مشاهده همه محصولات</span>
+              <span>مشاهده همه</span>
               <ArrowUpRight className="size-3.5" />
             </Link>
           </div>
 
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-2.5">
             {stats.best_selling_products?.length === 0 ? (
               <span className="text-xs font-semibold text-muted-foreground text-center py-6">
                 هنوز سفارشی ثبت نشده است.
@@ -159,20 +159,20 @@ export default function AdminDashboardPage() {
               stats.best_selling_products?.map((item, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center justify-between p-3 rounded-2xl bg-muted/20 border border-border/40 hover:bg-muted/40 transition-colors"
+                  className="flex items-center justify-between p-2.5 sm:p-3 rounded-2xl bg-muted/20 border border-border/40 hover:bg-muted/40 transition-colors gap-2"
                 >
-                  <div className="flex items-center gap-3">
-                    <div className="relative size-12 rounded-xl overflow-hidden shrink-0 border border-border">
-                      <Image src={item.image || '/placeholder.png'} alt={item.name} fill className="object-cover" unoptimized />
+                  <div className="flex items-center gap-2.5 sm:gap-3 min-w-0">
+                    <div className="relative size-10 sm:size-12 rounded-xl overflow-hidden shrink-0 border border-border">
+                      <ProductImage src={item.image} alt={item.name} fill className="object-cover" />
                     </div>
-                    <div className="flex flex-col">
-                      <span className="text-xs font-bold text-foreground line-clamp-1">{item.name}</span>
+                    <div className="flex flex-col min-w-0">
+                      <span className="text-xs font-bold text-foreground truncate">{item.name}</span>
                       <span className="text-[10px] text-muted-foreground font-semibold">
                         {item.sales} عدد فروخته شده
                       </span>
                     </div>
                   </div>
-                  <span className="text-xs font-extrabold text-primary">
+                  <span className="text-xs font-extrabold text-primary shrink-0">
                     {item.revenue.toLocaleString('fa-IR')} تومان
                   </span>
                 </div>
@@ -182,15 +182,15 @@ export default function AdminDashboardPage() {
         </div>
 
         {/* Categories Distribution */}
-        <div className="rounded-3xl border border-border/60 bg-background/95 backdrop-blur-xl p-6 shadow-sm flex flex-col gap-4">
+        <div className="rounded-2xl sm:rounded-3xl border border-border/60 bg-background/95 backdrop-blur-xl p-4 sm:p-6 shadow-sm flex flex-col gap-4">
           <div className="border-b border-border/40 pb-3">
-            <h2 className="text-sm font-black text-foreground">توزیع دسته‌بندی محصولات</h2>
+            <h2 className="text-xs sm:text-sm font-black text-foreground">توزیع دسته‌بندی محصولات</h2>
           </div>
           <div className="flex flex-col gap-3">
             {stats.categories_distribution?.map((cat, idx) => (
               <div key={idx} className="flex items-center justify-between text-xs">
                 <span className="font-bold text-foreground/80">{cat.category}</span>
-                <span className="px-2.5 py-1 rounded-full bg-primary/10 text-primary font-extrabold">
+                <span className="px-2.5 py-1 rounded-full bg-primary/10 text-primary font-extrabold text-[11px]">
                   {cat.count} محصول
                 </span>
               </div>

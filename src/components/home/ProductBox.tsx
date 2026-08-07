@@ -4,6 +4,7 @@ import React from "react"
 import Link from "next/link"
 import { useApp, Product } from "../AppContext"
 import { Button } from "../ui/button"
+import ProductImage from "../ui/ProductImage"
 import { 
   Star, 
   ShoppingCart, 
@@ -48,11 +49,11 @@ export default function ProductBox({ product }: ProductBoxProps) {
     >
       {/* Product Image and Overlay Tags */}
       <div className="relative aspect-square w-full bg-muted/20 overflow-hidden">
-        <img
+        <ProductImage
           src={product.image}
           alt={product.name}
+          fill
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-          loading="lazy"
         />
 
         {/* Discount Badge */}
