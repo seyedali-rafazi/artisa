@@ -53,6 +53,18 @@ export default function LoginPage() {
 
   const isPending = loginMutation.isPending || registerMutation.isPending || googleAuthMutation.isPending || verifyMutation.isPending
 
+  const handleRedirect = (res: any) => {
+    const user = res?.user || res?.data?.user || res?.data || res;
+    const role = (user?.role || '').toLowerCase();
+    const isSuperUser = Boolean(user?.is_superuser);
+
+    if (role === 'admin' || role === 'superadmin' || role === 'super_admin' || isSuperUser) {
+      router.push('/admin/dashboard');
+    } else {
+      router.push('/profile');
+    }
+  };
+
   const handleGoogleSuccess = (credentialResponse: CredentialResponse) => {
     if (!credentialResponse.credential) {
       setErrorMsg("توکن گوگلی دریافت نشد")
@@ -61,11 +73,11 @@ export default function LoginPage() {
     setErrorMsg("")
     setSuccessMsg("")
     googleAuthMutation.mutate(credentialResponse.credential, {
-      onSuccess: () => {
-        setSuccessMsg("ورود با گوگل با موفقیت انجام شد. در حال انتقال...")
+      onSuccess: (res: any) => {
+        setSuccessMsg("ورود با موفقیت انجام شد. در حال انتقال...")
         setTimeout(() => {
-          router.push("/profile")
-        }, 800)
+          handleRedirect(res)
+        }, 600)
       },
       onError: (err: any) => {
         setErrorMsg(err?.message || "خطا در ورود با گوگل")
@@ -86,11 +98,11 @@ export default function LoginPage() {
     loginMutation.mutate(
       { email: loginIdentifier.trim(), password: loginPassword },
       {
-        onSuccess: () => {
+        onSuccess: (res: any) => {
           setSuccessMsg("ورود با موفقیت انجام شد. در حال انتقال...")
           setTimeout(() => {
-            router.push("/profile")
-          }, 800)
+            handleRedirect(res)
+          }, 600)
         },
         onError: (err: any) => {
           const detail = err?.data?.detail;
@@ -157,11 +169,11 @@ export default function LoginPage() {
     verifyMutation.mutate(
       { email: targetEmail.trim(), code: otpCode },
       {
-        onSuccess: () => {
-          setSuccessMsg("ایمیل شما با موفقیت تایید شد! در حال انتقال به پروفایل...")
+        onSuccess: (res: any) => {
+          setSuccessMsg("ایمیل شما با موفقیت تایید شد! در حال انتقال...")
           setTimeout(() => {
-            router.push("/profile")
-          }, 800)
+            handleRedirect(res)
+          }, 600)
         },
         onError: (err: any) => {
           setErrorMsg(err?.message || "کد تایید وارد شده اشتباه است.")

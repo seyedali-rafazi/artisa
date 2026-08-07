@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState } from "react"
+import { useRouter } from "next/navigation"
 import { useApp } from "../AppContext"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
@@ -12,6 +13,7 @@ import ResendTimer from "../auth/ResendTimer"
 import { CredentialResponse } from "@react-oauth/google"
 
 export default function LoginDialog() {
+  const router = useRouter()
   const { showLogin, setShowLogin } = useApp()
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
@@ -30,6 +32,18 @@ export default function LoginDialog() {
   const resendMutation = useResendVerification()
 
   if (!showLogin) return null
+
+  const handleRedirect = (res: any) => {
+    setShowLogin(false)
+    resetForm()
+    const user = res?.user || res?.data?.user || res?.data || res;
+    const role = (user?.role || '').toLowerCase();
+    const isSuperUser = Boolean(user?.is_superuser);
+
+    if (role === 'admin' || role === 'superadmin' || role === 'super_admin' || isSuperUser) {
+      router.push('/admin/dashboard');
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -56,9 +70,8 @@ export default function LoginDialog() {
       loginMutation.mutate(
         { email, password },
         {
-          onSuccess: () => {
-            setShowLogin(false)
-            resetForm()
+          onSuccess: (res: any) => {
+            handleRedirect(res)
           },
           onError: (err: any) => {
             const detail = err?.data?.detail;
@@ -90,12 +103,11 @@ export default function LoginDialog() {
     verifyMutation.mutate(
       { email: email.trim(), code: otpCode },
       {
-        onSuccess: () => {
+        onSuccess: (res: any) => {
           setSuccessMessage("ایمیل شما با موفقیت تایید شد!")
           setTimeout(() => {
-            setShowLogin(false)
-            resetForm()
-          }, 800)
+            handleRedirect(res)
+          }, 600)
         },
         onError: (err: any) => {
           setErrorMessage(err?.message || "کد تایید وارد شده اشتباه است")
@@ -129,9 +141,8 @@ export default function LoginDialog() {
     }
     setErrorMessage(null)
     googleAuthMutation.mutate(credentialResponse.credential, {
-      onSuccess: () => {
-        setShowLogin(false)
-        resetForm()
+      onSuccess: (res: any) => {
+        handleRedirect(res)
       },
       onError: (err: any) => {
         setErrorMessage(err?.message || "خطا در ورود با گوگل")
