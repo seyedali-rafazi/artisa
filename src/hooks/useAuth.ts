@@ -10,6 +10,7 @@ export interface UserProfile {
   avatar?: string;
   provider?: string;
   email_verified?: boolean;
+  is_verified?: boolean;
   createdAt?: string;
 }
 
@@ -17,6 +18,13 @@ export interface AuthResponse {
   token: string;
   refresh_token?: string;
   user: UserProfile;
+}
+
+export interface RegisterResponse {
+  user_id: string;
+  email: string;
+  is_verified: boolean;
+  message: string;
 }
 
 export function useUserProfile() {
@@ -27,6 +35,36 @@ export function useUserProfile() {
     queryFn: () => api.get<UserProfile>('/api/v1/users/me'),
     enabled: Boolean(token),
     retry: false,
+  });
+}
+
+export function useRegister() {
+  return useMutation({
+    mutationFn: (payload: { name: string; email: string; password: string; phone?: string }) =>
+      api.post<RegisterResponse>('/api/v1/auth/register', payload),
+  });
+}
+
+export function useVerifyEmail() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (payload: { email: string; code: string }) =>
+      api.post<AuthResponse>('/api/v1/auth/verify-email', payload),
+    onSuccess: (data) => {
+      if (data?.token) {
+        setAuthTokens(data.token, data.refresh_token);
+        queryClient.setQueryData(['user-profile'], data.user);
+        queryClient.invalidateQueries({ queryKey: ['user-profile'] });
+      }
+    },
+  });
+}
+
+export function useResendVerification() {
+  return useMutation({
+    mutationFn: (payload: { email: string }) =>
+      api.post<{ message: string }>('/api/v1/auth/resend-verification', payload),
   });
 }
 
@@ -68,19 +106,24 @@ export function useGoogleLoginAuth() {
   });
 }
 
-export function useRegister() {
-  const queryClient = useQueryClient();
-
+export function useForgotPassword() {
   return useMutation({
-    mutationFn: (payload: { name: string; email: string; password: string; phone?: string }) =>
-      api.post<AuthResponse>('/api/v1/auth/register', payload),
-    onSuccess: (data) => {
-      if (data?.token) {
-        setAuthTokens(data.token, data.refresh_token);
-        queryClient.setQueryData(['user-profile'], data.user);
-        queryClient.invalidateQueries({ queryKey: ['user-profile'] });
-      }
-    },
+    mutationFn: (payload: { email: string }) =>
+      api.post<{ message: string }>('/api/v1/auth/forgot-password', payload),
+  });
+}
+
+export function useVerifyResetCode() {
+  return useMutation({
+    mutationFn: (payload: { email: string; code: string }) =>
+      api.post<{ valid: boolean }>('/api/v1/auth/verify-reset-code', payload),
+  });
+}
+
+export function useResetPassword() {
+  return useMutation({
+    mutationFn: (payload: { email: string; code: string; new_password: string }) =>
+      api.post<{ message: string }>('/api/v1/auth/reset-password', payload),
   });
 }
 
