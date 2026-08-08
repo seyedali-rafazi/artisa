@@ -10,6 +10,16 @@ const nextConfig: NextConfig = {
         pathname: "/**",
       },
       {
+        protocol: "https",
+        hostname: "*.public.blob.vercel-storage.com",
+        pathname: "/**",
+      },
+      {
+        protocol: "https",
+        hostname: "*.blob.vercel-storage.com",
+        pathname: "/**",
+      },
+      {
         protocol: "http",
         hostname: "localhost",
         pathname: "/**",

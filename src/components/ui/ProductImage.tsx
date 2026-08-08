@@ -18,7 +18,7 @@ export function getFullImageUrl(url?: string | null): string {
     return cleanUrl;
   }
 
-  // Relative backend upload path (e.g. "/uploads/xyz.png")
+  // Absolute or relative image URL (Blob URL or legacy /uploads path)
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
   const path = cleanUrl.startsWith('/') ? cleanUrl : `/${cleanUrl}`;
   return `${baseUrl}${path}`;
