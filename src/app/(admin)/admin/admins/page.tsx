@@ -15,9 +15,10 @@ import {
   ShieldAlert,
 } from 'lucide-react';
 
+import ConfirmModal from '@/components/ui/ConfirmModal';
+
 export default function AdminsManagementPage() {
   const { data: currentUser } = useUserProfile();
-  console.log('currentUser', currentUser);
   
   const isSuperAdmin = currentUser?.role === 'super_admin' || currentUser?.role === 'superadmin' || (currentUser as any)?.is_superuser;
 
@@ -32,6 +33,17 @@ export default function AdminsManagementPage() {
   const [role, setRole] = useState('admin');
 
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [deleteErrorMessage, setDeleteErrorMessage] = useState<string | null>(null);
+
+  const [deleteModal, setDeleteModal] = useState<{
+    isOpen: boolean;
+    adminId: string;
+    adminName: string;
+  }>({
+    isOpen: false,
+    adminId: '',
+    adminName: '',
+  });
 
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,14 +67,22 @@ export default function AdminsManagementPage() {
     );
   };
 
-  const handleDeleteAdmin = (adminId: string, adminName: string) => {
-    if (confirm(`آیا از حذف حساب مدیر "${adminName}" اطمینان دارید؟`)) {
-      deleteAdminMutation.mutate(adminId, {
-        onError: (err: any) => {
-          alert(err?.message || 'امکان حذف این مدیر وجود ندارد.');
-        },
-      });
-    }
+  const handleDeleteAdminClick = (adminId: string, adminName: string) => {
+    setDeleteErrorMessage(null);
+    setDeleteModal({ isOpen: true, adminId, adminName });
+  };
+
+  const handleConfirmDeleteAdmin = () => {
+    if (!deleteModal.adminId) return;
+    setDeleteErrorMessage(null);
+    deleteAdminMutation.mutate(deleteModal.adminId, {
+      onSuccess: () => {
+        setDeleteModal({ isOpen: false, adminId: '', adminName: '' });
+      },
+      onError: (err: any) => {
+        setDeleteErrorMessage(err?.message || 'امکان حذف این مدیر وجود ندارد.');
+      },
+    });
   };
 
   if (!isSuperAdmin) {
@@ -146,7 +166,7 @@ export default function AdminsManagementPage() {
                     <td className="p-3 text-left whitespace-nowrap">
                       <button
                         title="حذف مدیر"
-                        onClick={() => handleDeleteAdmin(admin.id, admin.name)}
+                        onClick={() => handleDeleteAdminClick(admin.id, admin.name)}
                         disabled={deleteAdminMutation.isPending}
                         className="p-1.5 rounded-xl hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
                       >
@@ -249,6 +269,33 @@ export default function AdminsManagementPage() {
           </div>
         </div>
       )}
+
+      {/* Delete Admin Confirmation Modal */}
+      <ConfirmModal
+        isOpen={deleteModal.isOpen}
+        onClose={() => {
+          setDeleteModal({ isOpen: false, adminId: '', adminName: '' });
+          setDeleteErrorMessage(null);
+        }}
+        onConfirm={handleConfirmDeleteAdmin}
+        title="حذف حساب مدیر"
+        variant="danger"
+        confirmText="حذف مدیر"
+        isLoading={deleteAdminMutation.isPending}
+        description={
+          <div className="flex flex-col gap-2">
+            <span>
+              آیا از حذف حساب مدیر <strong className="text-foreground font-black">«{deleteModal.adminName}»</strong> اطمینان دارید؟
+            </span>
+            {deleteErrorMessage && (
+              <div className="p-2.5 rounded-xl bg-destructive/10 text-destructive text-xs font-bold flex items-center gap-2 mt-1">
+                <AlertCircle className="size-4 shrink-0" />
+                <span>{deleteErrorMessage}</span>
+              </div>
+            )}
+          </div>
+        }
+      />
     </div>
   );
 }

@@ -6,6 +6,7 @@ import ProductImage from '@/components/ui/ProductImage';
 import {
   useAdminProducts,
   useArchiveProduct,
+  useDeleteProduct,
   useRestoreProduct,
   useDuplicateProduct,
 } from '@/hooks/useAdmin';
@@ -18,23 +19,54 @@ import {
   Copy,
   Archive,
   RotateCcw,
+  Trash2,
   Loader2,
   Package,
 } from 'lucide-react';
+
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 export default function AdminProductsPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
 
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    type: 'archive' | 'delete' | null;
+    productId: string;
+    productName: string;
+  }>({
+    isOpen: false,
+    type: null,
+    productId: '',
+    productName: '',
+  });
+
   const { data, isLoading } = useAdminProducts({ page, limit: 10, search, status: statusFilter });
   const archiveMutation = useArchiveProduct();
+  const deleteMutation = useDeleteProduct();
   const restoreMutation = useRestoreProduct();
   const duplicateMutation = useDuplicateProduct();
 
-  const handleArchive = (id: string) => {
-    if (confirm('آیا از آرشیو کردن این محصول اطمینان دارید؟')) {
-      archiveMutation.mutate(id);
+  const handleArchive = (id: string, name: string) => {
+    setConfirmModal({ isOpen: true, type: 'archive', productId: id, productName: name });
+  };
+
+  const handleDelete = (id: string, name: string) => {
+    setConfirmModal({ isOpen: true, type: 'delete', productId: id, productName: name });
+  };
+
+  const handleConfirmModalAction = () => {
+    if (!confirmModal.productId) return;
+    if (confirmModal.type === 'archive') {
+      archiveMutation.mutate(confirmModal.productId, {
+        onSuccess: () => setConfirmModal({ isOpen: false, type: null, productId: '', productName: '' }),
+      });
+    } else if (confirmModal.type === 'delete') {
+      deleteMutation.mutate(confirmModal.productId, {
+        onSuccess: () => setConfirmModal({ isOpen: false, type: null, productId: '', productName: '' }),
+      });
     }
   };
 
@@ -187,12 +219,19 @@ export default function AdminProductsPage() {
                         ) : (
                           <button
                             title="آرشیو محصول"
-                            onClick={() => handleArchive(product.id)}
-                            className="p-1.5 rounded-xl hover:bg-muted text-muted-foreground hover:text-rose-500 transition-colors cursor-pointer"
+                            onClick={() => handleArchive(product.id, product.name)}
+                            className="p-1.5 rounded-xl hover:bg-muted text-muted-foreground hover:text-amber-500 transition-colors cursor-pointer"
                           >
                             <Archive className="size-4" />
                           </button>
                         )}
+                        <button
+                          title="حذف دائمی محصول"
+                          onClick={() => handleDelete(product.id, product.name)}
+                          className="p-1.5 rounded-xl hover:bg-rose-500/10 text-muted-foreground hover:text-rose-600 transition-colors cursor-pointer"
+                        >
+                          <Trash2 className="size-4" />
+                        </button>
                       </div>
                     </td>
                   </tr>
@@ -202,6 +241,28 @@ export default function AdminProductsPage() {
           </div>
         )}
       </div>
+
+      {/* Confirmation Modal */}
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal({ isOpen: false, type: null, productId: '', productName: '' })}
+        onConfirm={handleConfirmModalAction}
+        title={confirmModal.type === 'delete' ? 'حذف دائمی محصول' : 'آرشیو کردن محصول'}
+        variant={confirmModal.type === 'delete' ? 'danger' : 'warning'}
+        confirmText={confirmModal.type === 'delete' ? 'حذف دائمی' : 'آرشیو محصول'}
+        isLoading={archiveMutation.isPending || deleteMutation.isPending}
+        description={
+          confirmModal.type === 'delete' ? (
+            <span>
+              آیا از حذف دائمی محصول <strong className="text-foreground font-black">«{confirmModal.productName}»</strong> اطمینان دارید؟ این عملیات غیرقابل بازگشت است و تمام تصاویر مرتبط نیز پاک خواهند شد.
+            </span>
+          ) : (
+            <span>
+              آیا از انتقال محصول <strong className="text-foreground font-black">«{confirmModal.productName}»</strong> به بایگانی (آرشیو) اطمینان دارید؟
+            </span>
+          )
+        }
+      />
     </div>
   );
 }

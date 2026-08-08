@@ -102,7 +102,7 @@ export function useAdminDashboard() {
 export function useAdminUsers(params: { page?: number; limit?: number; search?: string; role?: string; is_active?: boolean }) {
   return useQuery({
     queryKey: ['admin-users', params],
-    queryFn: () => api.get<PaginatedResult<AdminUser>>('/api/v1/admin/users', { params }),
+    queryFn: () => api.get<PaginatedResult<AdminUser>>('/api/v1/admin/users', params),
   });
 }
 
@@ -134,7 +134,7 @@ export function useUpdateUserRole() {
 export function useAdminProducts(params: { page?: number; limit?: number; search?: string; category?: string; status?: string }) {
   return useQuery({
     queryKey: ['admin-products', params],
-    queryFn: () => api.get<PaginatedResult<AdminProduct>>('/api/v1/admin/products', { params }),
+    queryFn: () => api.get<PaginatedResult<AdminProduct>>('/api/v1/admin/products', params),
   });
 }
 
@@ -172,6 +172,17 @@ export function useArchiveProduct() {
   });
 }
 
+export function useDeleteProduct() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.delete(`/api/v1/admin/products/${id}/permanent`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+    },
+  });
+}
+
 export function useRestoreProduct() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -197,7 +208,7 @@ export function useDuplicateProduct() {
 export function useAdminOrders(params: { page?: number; limit?: number; search?: string; status?: string }) {
   return useQuery({
     queryKey: ['admin-orders', params],
-    queryFn: () => api.get<PaginatedResult<AdminOrder>>('/api/v1/admin/orders', { params }),
+    queryFn: () => api.get<PaginatedResult<AdminOrder>>('/api/v1/admin/orders', params),
   });
 }
 
@@ -247,6 +258,6 @@ export function useDeleteAdmin() {
 export function useAuditLogs(params: { page?: number; limit?: number; search?: string }) {
   return useQuery({
     queryKey: ['audit-logs', params],
-    queryFn: () => api.get<PaginatedResult<AuditLog>>('/api/v1/admin/audit-logs', { params }),
+    queryFn: () => api.get<PaginatedResult<AuditLog>>('/api/v1/admin/audit-logs', params),
   });
 }

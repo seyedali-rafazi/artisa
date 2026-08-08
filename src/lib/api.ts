@@ -108,9 +108,14 @@ export async function fetchApi<T = any>(
 
   let url = `${BASE_URL}${endpoint.startsWith('/') ? '' : '/'}${endpoint}`;
 
-  if (params) {
+  let queryParams = params;
+  if (queryParams && typeof queryParams === 'object' && 'params' in queryParams && typeof (queryParams as any).params === 'object') {
+    queryParams = (queryParams as any).params;
+  }
+
+  if (queryParams) {
     const searchParams = new URLSearchParams();
-    Object.entries(params).forEach(([key, value]) => {
+    Object.entries(queryParams).forEach(([key, value]) => {
       if (value !== undefined && value !== null && value !== '') {
         searchParams.append(key, String(value));
       }

@@ -17,25 +17,52 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 
+import { useDebounce } from '@/hooks/useDebounce';
+import ConfirmModal from '@/components/ui/ConfirmModal';
+
 export default function AdminUsersPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState('');
 
+  const debouncedSearch = useDebounce(search, 400);
+
+  const [statusModal, setStatusModal] = useState<{
+    isOpen: boolean;
+    userId: string;
+    userName: string;
+    currentStatus: boolean;
+  }>({
+    isOpen: false,
+    userId: '',
+    userName: '',
+    currentStatus: true,
+  });
+
   const { data: currentUser } = useUserProfile();
   const isSuperAdmin = currentUser?.role === 'superadmin' || currentUser?.role === 'super_admin' || currentUser?.role === 'مدیر ارشد' || (currentUser as any)?.is_superuser;
 
-  const { data, isLoading } = useAdminUsers({ page, limit: 10, search, role: roleFilter });
+  const { data, isLoading } = useAdminUsers({ page, limit: 10, search: debouncedSearch, role: roleFilter });
   const statusMutation = useUpdateUserStatus();
   const roleMutation = useUpdateUserRole();
 
   const [selectedUserForRole, setSelectedUserForRole] = useState<{ id: string; name: string; currentRole: string } | null>(null);
   const [newRoleInput, setNewRoleInput] = useState('admin');
 
-  const handleToggleStatus = (userId: string, currentStatus: boolean) => {
-    if (confirm(`آیا از ${currentStatus ? 'غیرفعال‌سازی' : 'فعال‌سازی'} این کاربر اطمینان دارید؟`)) {
-      statusMutation.mutate({ userId, is_active: !currentStatus });
-    }
+  const handleToggleStatusClick = (userId: string, userName: string, currentStatus: boolean) => {
+    setStatusModal({ isOpen: true, userId, userName, currentStatus });
+  };
+
+  const handleConfirmToggleStatus = () => {
+    if (!statusModal.userId) return;
+    statusMutation.mutate(
+      { userId: statusModal.userId, is_active: !statusModal.currentStatus },
+      {
+        onSuccess: () => {
+          setStatusModal({ isOpen: false, userId: '', userName: '', currentStatus: true });
+        },
+      }
+    );
   };
 
   const handleSaveRole = () => {
@@ -169,7 +196,7 @@ export default function AdminUsersPage() {
 
                         <button
                           title={u.is_active ? 'غیرفعال‌سازی کاربر' : 'فعال‌سازی کاربر'}
-                          onClick={() => handleToggleStatus(u.id, u.is_active)}
+                          onClick={() => handleToggleStatusClick(u.id, u.name, u.is_active)}
                           className="p-1.5 rounded-xl hover:bg-muted text-muted-foreground hover:text-amber-500 transition-colors cursor-pointer"
                         >
                           {u.is_active ? <UserX className="size-4" /> : <UserCheck className="size-4" />}
@@ -236,6 +263,22 @@ export default function AdminUsersPage() {
           </div>
         </div>
       )}
+
+      {/* Status Confirmation Modal */}
+      <ConfirmModal
+        isOpen={statusModal.isOpen}
+        onClose={() => setStatusModal({ isOpen: false, userId: '', userName: '', currentStatus: true })}
+        onConfirm={handleConfirmToggleStatus}
+        title={statusModal.currentStatus ? 'غیرفعال‌سازی کاربر' : 'فعال‌سازی کاربر'}
+        variant={statusModal.currentStatus ? 'warning' : 'info'}
+        confirmText={statusModal.currentStatus ? 'غیرفعال کن' : 'فعال کن'}
+        isLoading={statusMutation.isPending}
+        description={
+          <span>
+            آیا از {statusModal.currentStatus ? 'غیرفعال‌سازی' : 'فعال‌سازی'} حساب کاربر <strong className="text-foreground font-black">«{statusModal.userName}»</strong> اطمینان دارید؟
+          </span>
+        }
+      />
     </div>
   );
 }
