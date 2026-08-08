@@ -41,7 +41,7 @@ export default function AdminOrdersPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6" dir="rtl">
+    <div className="flex flex-col gap-6 min-w-0 w-full" dir="rtl">
       {/* Header */}
       <div>
         <h1 className="text-xl font-black text-foreground">مدیریت سفارشات مشتریان</h1>
@@ -84,7 +84,7 @@ export default function AdminOrdersPage() {
       </div>
 
       {/* Orders Table */}
-      <div className="rounded-3xl border border-border/60 bg-background/95 backdrop-blur-xl overflow-hidden shadow-sm">
+      <div className="rounded-2xl sm:rounded-3xl border border-border/60 bg-background/95 backdrop-blur-xl shadow-sm min-w-0 overflow-hidden">
         {isLoading ? (
           <div className="h-64 flex items-center justify-center">
             <Loader2 className="size-6 text-primary animate-spin" />
@@ -95,43 +95,43 @@ export default function AdminOrdersPage() {
             <span className="text-xs font-bold text-muted-foreground">هیچ سفارشی یافت نشد.</span>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-right text-xs">
+          <div className="overflow-x-auto overscroll-x-contain">
+            <table className="w-full min-w-[780px] text-right text-xs">
               <thead className="bg-muted/40 border-b border-border/40 font-extrabold text-muted-foreground">
                 <tr>
-                  <th className="p-4">کد سفارش</th>
-                  <th className="p-4">مشتری</th>
-                  <th className="p-4">تاریخ ثبت</th>
-                  <th className="p-4">مبلغ کل</th>
-                  <th className="p-4">وضعیت سفارش</th>
-                  <th className="p-4">تغییر وضعیت</th>
-                  <th className="p-4 text-left">جزئیات</th>
+                  <th className="p-3 sm:p-4 whitespace-nowrap">کد سفارش</th>
+                  <th className="p-3 sm:p-4 whitespace-nowrap">مشتری</th>
+                  <th className="p-3 sm:p-4 whitespace-nowrap">تاریخ ثبت</th>
+                  <th className="p-3 sm:p-4 whitespace-nowrap">مبلغ کل</th>
+                  <th className="p-3 sm:p-4 whitespace-nowrap">وضعیت سفارش</th>
+                  <th className="p-3 sm:p-4 whitespace-nowrap">تغییر وضعیت</th>
+                  <th className="p-3 sm:p-4 text-left whitespace-nowrap">جزئیات</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40 font-semibold">
                 {data.items.map((order) => (
                   <tr key={order.id} className="hover:bg-muted/20 transition-colors">
-                    <td className="p-3 font-extrabold text-primary dir-ltr text-right">{order.orderId}</td>
+                    <td className="p-3 font-extrabold text-primary dir-ltr text-right whitespace-nowrap">{order.orderId}</td>
                     <td className="p-3">
-                      <div className="flex flex-col">
-                        <span className="font-bold text-foreground">
+                      <div className="flex flex-col min-w-[120px]">
+                        <span className="font-bold text-foreground truncate">
                           {order.shippingAddress?.fullName || 'کاربر مهمان'}
                         </span>
-                        <span className="text-[10px] text-muted-foreground dir-ltr text-right">
+                        <span className="text-[10px] text-muted-foreground dir-ltr text-right whitespace-nowrap">
                           {order.shippingAddress?.phone}
                         </span>
                       </div>
                     </td>
-                    <td className="p-3 text-muted-foreground dir-ltr text-right">{order.date}</td>
-                    <td className="p-3 font-extrabold text-foreground">
+                    <td className="p-3 text-muted-foreground dir-ltr text-right whitespace-nowrap">{order.date}</td>
+                    <td className="p-3 font-extrabold text-foreground whitespace-nowrap">
                       {order.totalPrice.toLocaleString('fa-IR')} تومان
                     </td>
-                    <td className="p-3">{getStatusBadge(order.status)}</td>
-                    <td className="p-3">
+                    <td className="p-3 whitespace-nowrap">{getStatusBadge(order.status)}</td>
+                    <td className="p-3 whitespace-nowrap">
                       <select
                         value={order.status}
                         onChange={(e) => handleStatusChange(order.orderId, e.target.value)}
-                        className="rounded-xl border border-border bg-background px-2.5 py-1 text-[11px] font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer"
+                        className="rounded-xl border border-border bg-background px-2.5 py-1 text-[11px] font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary cursor-pointer max-w-[140px]"
                       >
                         <option value="pending">در انتظار</option>
                         <option value="processing">در حال پردازش</option>
@@ -141,7 +141,7 @@ export default function AdminOrdersPage() {
                         <option value="refunded">مرجوع شده</option>
                       </select>
                     </td>
-                    <td className="p-3 text-left">
+                    <td className="p-3 text-left whitespace-nowrap">
                       <Link href={`/admin/orders/${order.orderId}`}>
                         <button
                           title="مشاهده جزئیات سفارش"

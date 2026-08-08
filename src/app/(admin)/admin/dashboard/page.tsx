@@ -110,7 +110,7 @@ export default function AdminDashboardPage() {
   ];
 
   return (
-    <div className="flex flex-col gap-4 sm:gap-6" dir="rtl">
+    <div className="flex flex-col gap-4 sm:gap-6 min-w-0 w-full" dir="rtl">
       {/* KPI Cards Grid - Responsive from 2 cols on mobile to 5 cols on desktop */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         {kpiCards.map((kpi, idx) => {

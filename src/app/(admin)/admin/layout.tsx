@@ -55,7 +55,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   }
 
   return (
-    <div className="min-h-screen bg-muted/20 text-foreground flex" dir="rtl">
+    <div className="min-h-screen bg-muted/20 text-foreground flex overflow-x-hidden" dir="rtl">
       {/* Sidebar */}
       <AdminSidebar
         collapsed={collapsed}
@@ -64,10 +64,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         onMobileClose={() => setMobileOpen(false)}
       />
 
-      {/* Main Content Area */}
-      <div className={`flex-1 transition-all duration-300 flex flex-col mr-0 ${collapsed ? 'md:mr-20' : 'md:mr-64'}`}>
+      {/* Main Content Area — min-w-0 lets flex child shrink so table overflow-x-auto works */}
+      <div
+        className={`flex-1 min-w-0 max-w-full transition-all duration-300 flex flex-col mr-0 ${
+          collapsed ? 'md:mr-20' : 'md:mr-64'
+        }`}
+      >
         <AdminHeader onMobileMenuToggle={() => setMobileOpen(!mobileOpen)} />
-        <main className="p-3 sm:p-6 flex-1 overflow-x-hidden">{children}</main>
+        <main className="p-3 sm:p-6 flex-1 w-full max-w-full min-w-0 overflow-x-hidden">{children}</main>
       </div>
     </div>
   );

@@ -18,6 +18,7 @@ import {
   Heart,
   MapPin,
   LogOut,
+  LayoutDashboard,
 } from "lucide-react";
 
 const profileNavItems = [
@@ -102,6 +103,17 @@ export default function Header() {
   };
 
   const cartItemsCount = cart.reduce((acc, item) => acc + item.quantity, 0);
+
+  const role = (user?.role || "").toLowerCase();
+  const isAdmin =
+    !!user &&
+    (role === "admin" ||
+      role === "superadmin" ||
+      role === "super_admin" ||
+      role === "مدیر سیستم" ||
+      role === "مدیر ارشد" ||
+      (user as { is_superuser?: boolean })?.is_superuser === true);
+  const isOnAdmin = pathname.startsWith("/admin");
 
   const categories = [
     { key: "categoryPainting", filter: "تابلو نقاشی" },
@@ -240,6 +252,23 @@ export default function Header() {
 
                     {/* Nav Links */}
                     <div className="flex flex-col gap-0.5 text-xs font-medium">
+                      {isAdmin && (
+                        <Link
+                          href="/admin/dashboard"
+                          onClick={() => setProfileMenuOpen(false)}
+                          className={`flex items-center gap-2.5 rounded-xl px-3 py-2 transition-colors ${
+                            isOnAdmin
+                              ? "bg-primary/15 text-primary font-bold"
+                              : "text-foreground hover:bg-muted hover:text-primary"
+                          }`}
+                          aria-current={isOnAdmin ? "page" : undefined}
+                        >
+                          <LayoutDashboard
+                            className={`size-4 ${isOnAdmin ? "text-primary" : "text-muted-foreground"}`}
+                          />
+                          <span>پنل مدیریت</span>
+                        </Link>
+                      )}
                       {profileNavItems.map(
                         ({ tab, href, label, icon: Icon }) => {
                           const isActive = activeProfileTab === tab;

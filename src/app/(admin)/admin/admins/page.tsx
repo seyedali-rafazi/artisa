@@ -17,7 +17,9 @@ import {
 
 export default function AdminsManagementPage() {
   const { data: currentUser } = useUserProfile();
-  const isSuperAdmin = currentUser?.role === 'super_admin' || currentUser?.role === 'مدیر ارشد' || (currentUser as any)?.is_superuser;
+  console.log('currentUser', currentUser);
+  
+  const isSuperAdmin = currentUser?.role === 'super_admin' || currentUser?.role === 'superadmin' || (currentUser as any)?.is_superuser;
 
   const { data: admins, isLoading } = useAdminList();
   const createAdminMutation = useCreateAdmin();
@@ -78,7 +80,7 @@ export default function AdminsManagementPage() {
   }
 
   return (
-    <div className="flex flex-col gap-6" dir="rtl">
+    <div className="flex flex-col gap-6 min-w-0 w-full" dir="rtl">
       {/* Header */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
@@ -98,7 +100,7 @@ export default function AdminsManagementPage() {
       </div>
 
       {/* Admins Table */}
-      <div className="rounded-3xl border border-border/60 bg-background/95 backdrop-blur-xl overflow-hidden shadow-sm">
+      <div className="rounded-2xl sm:rounded-3xl border border-border/60 bg-background/95 backdrop-blur-xl shadow-sm min-w-0 overflow-hidden">
         {isLoading ? (
           <div className="h-64 flex items-center justify-center">
             <Loader2 className="size-6 text-primary animate-spin" />
@@ -109,23 +111,23 @@ export default function AdminsManagementPage() {
             <span className="text-xs font-bold text-muted-foreground">هیچ مدیری تعریف نشده است.</span>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-right text-xs">
+          <div className="overflow-x-auto overscroll-x-contain">
+            <table className="w-full min-w-[640px] text-right text-xs">
               <thead className="bg-muted/40 border-b border-border/40 font-extrabold text-muted-foreground">
                 <tr>
-                  <th className="p-4">نام مدیر</th>
-                  <th className="p-4">ایمیل</th>
-                  <th className="p-4">سطح دسترسی</th>
-                  <th className="p-4">وضعیت</th>
-                  <th className="p-4 text-left">عملیات</th>
+                  <th className="p-3 sm:p-4 whitespace-nowrap">نام مدیر</th>
+                  <th className="p-3 sm:p-4 whitespace-nowrap">ایمیل</th>
+                  <th className="p-3 sm:p-4 whitespace-nowrap">سطح دسترسی</th>
+                  <th className="p-3 sm:p-4 whitespace-nowrap">وضعیت</th>
+                  <th className="p-3 sm:p-4 text-left whitespace-nowrap">عملیات</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40 font-semibold">
                 {admins.map((admin) => (
                   <tr key={admin.id} className="hover:bg-muted/20 transition-colors">
-                    <td className="p-3 font-extrabold text-foreground">{admin.name}</td>
-                    <td className="p-3 dir-ltr text-right text-muted-foreground font-mono">{admin.email}</td>
-                    <td className="p-3">
+                    <td className="p-3 font-extrabold text-foreground whitespace-nowrap">{admin.name}</td>
+                    <td className="p-3 dir-ltr text-right text-muted-foreground font-mono whitespace-nowrap">{admin.email}</td>
+                    <td className="p-3 whitespace-nowrap">
                       {admin.role === 'superadmin' || admin.role === 'super_admin' ? (
                         <span className="px-2.5 py-1 rounded-full bg-violet-500/10 text-violet-500 font-bold text-[10px]">
                           مدیر ارشد (Super Admin)
@@ -136,12 +138,12 @@ export default function AdminsManagementPage() {
                         </span>
                       )}
                     </td>
-                    <td className="p-3">
+                    <td className="p-3 whitespace-nowrap">
                       <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-500 font-bold text-[10px]">
                         فعال
                       </span>
                     </td>
-                    <td className="p-3 text-left">
+                    <td className="p-3 text-left whitespace-nowrap">
                       <button
                         title="حذف مدیر"
                         onClick={() => handleDeleteAdmin(admin.id, admin.name)}

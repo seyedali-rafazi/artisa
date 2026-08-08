@@ -51,7 +51,7 @@ export default function AdminUsersPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6" dir="rtl">
+    <div className="flex flex-col gap-6 min-w-0 w-full" dir="rtl">
       {/* Header */}
       <div>
         <h1 className="text-xl font-black text-foreground">مدیریت کاربران و مشتریان</h1>
@@ -92,7 +92,7 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Users Table */}
-      <div className="rounded-3xl border border-border/60 bg-background/95 backdrop-blur-xl overflow-hidden shadow-sm">
+      <div className="rounded-2xl sm:rounded-3xl border border-border/60 bg-background/95 backdrop-blur-xl shadow-sm min-w-0 overflow-hidden">
         {isLoading ? (
           <div className="h-64 flex items-center justify-center">
             <Loader2 className="size-6 text-primary animate-spin" />
@@ -103,30 +103,30 @@ export default function AdminUsersPage() {
             <span className="text-xs font-bold text-muted-foreground">هیچ کاربری یافت نشد.</span>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-right text-xs">
+          <div className="overflow-x-auto overscroll-x-contain">
+            <table className="w-full min-w-[800px] text-right text-xs">
               <thead className="bg-muted/40 border-b border-border/40 font-extrabold text-muted-foreground">
                 <tr>
-                  <th className="p-4">کاربر</th>
-                  <th className="p-4">ایمیل</th>
-                  <th className="p-4">نقش کاربری</th>
-                  <th className="p-4">تعداد سفارشات</th>
-                  <th className="p-4">مجموع خرید</th>
-                  <th className="p-4">وضعیت حساب</th>
-                  <th className="p-4 text-left">عملیات</th>
+                  <th className="p-3 sm:p-4 whitespace-nowrap">کاربر</th>
+                  <th className="p-3 sm:p-4 whitespace-nowrap">ایمیل</th>
+                  <th className="p-3 sm:p-4 whitespace-nowrap">نقش کاربری</th>
+                  <th className="p-3 sm:p-4 whitespace-nowrap">تعداد سفارشات</th>
+                  <th className="p-3 sm:p-4 whitespace-nowrap">مجموع خرید</th>
+                  <th className="p-3 sm:p-4 whitespace-nowrap">وضعیت حساب</th>
+                  <th className="p-3 sm:p-4 text-left whitespace-nowrap">عملیات</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40 font-semibold">
                 {data.items.map((u) => (
                   <tr key={u.id} className="hover:bg-muted/20 transition-colors">
                     <td className="p-3">
-                      <div className="flex flex-col">
-                        <span className="font-extrabold text-foreground">{u.name}</span>
-                        {u.phone && <span className="text-[10px] text-muted-foreground dir-ltr text-right">{u.phone}</span>}
+                      <div className="flex flex-col min-w-[110px]">
+                        <span className="font-extrabold text-foreground truncate">{u.name}</span>
+                        {u.phone && <span className="text-[10px] text-muted-foreground dir-ltr text-right whitespace-nowrap">{u.phone}</span>}
                       </div>
                     </td>
-                    <td className="p-3 dir-ltr text-right text-muted-foreground font-mono">{u.email}</td>
-                    <td className="p-3">
+                    <td className="p-3 dir-ltr text-right text-muted-foreground font-mono whitespace-nowrap">{u.email}</td>
+                    <td className="p-3 whitespace-nowrap">
                       {u.role === 'superadmin' || u.role === 'super_admin' ? (
                         <span className="px-2.5 py-1 rounded-full bg-violet-500/10 text-violet-500 font-bold text-[10px]">
                           مدیر ارشد
@@ -141,11 +141,11 @@ export default function AdminUsersPage() {
                         </span>
                       )}
                     </td>
-                    <td className="p-3 font-bold">{u.total_orders.toLocaleString('fa-IR')} سفارش</td>
-                    <td className="p-3 font-extrabold text-primary">
+                    <td className="p-3 font-bold whitespace-nowrap">{u.total_orders.toLocaleString('fa-IR')} سفارش</td>
+                    <td className="p-3 font-extrabold text-primary whitespace-nowrap">
                       {u.total_spent.toLocaleString('fa-IR')} تومان
                     </td>
-                    <td className="p-3">
+                    <td className="p-3 whitespace-nowrap">
                       {u.is_active ? (
                         <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-500 font-bold text-[10px]">
                           فعال
@@ -156,7 +156,7 @@ export default function AdminUsersPage() {
                         </span>
                       )}
                     </td>
-                    <td className="p-3 text-left">
+                    <td className="p-3 text-left whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1.5">
                         <Link href={`/admin/users/${u.id}`}>
                           <button

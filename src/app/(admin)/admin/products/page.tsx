@@ -47,7 +47,7 @@ export default function AdminProductsPage() {
   };
 
   return (
-    <div className="flex flex-col gap-6" dir="rtl">
+    <div className="flex flex-col gap-6 min-w-0 w-full" dir="rtl">
       {/* Header & Controls */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
@@ -97,7 +97,7 @@ export default function AdminProductsPage() {
       </div>
 
       {/* Products Table */}
-      <div className="rounded-3xl border border-border/60 bg-background/95 backdrop-blur-xl overflow-hidden shadow-sm">
+      <div className="rounded-2xl sm:rounded-3xl border border-border/60 bg-background/95 backdrop-blur-xl shadow-sm min-w-0 overflow-hidden">
         {isLoading ? (
           <div className="h-64 flex items-center justify-center">
             <Loader2 className="size-6 text-primary animate-spin" />
@@ -108,43 +108,43 @@ export default function AdminProductsPage() {
             <span className="text-xs font-bold text-muted-foreground">هیچ محصولی یافت نشد.</span>
           </div>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-right text-xs">
+          <div className="overflow-x-auto overscroll-x-contain">
+            <table className="w-full min-w-[720px] text-right text-xs">
               <thead className="bg-muted/40 border-b border-border/40 font-extrabold text-muted-foreground">
                 <tr>
-                  <th className="p-4">تصویر</th>
-                  <th className="p-4">نام محصول</th>
-                  <th className="p-4">دسته‌بندی</th>
-                  <th className="p-4">قیمت</th>
-                  <th className="p-4">موجودی</th>
-                  <th className="p-4">وضعیت</th>
-                  <th className="p-4 text-left">عملیات</th>
+                  <th className="p-3 sm:p-4 whitespace-nowrap">تصویر</th>
+                  <th className="p-3 sm:p-4 whitespace-nowrap">نام محصول</th>
+                  <th className="p-3 sm:p-4 whitespace-nowrap">دسته‌بندی</th>
+                  <th className="p-3 sm:p-4 whitespace-nowrap">قیمت</th>
+                  <th className="p-3 sm:p-4 whitespace-nowrap">موجودی</th>
+                  <th className="p-3 sm:p-4 whitespace-nowrap">وضعیت</th>
+                  <th className="p-3 sm:p-4 text-left whitespace-nowrap">عملیات</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40 font-semibold">
                 {data.items.map((product) => (
                   <tr key={product.id} className="hover:bg-muted/20 transition-colors">
-                    <td className="p-3">
+                    <td className="p-3 whitespace-nowrap">
                       <div className="relative size-12 rounded-xl overflow-hidden border border-border shrink-0">
                         <ProductImage src={product.image} alt={product.name} fill className="object-cover" />
                       </div>
                     </td>
                     <td className="p-3">
-                      <div className="flex flex-col">
-                        <span className="font-extrabold text-foreground">{product.name}</span>
-                        {product.nameEn && <span className="text-[10px] text-muted-foreground dir-ltr text-right">{product.nameEn}</span>}
+                      <div className="flex flex-col min-w-[140px] max-w-[220px]">
+                        <span className="font-extrabold text-foreground truncate">{product.name}</span>
+                        {product.nameEn && <span className="text-[10px] text-muted-foreground dir-ltr text-right truncate">{product.nameEn}</span>}
                       </div>
                     </td>
-                    <td className="p-3 text-muted-foreground">{product.category}</td>
-                    <td className="p-3 font-extrabold text-primary">
+                    <td className="p-3 text-muted-foreground whitespace-nowrap">{product.category}</td>
+                    <td className="p-3 font-extrabold text-primary whitespace-nowrap">
                       {product.price.toLocaleString('fa-IR')} تومان
                     </td>
-                    <td className="p-3">
+                    <td className="p-3 whitespace-nowrap">
                       <span className={`font-bold ${product.stock_quantity <= 5 ? 'text-rose-500' : 'text-foreground'}`}>
                         {product.stock_quantity.toLocaleString('fa-IR')} عدد
                       </span>
                     </td>
-                    <td className="p-3">
+                    <td className="p-3 whitespace-nowrap">
                       {product.status === 'archived' ? (
                         <span className="px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-500 font-bold text-[10px]">
                           آرشیو شده
@@ -159,7 +159,7 @@ export default function AdminProductsPage() {
                         </span>
                       )}
                     </td>
-                    <td className="p-3 text-left">
+                    <td className="p-3 text-left whitespace-nowrap">
                       <div className="flex items-center justify-end gap-1.5">
                         <Link href={`/admin/products/${product.id}`}>
                           <button
