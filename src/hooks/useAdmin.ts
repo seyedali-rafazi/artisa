@@ -261,3 +261,67 @@ export function useAuditLogs(params: { page?: number; limit?: number; search?: s
     queryFn: () => api.get<PaginatedResult<AuditLog>>('/api/v1/admin/audit-logs', params),
   });
 }
+
+// ─── COMMENTS ──────────────────────────────────────────────────────────────
+
+export interface AdminComment {
+  id: string;
+  productId: string;
+  productName: string;
+  userId?: string;
+  userName: string;
+  userEmail?: string;
+  text: string;
+  rating: number;
+  status: string; // approved, pending, rejected
+  date: string;
+  created_at: string;
+  moderated_by?: string;
+  moderated_at?: string;
+}
+
+export function useAdminComments(params: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+  product_id?: string;
+}) {
+  return useQuery({
+    queryKey: ['admin-comments', params],
+    queryFn: () => api.get<PaginatedResult<AdminComment>>('/api/v1/admin/comments', params),
+  });
+}
+
+export function useUpdateAdminComment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({
+      commentId,
+      status,
+      text,
+      rating,
+    }: {
+      commentId: string;
+      status?: string;
+      text?: string;
+      rating?: number;
+    }) => api.patch(`/api/v1/admin/comments/${commentId}`, { status, text, rating }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-comments'] });
+      queryClient.invalidateQueries({ queryKey: ['comments'] });
+    },
+  });
+}
+
+export function useDeleteAdminComment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (commentId: string) => api.delete(`/api/v1/admin/comments/${commentId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-comments'] });
+      queryClient.invalidateQueries({ queryKey: ['comments'] });
+    },
+  });
+}
+

@@ -10,6 +10,7 @@ import {
   Package,
   ShoppingBag,
   Users,
+  MessageSquare,
   ShieldCheck,
   FileText,
   ArrowRight,
@@ -59,6 +60,12 @@ export default function AdminSidebar({
       title: 'مدیریت کاربران',
       href: '/admin/users',
       icon: Users,
+      superAdminOnly: false,
+    },
+    {
+      title: 'نظرات و دیدگاه‌ها',
+      href: '/admin/comments',
+      icon: MessageSquare,
       superAdminOnly: false,
     },
     {
