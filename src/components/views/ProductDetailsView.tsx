@@ -12,14 +12,15 @@ import {
   Truck, 
   CreditCard,
   MessageSquare,
-  ChevronLeft
+  ChevronLeft,
+  Heart
 } from "lucide-react"
 import { useProductComments, usePostComment } from "@/hooks/useComments"
 import { useProducts } from "@/hooks/useProducts"
 
 export default function ProductDetailsView() {
   const { t } = useLanguage()
-  const { selectedProduct, addToCart, cart, setSelectedProduct, user } = useApp()
+  const { selectedProduct, addToCart, cart, setSelectedProduct, user, isFavorited, toggleFavorite } = useApp()
   const [commentText, setCommentText] = useState("")
 
   const productId = selectedProduct?.id || ""
@@ -186,6 +187,26 @@ export default function ProductDetailsView() {
               <ShoppingCart className="size-5" />
               <span>
                 {isInCart ? t("addedToCart") : t("addToCart")}
+              </span>
+            </Button>
+
+            <Button
+              onClick={() => toggleFavorite(selectedProduct)}
+              variant={isFavorited(selectedProduct.id) ? "secondary" : "outline"}
+              size="lg"
+              aria-label={isFavorited(selectedProduct.id) ? "حذف از علاقه‌مندی‌ها" : "افزودن به علاقه‌مندی‌ها"}
+              aria-pressed={isFavorited(selectedProduct.id)}
+              className={`gap-2 rounded-2xl font-extrabold cursor-pointer transition-all border-border ${
+                isFavorited(selectedProduct.id) ? "text-rose-500 bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800" : "hover:text-rose-500"
+              }`}
+            >
+              <Heart
+                className={`size-5 transition-all ${
+                  isFavorited(selectedProduct.id) ? "fill-rose-500 text-rose-500" : ""
+                }`}
+              />
+              <span className="hidden sm:inline">
+                {isFavorited(selectedProduct.id) ? "علاقه‌مندی" : "افزودن به علاقه‌مندی"}
               </span>
             </Button>
           </div>

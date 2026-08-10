@@ -27,6 +27,7 @@ import OrderHistory from "../profile/OrderHistory"
 import ProfileCart from "../profile/ProfileCart"
 import WishlistSection from "../profile/WishlistSection"
 import AccountSettings from "../profile/AccountSettings"
+import { toast as sonnerToast } from "sonner"
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -75,41 +76,6 @@ function Skeleton() {
   )
 }
 
-// ─── Toast notification ──────────────────────────────────────────────────────
-
-function ToastNotification({ toast, onClose }: { toast: Toast; onClose: () => void }) {
-  useEffect(() => {
-    const timer = setTimeout(onClose, 3500)
-    return () => clearTimeout(timer)
-  }, [toast, onClose])
-
-  return (
-    <div
-      className={`fixed bottom-6 left-1/2 -translate-x-1/2 z-[200] flex items-center gap-2.5 rounded-2xl border px-4 py-3 shadow-xl text-sm font-semibold animate-fade-in ${
-        toast.type === "success"
-          ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-800 dark:bg-emerald-900/50 dark:text-emerald-200"
-          : "border-red-200 bg-red-50 text-red-800 dark:border-red-800 dark:bg-red-900/50 dark:text-red-200"
-      }`}
-      role="status"
-      aria-live="polite"
-    >
-      {toast.type === "success" ? (
-        <Check className="size-4 shrink-0" />
-      ) : (
-        <X className="size-4 shrink-0" />
-      )}
-      {toast.message}
-      <button
-        onClick={onClose}
-        className="mr-1 text-current opacity-60 hover:opacity-100 cursor-pointer"
-        aria-label="بستن پیام"
-      >
-        <X className="size-3.5" />
-      </button>
-    </div>
-  )
-}
-
 // ─── Main ProfileView ────────────────────────────────────────────────────────
 
 export default function ProfileView() {
@@ -120,7 +86,6 @@ export default function ProfileView() {
   const tabParam = searchParams.get("tab") as Tab | null
 
   const [activeTab, setActiveTab] = useState<Tab>("profile")
-  const [toast, setToast] = useState<Toast | null>(null)
   const [loading] = useState(false)
   const [drawerOpen, setDrawerOpen] = useState(false)
 
@@ -130,7 +95,13 @@ export default function ProfileView() {
     }
   }, [tabParam])
 
-  const showToast = (t: Toast) => setToast(t)
+  const showToast = (t: Toast) => {
+    if (t.type === "error") {
+      sonnerToast.error(t.message)
+    } else {
+      sonnerToast.success(t.message)
+    }
+  }
 
   const handleTabChange = (tab: Tab) => {
     setActiveTab(tab)
@@ -306,9 +277,6 @@ export default function ProfileView() {
           </div>
         </main>
       </div>
-
-      {/* Toast notification */}
-      {toast && <ToastNotification toast={toast} onClose={() => setToast(null)} />}
     </div>
   )
 }

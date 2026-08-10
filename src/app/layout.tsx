@@ -6,6 +6,7 @@ import { AppProvider } from "@/components/AppContext";
 import AppShell from "@/components/layout/AppShell";
 import QueryProvider from "@/components/providers/QueryProvider";
 import GoogleAuthProvider from "@/components/providers/GoogleAuthProvider";
+import { Toaster } from "sonner";
 
 const vazirmatn = localFont({
   src: [
@@ -61,6 +62,7 @@ export default function RootLayout({
             <LanguageProvider>
               <AppProvider>
                 <AppShell>{children}</AppShell>
+                <Toaster position="top-right" dir="rtl" richColors closeButton />
               </AppProvider>
             </LanguageProvider>
           </GoogleAuthProvider>

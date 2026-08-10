@@ -1,25 +1,28 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api, getAuthToken } from '@/lib/api';
-import { Product } from '@/components/AppContext';
+import { useFavorites, useToggleFavorite } from './useFavorites';
 
 export function useWishlist() {
-  const token = typeof window !== 'undefined' ? getAuthToken() : null;
-
-  return useQuery({
-    queryKey: ['wishlist'],
-    queryFn: () => api.get<Product[]>('/api/v1/wishlist'),
-    enabled: Boolean(token),
-  });
+  return useFavorites();
 }
 
 export function useToggleWishlist() {
-  const queryClient = useQueryClient();
+  const toggleMutation = useToggleFavorite();
 
-  return useMutation({
-    mutationFn: (productId: string) =>
-      api.post<{ added: boolean }>(`/api/v1/wishlist/toggle/${productId}`),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['wishlist'] });
+  return {
+    ...toggleMutation,
+    mutate: (productOrId: any) => {
+      if (typeof productOrId === 'string') {
+        toggleMutation.mutate({
+          product: { id: productOrId } as any,
+          isFavorited: false,
+        });
+      } else {
+        toggleMutation.mutate({
+          product: productOrId,
+          isFavorited: false,
+        });
+      }
     },
-  });
+  };
 }
+
+export { useFavorites, useToggleFavorite };

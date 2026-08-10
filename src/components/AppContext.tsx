@@ -2,7 +2,9 @@
 
 import React, { createContext, useContext, useState, useEffect } from "react"
 import { useUserProfile, useLogout } from "@/hooks/useAuth"
-import { useWishlist, useToggleWishlist } from "@/hooks/useWishlist"
+import { useFavorites, useFavoriteIds, useToggleFavorite } from "@/hooks/useFavorites"
+import { useQueryClient } from "@tanstack/react-query"
+import { toast } from "sonner"
 
 export interface CartItem {
   id: string
@@ -94,7 +96,12 @@ interface AppContextType {
   setDefaultAddress: (id: string) => void
   orders: Order[]
   wishlist: Product[]
+  favoriteIds: string[]
+  isFavorited: (productId: string) => boolean
   toggleWishlist: (product: Product) => void
+  toggleFavorite: (product: Product) => void
+  isFavoriteLoading: boolean
+  showToast: (message: string, type?: "success" | "error" | "info") => void
 }
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
@@ -115,6 +122,8 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [showLogin, setShowLogin] = useState(false)
   const [addresses, setAddresses] = useState<Address[]>([])
 
+  const queryClient = useQueryClient()
+
   // User Profile Query from TanStack Query
   const { data: userProfileData } = useUserProfile()
   const logoutMutation = useLogout()
@@ -130,12 +139,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
     : null
 
-  // Backend Wishlist Sync
-  const { data: backendWishlist } = useWishlist()
-  const toggleWishlistMutation = useToggleWishlist()
-  const [localWishlist, setLocalWishlist] = useState<Product[]>([])
+  // Backend Favorites / Wishlist Sync
+  const { data: backendFavoriteProducts = [] } = useFavorites()
+  const { data: favoriteIds = [] } = useFavoriteIds()
+  const toggleFavoriteMutation = useToggleFavorite()
 
-  const wishlist = user ? backendWishlist || [] : localWishlist
+  const showToast = (message: string, type: "success" | "error" | "info" = "success") => {
+    if (type === "error") {
+      toast.error(message)
+    } else if (type === "info") {
+      toast.info(message)
+    } else {
+      toast.success(message)
+    }
+  }
 
   // Save Cart to LocalStorage
   useEffect(() => {
@@ -164,6 +181,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         },
       ]
     })
+    showToast(`${product.name} به سبد خرید اضافه شد`, "success")
   }
 
   const removeFromCart = (productId: string) => {
@@ -217,20 +235,44 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     )
   }
 
-  const toggleWishlist = (product: Product) => {
-    if (user) {
-      toggleWishlistMutation.mutate(product.id)
-    } else {
-      setLocalWishlist((prev) => {
-        const exists = prev.find((p) => p.id === product.id)
-        if (exists) return prev.filter((p) => p.id !== product.id)
-        return [...prev, product]
-      })
+  const isFavorited = (productId: string): boolean => {
+    return Boolean(user && favoriteIds.includes(productId))
+  }
+
+  const toggleFavorite = (product: Product) => {
+    if (!user) {
+      setShowLogin(true)
+      showToast("برای افزودن به علاقه‌مندی‌ها ابتدا وارد حساب شوید", "info")
+      return
     }
+
+    const currentlyFavorited = isFavorited(product.id)
+
+    toggleFavoriteMutation.mutate(
+      { product, isFavorited: currentlyFavorited },
+      {
+        onSuccess: () => {
+          if (currentlyFavorited) {
+            showToast("محصول از علاقه‌مندی‌ها حذف شد", "info")
+          } else {
+            showToast("محصول به علاقه‌مندی‌ها اضافه شد", "success")
+          }
+        },
+        onError: () => {
+          showToast("خطا در به روزرسانی علاقه‌مندی‌ها", "error")
+        },
+      }
+    )
   }
 
   const logout = () => {
-    logoutMutation.mutate()
+    logoutMutation.mutate(undefined, {
+      onSuccess: () => {
+        queryClient.invalidateQueries({ queryKey: ["favorites"] })
+        queryClient.setQueryData(["favorites", "ids"], [])
+        queryClient.setQueryData(["favorites", "list"], [])
+      },
+    })
   }
 
   return (
@@ -258,8 +300,13 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         deleteAddress,
         setDefaultAddress,
         orders: [],
-        wishlist,
-        toggleWishlist,
+        wishlist: backendFavoriteProducts,
+        favoriteIds,
+        isFavorited,
+        toggleWishlist: toggleFavorite,
+        toggleFavorite,
+        isFavoriteLoading: toggleFavoriteMutation.isPending,
+        showToast,
       }}
     >
       {children}

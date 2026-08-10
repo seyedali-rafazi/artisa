@@ -19,10 +19,13 @@ export default function ProductBox({ product }: ProductBoxProps) {
   const { 
     addToCart, 
     cart, 
-    setSelectedProduct 
+    setSelectedProduct,
+    isFavorited,
+    toggleFavorite,
   } = useApp()
 
   const isInCart = !!cart.find((item) => item.id === product.id)
+  const favorited = isFavorited(product.id)
 
   const discountPercent = product.oldPrice
     ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
@@ -39,6 +42,12 @@ export default function ProductBox({ product }: ProductBoxProps) {
   const handleAddToCart = (e: React.MouseEvent) => {
     e.stopPropagation()
     addToCart(product)
+  }
+
+  const handleFavoriteClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    e.stopPropagation()
+    toggleFavorite(product)
   }
 
   return (
@@ -63,15 +72,23 @@ export default function ProductBox({ product }: ProductBoxProps) {
           </div>
         )}
 
-        {/* Floating Icons Overlay */}
-        <div className="absolute bottom-3 left-3 z-10 flex flex-col gap-2 transition-all duration-300 opacity-0 group-hover:opacity-100">
-          {/* Wishlist Button */}
+        {/* Floating Icons Overlay / Favorite Button */}
+        <div className="absolute top-3 left-3 z-10 flex flex-col gap-2">
           <button
-            onClick={(e) => { e.stopPropagation(); alert("به علاقه‌مندی‌ها اضافه شد"); }}
-            className="flex size-8 items-center justify-center rounded-xl bg-white/95 dark:bg-neutral-800/95 text-foreground hover:bg-primary hover:text-primary-foreground shadow-md transition-all"
-            title="افزودن به علاقه‌مندی‌ها"
+            onClick={handleFavoriteClick}
+            type="button"
+            aria-label={favorited ? `حذف ${product.name} از علاقه‌مندی‌ها` : `افزودن ${product.name} به علاقه‌مندی‌ها`}
+            aria-pressed={favorited}
+            className={`flex size-8 items-center justify-center rounded-xl bg-white/90 dark:bg-neutral-800/90 text-foreground hover:scale-110 active:scale-95 shadow-md backdrop-blur-sm transition-all duration-200 cursor-pointer ${
+              favorited ? "text-rose-500 bg-rose-50 dark:bg-rose-950/40" : "hover:text-rose-500"
+            }`}
+            title={favorited ? "حذف از علاقه‌مندی‌ها" : "افزودن به علاقه‌مندی‌ها"}
           >
-            <Heart className="size-4" />
+            <Heart
+              className={`size-4 transition-all duration-300 ${
+                favorited ? "fill-rose-500 text-rose-500 scale-110" : "text-neutral-600 dark:text-neutral-300"
+              }`}
+            />
           </button>
         </div>
       </div>
