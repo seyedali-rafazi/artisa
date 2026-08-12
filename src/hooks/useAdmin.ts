@@ -63,6 +63,8 @@ export interface AdminOrder {
   totalPrice: number;
   paymentStatus: string;
   paymentMethod: string;
+  receiptUrl?: string;
+  rejectionReason?: string;
   items: { id: string; name: string; price: number; quantity: number; image: string }[];
   shippingAddress?: { fullName: string; phone: string; postalCode?: string; address: string };
   created_at: string;
@@ -218,6 +220,28 @@ export function useUpdateOrderStatus() {
   return useMutation({
     mutationFn: ({ orderId, status, paymentStatus }: { orderId: string; status: string; paymentStatus?: string }) =>
       api.patch(`/api/v1/admin/orders/${orderId}/status`, { status, paymentStatus }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+    },
+  });
+}
+
+export function useApproveOrderPayment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (orderId: string) =>
+      api.post(`/api/v1/admin/orders/${orderId}/approve-payment`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
+    },
+  });
+}
+
+export function useRejectOrderPayment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ orderId, rejectionReason }: { orderId: string; rejectionReason?: string }) =>
+      api.post(`/api/v1/admin/orders/${orderId}/reject-payment`, { rejectionReason }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-orders'] });
     },

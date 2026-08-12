@@ -9,13 +9,21 @@ export interface OrderItemPayload {
   image: string;
 }
 
+export interface CreateOrderItemPayload {
+  id: string;
+  quantity: number;
+  name?: string;
+  price?: number;
+  image?: string;
+}
+
 export interface CreateOrderPayload {
   fullName: string;
   phone: string;
-  postalCode: string;
+  postalCode?: string;
   address: string;
   paymentMethod: string;
-  items: OrderItemPayload[];
+  items: CreateOrderItemPayload[];
 }
 
 export interface OrderResponseData {
@@ -25,6 +33,8 @@ export interface OrderResponseData {
   totalPrice: number;
   paymentStatus: string;
   paymentMethod: string;
+  receiptUrl?: string;
+  rejectionReason?: string;
   items: OrderItemPayload[];
   shippingAddress?: {
     fullName: string;
@@ -43,8 +53,11 @@ export interface TrackingStep {
 export interface OrderTrackingData {
   orderId: string;
   status: string;
+  paymentStatus?: string;
   date: string;
   totalPrice: number;
+  receiptUrl?: string;
+  rejectionReason?: string;
   steps: TrackingStep[];
 }
 
@@ -56,6 +69,22 @@ export function useCreateOrder() {
       api.post<OrderResponseData>('/api/v1/orders', payload),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['user-orders'] });
+    },
+  });
+}
+
+export function useSubmitPaymentReceipt() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: ({ orderId, file }: { orderId: string; file: File }) => {
+      const formData = new FormData();
+      formData.append('file', file);
+      return api.upload<OrderResponseData>(`/api/v1/orders/${orderId}/receipt`, formData);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-orders'] });
+      queryClient.invalidateQueries({ queryKey: ['track-order'] });
     },
   });
 }
@@ -78,3 +107,4 @@ export function useTrackOrder(orderId: string) {
     retry: false,
   });
 }
+

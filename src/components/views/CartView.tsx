@@ -2,17 +2,29 @@
 
 import React from "react"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useLanguage } from "../LanguageContext"
 import { useApp } from "../AppContext"
 import { Button } from "../ui/button"
 import { Trash2, Plus, Minus, ShoppingBag } from "lucide-react"
 
 export default function CartView() {
+  const router = useRouter()
   const { t } = useLanguage()
-  const { cart, updateCartQty, removeFromCart } = useApp()
+  const { cart, updateCartQty, removeFromCart, user, showToast } = useApp()
 
   const formatPrice = (amount: number) => {
     return `${amount.toLocaleString("fa-IR")} تومان`
+  }
+
+  const handleCheckoutClick = (e: React.MouseEvent) => {
+    e.preventDefault()
+    if (!user) {
+      showToast("برای ثبت سفارش، ابتدا وارد حساب کاربری شوید", "info")
+      router.push("/login?redirect=/checkout")
+      return
+    }
+    router.push("/checkout")
   }
 
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0)
@@ -118,8 +130,11 @@ export default function CartView() {
               <span className="text-primary">{formatPrice(subtotal)}</span>
             </div>
 
-            <Button className="w-full py-3 rounded-xl font-extrabold cursor-pointer transition-transform hover:scale-[1.02]">
-              <Link href="/checkout">{t("checkoutBtn")}</Link>
+            <Button
+              onClick={handleCheckoutClick}
+              className="w-full py-3 rounded-xl font-extrabold cursor-pointer transition-transform hover:scale-[1.02]"
+            >
+              {t("checkoutBtn")}
             </Button>
           </div>
         </div>
@@ -127,3 +142,4 @@ export default function CartView() {
     </div>
   )
 }
+

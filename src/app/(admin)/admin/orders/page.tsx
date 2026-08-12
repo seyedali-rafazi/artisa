@@ -9,6 +9,10 @@ import {
   Eye,
   ShoppingBag,
   Loader2,
+  FileCheck,
+  Clock,
+  AlertCircle,
+  CheckCircle2,
 } from 'lucide-react';
 
 export default function AdminOrdersPage() {
@@ -35,18 +39,52 @@ export default function AdminOrdersPage() {
       return <span className="px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-500 font-bold text-[10px]">در حال پردازش</span>;
     }
     if (s === 'cancelled' || s === 'refunded') {
-      return <span className="px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-500 font-bold text-[10px]">لغو / مرجوع شده</span>;
+      return <span className="px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-500 font-bold text-[10px]">لغو شده</span>;
     }
-    return <span className="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-500 font-bold text-[10px]">در انتظار بررسی</span>;
+    return <span className="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-500 font-bold text-[10px]">در انتظار</span>;
+  };
+
+  const getPaymentStatusBadge = (paymentStatus: string, hasReceipt: boolean) => {
+    const p = (paymentStatus || '').toLowerCase();
+    if (p === 'payment_approved' || p === 'paid') {
+      return (
+        <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 font-extrabold text-[10px] flex items-center gap-1 w-fit">
+          <CheckCircle2 className="size-3" />
+          پرداخت تایید شد
+        </span>
+      );
+    }
+    if (p === 'payment_rejected') {
+      return (
+        <span className="px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 font-extrabold text-[10px] flex items-center gap-1 w-fit">
+          <AlertCircle className="size-3" />
+          پرداخت رد شد
+        </span>
+      );
+    }
+    if (p === 'payment_pending_review' || hasReceipt) {
+      return (
+        <span className="px-2.5 py-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 font-extrabold text-[10px] flex items-center gap-1 w-fit animate-pulse">
+          <FileCheck className="size-3" />
+          نیازمند بررسی فیش
+        </span>
+      );
+    }
+    return (
+      <span className="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 font-extrabold text-[10px] flex items-center gap-1 w-fit">
+        <Clock className="size-3" />
+        در انتظار پرداخت
+      </span>
+    );
   };
 
   return (
     <div className="flex flex-col gap-6 min-w-0 w-full" dir="rtl">
       {/* Header */}
       <div>
-        <h1 className="text-xl font-black text-foreground">مدیریت سفارشات مشتریان</h1>
+        <h1 className="text-xl font-black text-foreground">مدیریت و بررسی پرداخت سفارشات</h1>
         <p className="text-xs text-muted-foreground font-semibold mt-1">
-          بررسی فاکتورها، تغییر وضعیت سفارشات و پیگیری ارسال مرسولات
+          بررسی فیش‌های کارت به کارت، تایید یا رد پرداخت‌ها و مدیریت ارسال سفارشات
         </p>
       </div>
 
@@ -96,16 +134,17 @@ export default function AdminOrdersPage() {
           </div>
         ) : (
           <div className="overflow-x-auto overscroll-x-contain">
-            <table className="w-full min-w-[780px] text-right text-xs">
+            <table className="w-full min-w-[850px] text-right text-xs">
               <thead className="bg-muted/40 border-b border-border/40 font-extrabold text-muted-foreground">
                 <tr>
                   <th className="p-3 sm:p-4 whitespace-nowrap">کد سفارش</th>
                   <th className="p-3 sm:p-4 whitespace-nowrap">مشتری</th>
                   <th className="p-3 sm:p-4 whitespace-nowrap">تاریخ ثبت</th>
                   <th className="p-3 sm:p-4 whitespace-nowrap">مبلغ کل</th>
+                  <th className="p-3 sm:p-4 whitespace-nowrap">وضعیت پرداخت</th>
                   <th className="p-3 sm:p-4 whitespace-nowrap">وضعیت سفارش</th>
                   <th className="p-3 sm:p-4 whitespace-nowrap">تغییر وضعیت</th>
-                  <th className="p-3 sm:p-4 text-left whitespace-nowrap">جزئیات</th>
+                  <th className="p-3 sm:p-4 text-left whitespace-nowrap">بررسی</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-border/40 font-semibold">
@@ -126,6 +165,9 @@ export default function AdminOrdersPage() {
                     <td className="p-3 font-extrabold text-foreground whitespace-nowrap">
                       {order.totalPrice.toLocaleString('fa-IR')} تومان
                     </td>
+                    <td className="p-3 whitespace-nowrap">
+                      {getPaymentStatusBadge(order.paymentStatus, Boolean(order.receiptUrl))}
+                    </td>
                     <td className="p-3 whitespace-nowrap">{getStatusBadge(order.status)}</td>
                     <td className="p-3 whitespace-nowrap">
                       <select
@@ -138,16 +180,16 @@ export default function AdminOrdersPage() {
                         <option value="shipped">ارسال شده</option>
                         <option value="delivered">تحویل شده</option>
                         <option value="cancelled">لغو شده</option>
-                        <option value="refunded">مرجوع شده</option>
                       </select>
                     </td>
                     <td className="p-3 text-left whitespace-nowrap">
                       <Link href={`/admin/orders/${order.orderId}`}>
                         <button
-                          title="مشاهده جزئیات سفارش"
-                          className="p-1.5 rounded-xl hover:bg-muted text-muted-foreground hover:text-primary transition-colors cursor-pointer"
+                          title="مشاهده و بررسی فیش پرداخت"
+                          className="px-3 py-1.5 rounded-xl bg-primary/10 hover:bg-primary text-primary hover:text-white font-extrabold transition-colors cursor-pointer flex items-center gap-1 text-[11px]"
                         >
-                          <Eye className="size-4" />
+                          <Eye className="size-3.5" />
+                          <span>بررسی</span>
                         </button>
                       </Link>
                     </td>
@@ -161,3 +203,4 @@ export default function AdminOrdersPage() {
     </div>
   );
 }
+

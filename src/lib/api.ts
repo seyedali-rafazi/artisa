@@ -126,9 +126,11 @@ export async function fetchApi<T = any>(
     }
   }
 
+  const isFormData = typeof FormData !== 'undefined' && customOptions.body instanceof FormData;
+
   const token = getAuthToken();
   const headers: HeadersInit = {
-    'Content-Type': 'application/json',
+    ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
     ...customHeaders,
   };
@@ -194,27 +196,40 @@ export const api = {
   get: <T = any>(endpoint: string, params?: Record<string, any>, options?: RequestInit) =>
     fetchApi<T>(endpoint, { method: 'GET', params, ...options }),
 
-  post: <T = any>(endpoint: string, body?: any, options?: RequestInit) =>
+  post: <T = any>(endpoint: string, body?: any, options?: RequestInit) => {
+    const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+    return fetchApi<T>(endpoint, {
+      method: 'POST',
+      body: isFormData ? body : (body ? JSON.stringify(body) : undefined),
+      ...options,
+    });
+  },
+
+  upload: <T = any>(endpoint: string, formData: FormData, options?: RequestInit) =>
     fetchApi<T>(endpoint, {
       method: 'POST',
-      body: body ? JSON.stringify(body) : undefined,
+      body: formData,
       ...options,
     }),
 
-  put: <T = any>(endpoint: string, body?: any, options?: RequestInit) =>
-    fetchApi<T>(endpoint, {
+  put: <T = any>(endpoint: string, body?: any, options?: RequestInit) => {
+    const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+    return fetchApi<T>(endpoint, {
       method: 'PUT',
-      body: body ? JSON.stringify(body) : undefined,
+      body: isFormData ? body : (body ? JSON.stringify(body) : undefined),
       ...options,
-    }),
+    });
+  },
 
   delete: <T = any>(endpoint: string, options?: RequestInit) =>
     fetchApi<T>(endpoint, { method: 'DELETE', ...options }),
 
-  patch: <T = any>(endpoint: string, body?: any, options?: RequestInit) =>
-    fetchApi<T>(endpoint, {
+  patch: <T = any>(endpoint: string, body?: any, options?: RequestInit) => {
+    const isFormData = typeof FormData !== 'undefined' && body instanceof FormData;
+    return fetchApi<T>(endpoint, {
       method: 'PATCH',
-      body: body ? JSON.stringify(body) : undefined,
+      body: isFormData ? body : (body ? JSON.stringify(body) : undefined),
       ...options,
-    }),
+    });
+  },
 };

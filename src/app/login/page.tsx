@@ -58,6 +58,15 @@ export default function LoginPage() {
     const role = (user?.role || '').toLowerCase();
     const isSuperUser = Boolean(user?.is_superuser);
 
+    if (typeof window !== "undefined") {
+      const searchParams = new URLSearchParams(window.location.search);
+      const redirectUrl = searchParams.get("redirect");
+      if (redirectUrl) {
+        router.push(redirectUrl);
+        return;
+      }
+    }
+
     if (role === 'admin' || role === 'superadmin' || role === 'super_admin' || isSuperUser) {
       router.push('/admin/dashboard');
     } else {
