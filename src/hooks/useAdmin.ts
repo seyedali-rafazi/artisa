@@ -1,5 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { CommentsStore } from '@/lib/commentsStore';
 
 export interface DashboardStats {
   total_revenue: number;
@@ -267,12 +268,15 @@ export function useAuditLogs(params: { page?: number; limit?: number; search?: s
 export interface AdminComment {
   id: string;
   productId: string;
-  productName: string;
+  productName?: string;
   userId?: string;
   userName: string;
   userEmail?: string;
   text: string;
   rating: number;
+  type?: 'comment' | 'question';
+  reply?: string;
+  replyDate?: string;
   status: string; // approved, pending, rejected
   date: string;
   created_at: string;
@@ -285,28 +289,82 @@ export function useAdminComments(params: {
   limit?: number;
   search?: string;
   status?: string;
+  type?: string;
   product_id?: string;
 }) {
   return useQuery({
     queryKey: ['admin-comments', params],
-    queryFn: () => api.get<PaginatedResult<AdminComment>>('/api/v1/admin/comments', params),
+    queryFn: async () => {
+      let apiItems: AdminComment[] = [];
+      try {
+        const res = await api.get<PaginatedResult<AdminComment>>('/api/v1/admin/comments', params);
+        if (res && Array.isArray(res.items)) {
+          apiItems = res.items;
+        }
+      } catch (err) {}
+
+      const localResult = CommentsStore.getAllAdminComments(params);
+      const map = new Map<string, AdminComment>();
+      const textKey = (item: AdminComment) =>
+        `${item.productId}_${(item.userName || '').trim()}_${(item.text || '').trim().toLowerCase()}`;
+      const seenTextKeys = new Set<string>();
+
+      apiItems.forEach((item) => {
+        map.set(item.id, item);
+        seenTextKeys.add(textKey(item));
+      });
+
+      localResult.items.forEach((item) => {
+        const tKey = textKey(item as AdminComment);
+        if (map.has(item.id)) {
+          const existing = map.get(item.id)!;
+          map.set(item.id, {
+            ...existing,
+            ...(item as AdminComment),
+            reply: item.reply || existing.reply,
+            replyDate: item.replyDate || existing.replyDate,
+          });
+        } else if (!seenTextKeys.has(tKey)) {
+          map.set(item.id, item as AdminComment);
+          seenTextKeys.add(tKey);
+        }
+      });
+
+      const mergedList = Array.from(map.values());
+      const totalCount = Math.max(mergedList.length, localResult.total);
+
+      return {
+        items: mergedList,
+        total: totalCount,
+        page: params.page || 1,
+        limit: params.limit || 10,
+        total_pages: Math.ceil(mergedList.length / (params.limit || 10)) || 1,
+      };
+    },
   });
 }
 
 export function useUpdateAdminComment() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({
+    mutationFn: async ({
       commentId,
       status,
       text,
       rating,
+      reply,
     }: {
       commentId: string;
       status?: string;
       text?: string;
       rating?: number;
-    }) => api.patch(`/api/v1/admin/comments/${commentId}`, { status, text, rating }),
+      reply?: string;
+    }) => {
+      CommentsStore.updateComment(commentId, { status: status as any, text, rating, reply });
+      try {
+        await api.patch(`/api/v1/admin/comments/${commentId}`, { status, text, rating, reply });
+      } catch (e) {}
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-comments'] });
       queryClient.invalidateQueries({ queryKey: ['comments'] });
@@ -317,7 +375,12 @@ export function useUpdateAdminComment() {
 export function useDeleteAdminComment() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (commentId: string) => api.delete(`/api/v1/admin/comments/${commentId}`),
+    mutationFn: async (commentId: string) => {
+      CommentsStore.deleteComment(commentId);
+      try {
+        await api.delete(`/api/v1/admin/comments/${commentId}`);
+      } catch (e) {}
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-comments'] });
       queryClient.invalidateQueries({ queryKey: ['comments'] });
