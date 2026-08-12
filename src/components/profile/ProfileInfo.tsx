@@ -7,6 +7,7 @@ import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import { User as UserIcon, Mail, Phone, Calendar, Shield, Edit2, Check, X } from "lucide-react"
 import { useUpdateProfile } from "@/hooks/useAuth"
+import { formatShamsiDate } from "@/lib/utils"
 
 interface Toast {
   message: string
@@ -144,7 +145,7 @@ export default function ProfileInfo({ onToast }: Props) {
             <InfoRow icon={<Phone className="size-4" />} label={t("phoneNumber")} value={user.phone} />
           )}
           {user.createdAt && (
-            <InfoRow icon={<Calendar className="size-4" />} label={t("memberSince")} value={user.createdAt} />
+            <InfoRow icon={<Calendar className="size-4" />} label={t("memberSince")} value={formatShamsiDate(user.createdAt)} />
           )}
         </div>
       )}

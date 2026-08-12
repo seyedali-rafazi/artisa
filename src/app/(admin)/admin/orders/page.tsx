@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { useAdminOrders, useUpdateOrderStatus } from '@/hooks/useAdmin';
+import { formatShamsiDate } from '@/lib/utils';
 import { Input } from '@/components/ui/input';
 import {
   Search,
@@ -161,7 +162,7 @@ export default function AdminOrdersPage() {
                         </span>
                       </div>
                     </td>
-                    <td className="p-3 text-muted-foreground dir-ltr text-right whitespace-nowrap">{order.date}</td>
+                    <td className="p-3 text-muted-foreground whitespace-nowrap">{formatShamsiDate(order.date || order.created_at)}</td>
                     <td className="p-3 font-extrabold text-foreground whitespace-nowrap">
                       {order.totalPrice.toLocaleString('fa-IR')} تومان
                     </td>

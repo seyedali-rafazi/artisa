@@ -13,6 +13,7 @@ import {
 } from "lucide-react"
 import { useProductComments, usePostComment, useDeleteComment, CommentItem } from "@/hooks/useComments"
 import { Button } from "@/components/ui/button"
+import { formatShamsiDate } from "@/lib/utils"
 
 interface ProductCommentsSectionProps {
   productId: string
@@ -393,7 +394,7 @@ export default function ProductCommentsSection({
                         </div>
                         {comm.date && (
                           <span className="text-[10px] text-muted-foreground font-semibold">
-                            {comm.date}
+                            {formatShamsiDate(comm.date)}
                           </span>
                         )}
                       </div>
@@ -441,7 +442,7 @@ export default function ProductCommentsSection({
                         </span>
                         {comm.replyDate && (
                           <span className="text-[10px] text-muted-foreground font-semibold">
-                            {comm.replyDate}
+                            {formatShamsiDate(comm.replyDate)}
                           </span>
                         )}
                       </div>

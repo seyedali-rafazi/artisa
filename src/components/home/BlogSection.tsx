@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useLanguage } from "../LanguageContext"
 import { Calendar, User, ArrowLeft } from "lucide-react"
 import { useBlogPosts } from "@/hooks/useBlog"
+import { formatShamsiDate } from "@/lib/utils"
 
 export default function BlogSection() {
   const { t } = useLanguage()
@@ -62,7 +63,7 @@ export default function BlogSection() {
                 <div className="flex items-center gap-4 text-[10px] text-muted-foreground mb-3 font-semibold">
                   <span className="flex items-center gap-1">
                     <Calendar className="size-3.5 text-primary" />
-                    <span>{art.date}</span>
+                    <span>{formatShamsiDate(art.date)}</span>
                   </span>
                   <span className="flex items-center gap-1">
                     <User className="size-3.5 text-primary" />

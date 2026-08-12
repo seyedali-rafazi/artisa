@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useParams } from 'next/navigation';
 import { useAdminUsers, useAdminOrders } from '@/hooks/useAdmin';
 import { Button } from '@/components/ui/button';
+import { formatShamsiDate } from '@/lib/utils';
 import { ArrowRight, User, Mail, Phone, ShoppingBag, ShieldCheck, Calendar, DollarSign, Loader2 } from 'lucide-react';
 
 export default function UserDetailPage() {
@@ -100,7 +101,7 @@ export default function UserDetailPage() {
               <div key={order.id} className="py-3 flex items-center justify-between gap-4">
                 <div className="flex flex-col">
                   <span className="text-xs font-extrabold text-primary dir-ltr text-right">{order.orderId}</span>
-                  <span className="text-[10px] text-muted-foreground font-semibold">تاریخ: {order.date}</span>
+                  <span className="text-[10px] text-muted-foreground font-semibold">تاریخ: {formatShamsiDate(order.date || order.created_at)}</span>
                 </div>
                 <span className="text-xs font-black text-foreground">
                   {order.totalPrice.toLocaleString('fa-IR')} تومان

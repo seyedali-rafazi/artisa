@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useAuditLogs } from '@/hooks/useAdmin';
 import { useUserProfile } from '@/hooks/useAuth';
 import { Input } from '@/components/ui/input';
+import { formatShamsiDate } from '@/lib/utils';
 import {
   FileText,
   Search,
@@ -89,8 +90,8 @@ export default function AuditLogsPage() {
               <tbody className="divide-y divide-border/40 font-semibold">
                 {data.items.map((log) => (
                   <tr key={log.id} className="hover:bg-muted/20 transition-colors">
-                    <td className="p-3 text-muted-foreground font-mono text-[11px] whitespace-nowrap">
-                      {new Date(log.created_at).toLocaleString('fa-IR')}
+                    <td className="p-3 text-muted-foreground text-[11px] whitespace-nowrap">
+                      {formatShamsiDate(log.created_at, 'time')}
                     </td>
                     <td className="p-3">
                       <div className="flex flex-col min-w-[140px]">

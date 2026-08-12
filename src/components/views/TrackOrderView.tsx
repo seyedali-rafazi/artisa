@@ -14,6 +14,7 @@ import {
   AlertCircle
 } from "lucide-react"
 import { useTrackOrder } from "@/hooks/useOrders"
+import { formatShamsiDate } from "@/lib/utils"
 
 export default function TrackOrderView() {
   const { t } = useLanguage()
@@ -92,7 +93,12 @@ export default function TrackOrderView() {
       {searchedOrder && !isError && (
         <div className="border border-border/40 bg-muted/10 rounded-3xl p-6 md:p-8 animate-fade-in shadow-sm">
           <div className="flex justify-between items-center border-b border-border pb-4 mb-6">
-            <span className="text-xs font-bold text-muted-foreground">{t("orderId")}</span>
+            <div className="flex flex-col">
+              <span className="text-xs font-bold text-muted-foreground">{t("orderId")}</span>
+              {trackData?.date && (
+                <span className="text-[10px] text-muted-foreground mt-0.5">تاریخ ثبت: {formatShamsiDate(trackData.date)}</span>
+              )}
+            </div>
             <span className="text-sm font-black text-foreground tracking-widest">{trackData?.orderId || searchedOrder}</span>
           </div>
 

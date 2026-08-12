@@ -30,10 +30,10 @@ import {
 import { useCreateOrder, useSubmitPaymentReceipt } from "@/hooks/useOrders";
 
 const BANK_INFO = {
-  bankName: "بانک سامان",
-  cardNumber: "۶۲۱۹-۸۶۱۰-۱۲۳۴-۵۶۷۸",
-  cardNumberRaw: "6219861012345678",
-  accountHolder: "گالری هنری آرتیسا",
+  bankName: "بلو بانک",
+  cardNumber: "6219-8618-3853-2686",
+  cardNumberRaw: "6219861838532686",
+  accountHolder: "پریسا بابایی",
 };
 
 // Zod Schema for Receiver Address & Shipping Info (Step 1)

@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { toast } from 'sonner';
+import { formatShamsiDate } from '@/lib/utils';
 
 export default function AdminCommentsPage() {
   const [page, setPage] = useState(1);
@@ -372,7 +373,7 @@ export default function AdminCommentsPage() {
                                 </span>
                                 {comment.replyDate && (
                                   <span className="text-[9px] text-muted-foreground font-semibold">
-                                    {comment.replyDate}
+                                    {formatShamsiDate(comment.replyDate)}
                                   </span>
                                 )}
                               </div>

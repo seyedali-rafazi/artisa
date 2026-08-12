@@ -6,6 +6,7 @@ import { Package, ChevronDown, ChevronUp, AlertTriangle, Upload, CheckCircle2, C
 import { useUserOrders, useSubmitPaymentReceipt } from "@/hooks/useOrders"
 import { useApp } from "../AppContext"
 import { Button } from "../ui/button"
+import { formatShamsiDate } from "@/lib/utils"
 
 const STATUS_STYLES: Record<string, string> = {
   pending: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
@@ -160,7 +161,7 @@ export default function OrderHistory() {
                     {t("orderId")} {order.id}
                   </span>
                   <span className="text-[10px] text-muted-foreground">
-                    {t("orderDate")} {order.date}
+                    {t("orderDate")} {formatShamsiDate(order.date)}
                   </span>
                 </div>
               </div>

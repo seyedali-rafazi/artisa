@@ -28,6 +28,7 @@ import {
   AlertTriangle
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { formatShamsiDate } from '@/lib/utils';
 
 export default function OrderDetailPage() {
   const params = useParams();
@@ -106,7 +107,7 @@ export default function OrderDetailPage() {
   const isPendingReview = order.paymentStatus === 'payment_pending_review';
 
   const timelineSteps = [
-    { title: 'ثبت سفارش', date: order.date, completed: true, icon: Clock },
+    { title: 'ثبت سفارش', date: formatShamsiDate(order.date || order.created_at), completed: true, icon: Clock },
     { 
       title: 'بررسی فیش واریز', 
       date: isApproved ? 'تایید شد' : isRejected ? 'رد شد' : 'در انتظار بررسی', 
@@ -152,7 +153,7 @@ export default function OrderDetailPage() {
             <span className="text-xl font-black text-primary dir-ltr">{order.orderId}</span>
           </div>
           <span className="text-xs text-muted-foreground font-semibold mt-1">
-            تاریخ ثبت: {order.date}
+            تاریخ ثبت: {formatShamsiDate(order.date || order.created_at)}
           </span>
         </div>
 
