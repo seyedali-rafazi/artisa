@@ -83,9 +83,7 @@ export async function refreshAccessToken(): Promise<string | null> {
       const resJson = await res.json();
       const newAccessToken =
         resJson?.data?.access_token ||
-        resJson?.data?.token ||
-        resJson?.access_token ||
-        resJson?.token;
+        resJson?.access_token;
 
       if (newAccessToken && typeof newAccessToken === 'string') {
         setAccessToken(newAccessToken);

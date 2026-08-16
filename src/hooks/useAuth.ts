@@ -22,8 +22,7 @@ export interface UserProfile {
 }
 
 export interface AuthResponse {
-  access_token?: string;
-  token?: string;
+  access_token: string;
   token_type?: string;
   expires_in?: number;
   user: UserProfile;
@@ -74,7 +73,7 @@ export function useVerifyEmail() {
     mutationFn: (payload: { email: string; code: string }) =>
       api.post<AuthResponse>('/api/v1/auth/verify-email', payload),
     onSuccess: (data) => {
-      const token = data?.access_token || data?.token;
+      const token = data?.access_token;
       if (token) {
         setAccessToken(token);
         queryClient.setQueryData(['user-profile'], data.user);
@@ -98,7 +97,7 @@ export function useLogin() {
     mutationFn: (credentials: { email: string; password: string }) =>
       api.post<AuthResponse>('/api/v1/auth/login', credentials),
     onSuccess: (data) => {
-      const token = data?.access_token || data?.token;
+      const token = data?.access_token;
       if (token) {
         setAccessToken(token);
         queryClient.setQueryData(['user-profile'], data.user);
@@ -118,7 +117,7 @@ export function useGoogleLoginAuth() {
     mutationFn: (credential: string) =>
       api.post<AuthResponse>('/api/v1/auth/google', { credential }),
     onSuccess: (data) => {
-      const token = data?.access_token || data?.token;
+      const token = data?.access_token;
       if (token) {
         setAccessToken(token);
         queryClient.setQueryData(['user-profile'], data.user);
