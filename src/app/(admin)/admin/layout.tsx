@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useUserProfile } from '@/hooks/useAuth';
+import { useApp } from '@/components/AppContext';
 import AdminSidebar from '@/components/admin/AdminSidebar';
 import AdminHeader from '@/components/admin/AdminHeader';
 import { ShieldAlert, Loader2 } from 'lucide-react';
@@ -10,6 +11,7 @@ import { Button } from '@/components/ui/button';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const router = useRouter();
+  const { isAuthLoading } = useApp();
   const { data: user, isLoading, isError } = useUserProfile();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -19,7 +21,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     setMounted(true);
   }, []);
 
-  if (!mounted || isLoading) {
+  if (!mounted || isAuthLoading || isLoading) {
     return (
       <div className="h-screen w-screen flex flex-col items-center justify-center bg-background gap-3" dir="rtl">
         <Loader2 className="size-8 text-primary animate-spin" />

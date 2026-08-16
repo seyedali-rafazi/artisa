@@ -70,7 +70,7 @@
 | **State & Data Fetching** | [TanStack React Query v5](https://tanstack.com/query) + React Context API |
 | **HTTP Client** | [Axios](https://axios-http.com/) |
 | **Forms & Validation** | [React Hook Form](https://react-hook-form.com/) + [Zod](https://zod.dev/) |
-| **Auth Integration** | `@react-oauth/google` + JWT local storage/cookie state |
+| **Auth Integration** | `@react-oauth/google` + In-Memory Access Tokens + HttpOnly/Secure Refresh Cookies |
 | **Feedback & Dialogs** | [Sonner](https://sonner.emilkowal.ski/) toast notifications |
 
 ---
@@ -216,8 +216,8 @@ Open [http://localhost:3000](http://localhost:3000) with your browser to view th
 
 ## 🔌 Backend API Integration
 
-The frontend communicates with the **FastAPI Backend** via an Axios instance configured in `src/lib/api.ts` (or equivalent).
-- **Authentication**: JWT tokens stored securely. Axios interceptors automatically attach the `Authorization: Bearer <token>` header to requests.
+The frontend communicates with the **FastAPI Backend** via Axios and fetch API clients configured in `src/lib/axios.ts` and `src/lib/api.ts`.
+- **Authentication Security Architecture**: Short-lived Access Tokens are stored strictly in application memory (`TokenManager`), while Refresh Tokens are handled via backend-managed `HttpOnly`, `Secure`, and `SameSite` cookies with single-flight token rotation and automatic 401 retry interceptors. No authentication credentials are ever stored in `localStorage` or `sessionStorage`.
 - **Data Caching**: TanStack React Query (`@tanstack/react-query`) handles background data refetching, caching, optimistic updates, and loading/error states.
 
 ---

@@ -1,4 +1,35 @@
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'https://artisa-backend.vercel.app';
+import {
+  getAccessToken,
+  setAccessToken,
+  clearAccessToken,
+  hasAccessToken,
+  subscribeAccessToken,
+  useAccessToken,
+  tokenManager,
+  getAuthToken,
+  setAuthToken,
+  setAuthTokens,
+  removeAuthToken,
+} from './auth-token';
+
+export {
+  getAccessToken,
+  setAccessToken,
+  clearAccessToken,
+  hasAccessToken,
+  subscribeAccessToken,
+  useAccessToken,
+  tokenManager,
+  getAuthToken,
+  setAuthToken,
+  setAuthTokens,
+  removeAuthToken,
+};
+
+const BASE_URL =
+  typeof window !== 'undefined'
+    ? '' // Use relative path in browser so Next.js rewrites proxy requests as first-party
+    : process.env.NEXT_PUBLIC_API_URL || 'https://artisa-backend.vercel.app';
 
 export interface ApiResponse<T = any> {
   success: boolean;
@@ -19,87 +50,64 @@ export class ApiError extends Error {
   }
 }
 
-export function getAuthToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('artisa_token');
-}
+// ─── Synchronized Single-Flight Refresh Mutex ──────────────────────────────────
 
-export function getRefreshToken(): string | null {
-  if (typeof window === 'undefined') return null;
-  return localStorage.getItem('artisa_refresh_token');
-}
+let refreshPromise: Promise<string | null> | null = null;
 
-export function setAuthTokens(token: string, refreshToken?: string) {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('artisa_token', token);
-    if (refreshToken) {
-      localStorage.setItem('artisa_refresh_token', refreshToken);
-    }
+/**
+ * Trigger token rotation via HttpOnly refresh token cookie.
+ * - Single-flight deduplication: multiple concurrent callers share the exact same promise.
+ * - Prevents multiple /refresh requests from triggering backend reuse detection.
+ * - In-memory access token is updated upon successful response.
+ */
+export async function refreshAccessToken(): Promise<string | null> {
+  if (refreshPromise) {
+    return refreshPromise;
   }
-}
 
-export function setAuthToken(token: string) {
-  setAuthTokens(token);
-}
+  refreshPromise = (async () => {
+    try {
+      const res = await fetch(`${BASE_URL}/api/v1/auth/refresh`, {
+        method: 'POST',
+        credentials: 'include', // Send HttpOnly refresh_token cookie
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
 
-export function removeAuthToken() {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('artisa_token');
-    localStorage.removeItem('artisa_refresh_token');
-  }
-}
+      if (!res.ok) {
+        clearAccessToken();
+        return null;
+      }
 
-let isRefreshing = false;
-let failedQueue: Array<{
-  resolve: (value: any) => void;
-  reject: (reason?: any) => void;
-}> = [];
+      const resJson = await res.json();
+      const newAccessToken =
+        resJson?.data?.access_token ||
+        resJson?.data?.token ||
+        resJson?.access_token ||
+        resJson?.token;
 
-const processQueue = (error: any, token: string | null = null) => {
-  failedQueue.forEach((prom) => {
-    if (error) {
-      prom.reject(error);
-    } else {
-      prom.resolve(token);
+      if (newAccessToken && typeof newAccessToken === 'string') {
+        setAccessToken(newAccessToken);
+        return newAccessToken;
+      } else {
+        clearAccessToken();
+        return null;
+      }
+    } catch {
+      clearAccessToken();
+      return null;
     }
+  })().finally(() => {
+    refreshPromise = null;
   });
-  failedQueue = [];
-};
 
-async function refreshAccessToken(): Promise<string | null> {
-  const refreshToken = getRefreshToken();
-  if (!refreshToken) return null;
-
-  try {
-    const res = await fetch(`${BASE_URL}/api/v1/auth/refresh`, {
-      method: 'POST',
-      credentials: 'include',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ refresh_token: refreshToken }),
-    });
-
-    if (!res.ok) {
-      removeAuthToken();
-      return null;
-    }
-
-    const data = await res.json();
-    const newAccessToken = data?.data?.token || data?.token;
-    const newRefreshToken = data?.data?.refresh_token || data?.refresh_token || refreshToken;
-
-    if (newAccessToken) {
-      setAuthTokens(newAccessToken, newRefreshToken);
-      return newAccessToken;
-    } else {
-      removeAuthToken();
-      return null;
-    }
-  } catch (err) {
-    removeAuthToken();
-    return null;
-  }
+  return refreshPromise;
 }
 
+/**
+ * Universal authenticated API fetch function with single-flight refresh interceptor.
+ */
 export async function fetchApi<T = any>(
   endpoint: string,
   options: RequestInit & { params?: Record<string, any>; _isRetry?: boolean } = {}
@@ -127,8 +135,8 @@ export async function fetchApi<T = any>(
   }
 
   const isFormData = typeof FormData !== 'undefined' && customOptions.body instanceof FormData;
+  const token = getAccessToken();
 
-  const token = getAuthToken();
   const headers: HeadersInit = {
     ...(isFormData ? {} : { 'Content-Type': 'application/json' }),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
@@ -141,31 +149,24 @@ export async function fetchApi<T = any>(
     headers,
   });
 
-  // Handle 401 Unauthorized with Automatic Refresh Token
+  // Handle 401 Unauthorized with Automatic Single-Flight Refresh & Retry
   if (
     response.status === 401 &&
     !_isRetry &&
     !endpoint.includes('/auth/login') &&
     !endpoint.includes('/auth/register') &&
-    !endpoint.includes('/auth/google')
+    !endpoint.includes('/auth/google') &&
+    !endpoint.includes('/auth/verify-email') &&
+    !endpoint.includes('/auth/forgot-password') &&
+    !endpoint.includes('/auth/reset-password') &&
+    !endpoint.includes('/auth/refresh')
   ) {
-    if (isRefreshing) {
-      return new Promise((resolve, reject) => {
-        failedQueue.push({ resolve, reject });
-      })
-        .then(() => fetchApi<T>(endpoint, { ...options, _isRetry: true }))
-        .catch((err) => Promise.reject(err));
-    }
-
-    isRefreshing = true;
     const newToken = await refreshAccessToken();
-    isRefreshing = false;
-
     if (newToken) {
-      processQueue(null, newToken);
       return fetchApi<T>(endpoint, { ...options, _isRetry: true });
     } else {
-      processQueue(new ApiError('نشست شما منقضی شده است', 401), null);
+      const error = new ApiError('نشست شما منقضی شده است', 401);
+      throw error;
     }
   }
 

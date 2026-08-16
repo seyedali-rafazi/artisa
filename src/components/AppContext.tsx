@@ -3,6 +3,7 @@
 import React, { createContext, useContext, useState, useEffect } from "react"
 import { useUserProfile, useLogout } from "@/hooks/useAuth"
 import { useFavorites, useFavoriteIds, useToggleFavorite } from "@/hooks/useFavorites"
+import { refreshAccessToken } from "@/lib/api"
 import { useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
 
@@ -67,7 +68,7 @@ export interface User {
   email: string
   phone?: string
   createdAt?: string
-  role?: string
+  role?: string;
 }
 
 type View = "home" | "product-details" | "cart" | "checkout" | "checkout-success" | "track-order" | "about-us" | "contact-us" | "blog" | "faq"
@@ -88,6 +89,7 @@ interface AppContextType {
   setShowLogin: (show: boolean) => void
   user: User | null
   setUser: (user: User | null) => void
+  isAuthLoading: boolean
   logout: () => void
   addresses: Address[]
   addAddress: (address: Omit<Address, "id">) => void
@@ -106,6 +108,7 @@ interface AppContextType {
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [currentView, setCurrentView] = useState<View>("home")
+  const [isAuthLoading, setIsAuthLoading] = useState(true)
   const [cart, setCart] = useState<CartItem[]>(() => {
     if (typeof window !== "undefined") {
       try {
@@ -123,6 +126,25 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const [addresses, setAddresses] = useState<Address[]>([])
 
   const queryClient = useQueryClient()
+
+  // Bootstrap Auth on initial page load: attempt silent refresh via HttpOnly cookie
+  useEffect(() => {
+    let isMounted = true
+    refreshAccessToken()
+      .then((token) => {
+        if (isMounted && token) {
+          queryClient.invalidateQueries({ queryKey: ["user-profile"] })
+        }
+      })
+      .finally(() => {
+        if (isMounted) {
+          setIsAuthLoading(false)
+        }
+      })
+    return () => {
+      isMounted = false
+    }
+  }, [queryClient])
 
   // User Profile Query from TanStack Query
   const { data: userProfileData } = useUserProfile()
@@ -293,6 +315,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         setShowLogin,
         user,
         setUser: () => {},
+        isAuthLoading,
         logout,
         addresses,
         addAddress,

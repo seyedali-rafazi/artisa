@@ -1,5 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { api, setAuthTokens, removeAuthToken, getAuthToken } from '@/lib/api';
+import {
+  api,
+  setAccessToken,
+  clearAccessToken,
+  getAccessToken,
+  useAccessToken,
+  refreshAccessToken,
+} from '@/lib/api';
 
 export interface UserProfile {
   id: string;
@@ -15,8 +22,10 @@ export interface UserProfile {
 }
 
 export interface AuthResponse {
-  token: string;
-  refresh_token?: string;
+  access_token?: string;
+  token?: string;
+  token_type?: string;
+  expires_in?: number;
   user: UserProfile;
 }
 
@@ -27,14 +36,27 @@ export interface RegisterResponse {
   message: string;
 }
 
+export interface SessionItem {
+  id: string;
+  token_family_id: string;
+  created_at: string;
+  expires_at: string;
+  last_used_at?: string;
+  user_agent?: string;
+  ip_address?: string;
+  device_info?: string;
+  is_current: boolean;
+}
+
 export function useUserProfile() {
-  const token = typeof window !== 'undefined' ? getAuthToken() : null;
+  const token = useAccessToken();
 
   return useQuery({
     queryKey: ['user-profile'],
     queryFn: () => api.get<UserProfile>('/api/v1/users/me'),
     enabled: Boolean(token),
     retry: false,
+    staleTime: 5 * 60 * 1000,
   });
 }
 
@@ -52,8 +74,9 @@ export function useVerifyEmail() {
     mutationFn: (payload: { email: string; code: string }) =>
       api.post<AuthResponse>('/api/v1/auth/verify-email', payload),
     onSuccess: (data) => {
-      if (data?.token) {
-        setAuthTokens(data.token, data.refresh_token);
+      const token = data?.access_token || data?.token;
+      if (token) {
+        setAccessToken(token);
         queryClient.setQueryData(['user-profile'], data.user);
         queryClient.invalidateQueries({ queryKey: ['user-profile'] });
       }
@@ -75,8 +98,9 @@ export function useLogin() {
     mutationFn: (credentials: { email: string; password: string }) =>
       api.post<AuthResponse>('/api/v1/auth/login', credentials),
     onSuccess: (data) => {
-      if (data?.token) {
-        setAuthTokens(data.token, data.refresh_token);
+      const token = data?.access_token || data?.token;
+      if (token) {
+        setAccessToken(token);
         queryClient.setQueryData(['user-profile'], data.user);
         queryClient.invalidateQueries({ queryKey: ['user-profile'] });
         queryClient.invalidateQueries({ queryKey: ['wishlist'] });
@@ -94,8 +118,9 @@ export function useGoogleLoginAuth() {
     mutationFn: (credential: string) =>
       api.post<AuthResponse>('/api/v1/auth/google', { credential }),
     onSuccess: (data) => {
-      if (data?.token) {
-        setAuthTokens(data.token, data.refresh_token);
+      const token = data?.access_token || data?.token;
+      if (token) {
+        setAccessToken(token);
         queryClient.setQueryData(['user-profile'], data.user);
         queryClient.invalidateQueries({ queryKey: ['user-profile'] });
         queryClient.invalidateQueries({ queryKey: ['wishlist'] });
@@ -133,12 +158,50 @@ export function useLogout() {
   return useMutation({
     mutationFn: () => api.post('/api/v1/auth/logout'),
     onSettled: () => {
-      removeAuthToken();
+      clearAccessToken();
       queryClient.setQueryData(['user-profile'], null);
       queryClient.clear();
       if (typeof window !== 'undefined') {
         window.location.href = '/';
       }
+    },
+  });
+}
+
+export function useLogoutAll() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: () => api.post('/api/v1/auth/logout-all'),
+    onSettled: () => {
+      clearAccessToken();
+      queryClient.setQueryData(['user-profile'], null);
+      queryClient.clear();
+      if (typeof window !== 'undefined') {
+        window.location.href = '/';
+      }
+    },
+  });
+}
+
+export function useSessions() {
+  const token = useAccessToken();
+
+  return useQuery({
+    queryKey: ['user-sessions'],
+    queryFn: () => api.get<SessionItem[]>('/api/v1/auth/sessions'),
+    enabled: Boolean(token),
+  });
+}
+
+export function useRevokeSession() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (sessionId: string) =>
+      api.delete(`/api/v1/auth/sessions/${sessionId}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['user-sessions'] });
     },
   });
 }

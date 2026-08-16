@@ -80,7 +80,7 @@ function Skeleton() {
 
 export default function ProfileView() {
   const { t } = useLanguage()
-  const { user } = useApp()
+  const { user, isAuthLoading } = useApp()
   const router = useRouter()
   const searchParams = useSearchParams()
   const tabParam = searchParams.get("tab") as Tab | null
@@ -107,6 +107,15 @@ export default function ProfileView() {
     setActiveTab(tab)
     setDrawerOpen(false)
     router.push(`/profile?tab=${tab}`)
+  }
+
+  // ── Initial Auth Bootstrap Loading State (Prevents Flickering) ───────────
+  if (isAuthLoading) {
+    return (
+      <div className="w-full py-12" dir="rtl">
+        <Skeleton />
+      </div>
+    )
   }
 
   // ── Unauthenticated state ────────────────────────────────────────────────
