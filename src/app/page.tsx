@@ -1,6 +1,7 @@
 "use client"
 
-import React from "react"
+import React, { useEffect, Suspense } from "react"
+import { useSearchParams, useRouter } from "next/navigation"
 import { useLanguage } from "@/components/LanguageContext"
 import { useApp } from "@/components/AppContext"
 import HeroSlider from "@/components/home/HeroSlider"
@@ -10,10 +11,19 @@ import BlogSection from "@/components/home/BlogSection"
 import ProductBox from "@/components/home/ProductBox"
 import { X, Search } from "lucide-react"
 import { useProducts } from "@/hooks/useProducts"
-
 function MainAppContent() {
   const { searchQuery, setSearchQuery } = useApp()
   const { t } = useLanguage()
+  const searchParams = useSearchParams()
+  const router = useRouter()
+
+  // Sync URL search param with AppContext
+  useEffect(() => {
+    const param = searchParams.get("search")
+    if (param !== null && param !== searchQuery) {
+      setSearchQuery(param)
+    }
+  }, [searchParams, searchQuery, setSearchQuery])
 
   // Dynamic backend fetch for search / category filtering
   const isSpecialSearch = searchQuery === "special"
@@ -35,8 +45,14 @@ function MainAppContent() {
     limit: 8,
   })
 
+  // Dynamic products strictly from backend
   const filteredProducts = searchApiData?.items || []
   const bestSellers = bestSellersApiData?.items || []
+
+  const handleClearSearch = () => {
+    setSearchQuery("")
+    router.push("/")
+  }
 
   return (
     <div className="flex flex-col gap-12">
@@ -53,7 +69,7 @@ function MainAppContent() {
               </span>
             </div>
             <button 
-              onClick={() => setSearchQuery("")}
+              onClick={handleClearSearch}
               className="flex items-center gap-1 text-xs font-bold text-muted-foreground hover:text-primary transition-colors cursor-pointer"
             >
               <span>پاک کردن فیلتر</span>
@@ -121,5 +137,9 @@ function MainAppContent() {
 }
 
 export default function RootPage() {
-  return <MainAppContent />
+  return (
+    <Suspense fallback={<div className="h-64 animate-pulse rounded-3xl bg-muted/30" />}>
+      <MainAppContent />
+    </Suspense>
+  )
 }

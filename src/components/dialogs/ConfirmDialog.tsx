@@ -27,11 +27,15 @@ export default function ConfirmDialog({
 
   return (
     <div
-      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in"
       role="dialog"
       aria-modal="true"
+      onClick={onCancel}
     >
-      <div className="w-full max-w-sm rounded-2xl border border-border/40 bg-background p-6 shadow-2xl flex flex-col gap-5">
+      <div 
+        className="w-full max-w-sm rounded-2xl border border-border/40 bg-background p-6 shadow-2xl flex flex-col gap-5 animate-scale-up"
+        onClick={(e) => e.stopPropagation()}
+      >
         <div className="flex flex-col items-center gap-3 text-center">
           <div
             className={`flex size-12 items-center justify-center rounded-2xl ${

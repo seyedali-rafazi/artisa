@@ -492,8 +492,17 @@ export default function AdminCommentsPage() {
 
       {/* Admin Reply Modal */}
       {replyTarget && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-background rounded-3xl p-6 max-w-lg w-full border border-border shadow-2xl space-y-4" dir="rtl">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in"
+          onClick={() => { setReplyTarget(null); setReplyText(''); }}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div 
+            className="bg-background rounded-3xl p-6 max-w-lg w-full border border-border shadow-2xl space-y-4 animate-scale-up" 
+            dir="rtl"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between border-b border-border/40 pb-3">
               <h3 className="text-base font-black text-foreground flex items-center gap-2">
                 <Reply className="size-5 text-primary" />

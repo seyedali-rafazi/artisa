@@ -164,7 +164,12 @@ export default function LoginDialog() {
   const isPending = loginMutation.isPending || registerMutation.isPending || googleAuthMutation.isPending || verifyMutation.isPending
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
+    <div 
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in"
+      onClick={() => { setShowLogin(false); resetForm(); }}
+      role="dialog"
+      aria-modal="true"
+    >
       <div 
         className="relative w-full max-w-sm rounded-3xl border border-border/40 bg-background p-6 shadow-2xl flex flex-col gap-4 animate-scale-up"
         onClick={(e) => e.stopPropagation()}

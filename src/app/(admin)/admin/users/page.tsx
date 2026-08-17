@@ -226,8 +226,16 @@ export default function AdminUsersPage() {
 
       {/* Role Change Modal (SUPER_ADMIN only) */}
       {selectedUserForRole && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="bg-background border border-border/60 rounded-3xl p-6 max-w-sm w-full shadow-2xl flex flex-col gap-4">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in"
+          onClick={() => setSelectedUserForRole(null)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div 
+            className="bg-background border border-border/60 rounded-3xl p-6 max-w-sm w-full shadow-2xl flex flex-col gap-4 animate-scale-up"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h2 className="text-sm font-black text-foreground">تغییر سطح دسترسی کاربر</h2>
             <span className="text-xs font-bold text-muted-foreground">
               کاربر: <strong className="text-foreground">{selectedUserForRole.name}</strong>

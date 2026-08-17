@@ -183,8 +183,16 @@ export default function AdminsManagementPage() {
 
       {/* Create Admin Modal */}
       {showCreateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="bg-background border border-border/60 rounded-3xl p-6 max-w-sm w-full shadow-2xl flex flex-col gap-4">
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in"
+          onClick={() => setShowCreateModal(false)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div 
+            className="bg-background border border-border/60 rounded-3xl p-6 max-w-sm w-full shadow-2xl flex flex-col gap-4 animate-scale-up"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h2 className="text-base font-black text-foreground">افزودن مدیر جدید</h2>
 
             {errorMessage && (

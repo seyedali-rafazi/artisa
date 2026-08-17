@@ -20,6 +20,8 @@ import {
   LogOut,
   LayoutDashboard,
 } from "lucide-react";
+import SearchModal from "./SearchModal";
+import HeaderSearchBar from "./HeaderSearchBar";
 
 const profileNavItems = [
   {
@@ -56,6 +58,7 @@ export default function Header() {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
 
   const profileMenuRef = useRef<HTMLDivElement>(null);
@@ -63,6 +66,22 @@ export default function Header() {
     ? searchParams.get("tab") || "profile"
     : null;
   const isOnProfile = pathname.startsWith("/profile");
+
+  // Global search shortcut (Ctrl+K or /)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
+        return;
+      }
+      if (((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") || e.key === "/") {
+        e.preventDefault();
+        setIsSearchModalOpen(true);
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -170,31 +189,25 @@ export default function Header() {
             </Link>
           </div>
 
-          {/* Desktop Search bar */}
-          <form
-            onSubmit={handleSearchSubmit}
-            className="relative hidden max-w-md flex-1 px-4 md:block"
-          >
-            <div className="relative">
-              <Input
-                type="text"
-                placeholder={t("searchPlaceholder")}
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                className="w-full pr-10 pl-4 py-2 rounded-xl border-border bg-muted/30 focus-visible:ring-primary/40 focus-visible:border-primary text-sm"
-                dir="rtl"
-              />
-              <button
-                type="submit"
-                className="absolute top-1/2 -translate-y-1/2 cursor-pointer text-muted-foreground hover:text-primary transition-colors left-3"
-              >
-                <Search className="size-4" />
-              </button>
-            </div>
-          </form>
+          {/* Desktop Search bar — EXACT size and location with anchored suggestions dropdown */}
+          <HeaderSearchBar
+            isOpen={isSearchModalOpen}
+            onOpen={() => setIsSearchModalOpen(true)}
+            onClose={() => setIsSearchModalOpen(false)}
+          />
 
-          {/* Action icons (Cart, Profile Popup) */}
+          {/* Action icons (Search, Cart, Profile Popup) */}
           <div className="flex items-center gap-2 md:gap-3">
+            {/* Mobile Search Button */}
+            <button
+              onClick={() => setIsSearchModalOpen(true)}
+              className="flex size-10 items-center justify-center rounded-full hover:bg-muted/80 text-foreground transition-all md:hidden cursor-pointer"
+              title="جستجو"
+              aria-label="جستجو"
+            >
+              <Search className="size-5" />
+            </button>
+
             {/* Cart Button */}
             <Link
               href="/cart"
@@ -440,25 +453,19 @@ export default function Header() {
             </button>
           </div>
 
-          {/* Mobile Search input */}
-          <form onSubmit={handleSearchSubmit} className="mb-6">
-            <div className="relative">
-              <Input
-                type="text"
-                placeholder={t("searchPlaceholder")}
-                value={searchInput}
-                onChange={(e) => setSearchInput(e.target.value)}
-                className="w-full pr-10 pl-4 py-2 rounded-xl bg-muted/40 border-border text-sm"
-                dir="rtl"
-              />
-              <button
-                type="submit"
-                className="absolute top-1/2 -translate-y-1/2 cursor-pointer text-muted-foreground left-3"
-              >
-                <Search className="size-4" />
-              </button>
+          {/* Mobile Search button */}
+          <div
+            onClick={() => {
+              setMobileMenuOpen(false);
+              setIsSearchModalOpen(true);
+            }}
+            className="mb-6 cursor-pointer"
+          >
+            <div className="relative flex items-center justify-between pr-10 pl-3 py-2.5 rounded-2xl bg-muted/40 border border-border text-xs text-muted-foreground">
+              <span className="truncate">{searchQuery ? `جستجو: «${searchQuery}»` : t("searchPlaceholder")}</span>
+              <Search className="absolute right-3.5 size-4 text-muted-foreground" />
             </div>
-          </form>
+          </div>
 
           {/* Menu links */}
           <div className="flex flex-col gap-1 text-base font-bold">
@@ -549,6 +556,13 @@ export default function Header() {
           </div>
         </div>
       </div>
+
+      {/* Digikala-Style Search Modal */}
+      <SearchModal
+        isOpen={isSearchModalOpen}
+        onClose={() => setIsSearchModalOpen(false)}
+        initialQuery={searchQuery}
+      />
     </>
   );
 }

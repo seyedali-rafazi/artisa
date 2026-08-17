@@ -356,8 +356,16 @@ export default function OrderDetailPage() {
 
       {/* Lightbox Modal for Receipt Image */}
       {showReceiptModal && order.receiptUrl && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="relative max-w-3xl max-h-[90vh] bg-background border border-border rounded-3xl overflow-hidden shadow-2xl flex flex-col">
+        <div 
+          className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setShowReceiptModal(false)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div 
+            className="relative max-w-3xl max-h-[90vh] bg-background border border-border rounded-3xl overflow-hidden shadow-2xl flex flex-col animate-scale-up"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="flex items-center justify-between p-4 border-b border-border">
               <h3 className="text-sm font-black text-foreground">تصویر فیش پرداخت کارت به کارت - سفارش {order.orderId}</h3>
               <button
@@ -376,8 +384,16 @@ export default function OrderDetailPage() {
 
       {/* Reject Payment Reason Modal */}
       {showRejectModal && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="relative max-w-md w-full bg-background border border-border rounded-3xl p-6 shadow-2xl flex flex-col gap-4">
+        <div 
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 animate-fade-in"
+          onClick={() => setShowRejectModal(false)}
+          role="dialog"
+          aria-modal="true"
+        >
+          <div 
+            className="relative max-w-md w-full bg-background border border-border rounded-3xl p-6 shadow-2xl flex flex-col gap-4 animate-scale-up"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h3 className="text-sm font-black text-foreground border-b border-border/40 pb-3">
               رد پرداخت فیش واریزی
             </h3>
