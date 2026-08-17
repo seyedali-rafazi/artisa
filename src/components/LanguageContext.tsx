@@ -37,13 +37,13 @@ const translations: Record<string, string> = {
   serviceSupport: "پشتیبانی ۲۴/۷",
   serviceSupportDesc: "مشاوره هنری آنلاین در تمام روزهای هفته",
   serviceGuarantee: "ضمانت اصالت اثر",
-  serviceGuaranteeDesc: "گواهی اصالت برای تمام آثار اورجینال",
+  serviceGuaranteeDesc: "گواهی اصالت برای تمام آثار",
   servicePayment: "پرداخت در محل",
   servicePaymentDesc: "امکان پرداخت وجه پس از تحویل اثر",
 
   // Specials
   specialOffersTitle: "آثار ویژه با قیمت استثنایی",
-  specialOffersSubtitle: "فرصت محدود برای تهیه آثار هنری اورجینال",
+  specialOffersSubtitle: "فرصت محدود برای تهیه آثار هنری",
   viewAll: "مشاهده همه",
   timeLeft: "زمان باقی‌مانده:",
 

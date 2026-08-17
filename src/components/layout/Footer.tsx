@@ -148,7 +148,7 @@ export default function Footer() {
           </div>
           <div className="flex items-center gap-2">
             <Mail className="size-4 text-primary shrink-0" />
-            <span>info@zihome.ir</span>
+            <span>artisaartgallery@gmail.com</span>
           </div>
           <div className="flex items-center gap-2">
             <Clock className="size-4 text-primary shrink-0" />

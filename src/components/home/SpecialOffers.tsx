@@ -3,46 +3,69 @@
 import React, { useState, useEffect } from "react"
 import { useLanguage } from "../LanguageContext"
 import ProductBox from "./ProductBox"
-import { Timer } from "lucide-react"
-import { useProducts } from "@/hooks/useProducts"
+import { Timer, Sparkles } from "lucide-react"
+import { useActiveSpecialOffers } from "@/hooks/useSpecialOffers"
+import { toPersianDigits } from "@/lib/utils"
 
 export default function SpecialOffers() {
   const { t } = useLanguage()
-  const { data: apiData, isLoading } = useProducts({ isSpecial: true })
-  const [timeLeft, setTimeLeft] = useState({ hrs: 12, mins: 34, secs: 56 })
+  const { data: activeOffers, isLoading, refetch } = useActiveSpecialOffers()
+
+  // Get active offer and associated products
+  const primaryOffer = activeOffers && activeOffers.length > 0 ? activeOffers[0] : null
+
+  // Aggregate products from active offer(s)
+  const specialProducts = primaryOffer?.products || []
+
+  // Countdown timer state
+  const [timeLeft, setTimeLeft] = useState<{
+    days: number
+    hrs: number
+    mins: number
+    secs: number
+    isExpired: boolean
+  }>({
+    days: 0,
+    hrs: 0,
+    mins: 0,
+    secs: 0,
+    isExpired: false,
+  })
 
   useEffect(() => {
-    const countdown = setInterval(() => {
-      setTimeLeft((prev) => {
-        let { hrs, mins, secs } = prev
-        if (secs > 0) {
-          secs--
-        } else {
-          secs = 59
-          if (mins > 0) {
-            mins--
-          } else {
-            mins = 59
-            if (hrs > 0) {
-              hrs--
-            } else {
-              hrs = 23
-            }
-          }
-        }
-        return { hrs, mins, secs }
-      })
-    }, 1000)
-    return () => clearInterval(countdown)
-  }, [])
+    if (!primaryOffer?.end_at) return
 
-  const specialProducts = apiData?.items || []
+    const targetTime = new Date(primaryOffer.end_at).getTime()
 
-  const translateNum = (n: number) => {
-    return n.toString().padStart(2, "0").replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[parseInt(d)])
+    const updateTimer = () => {
+      const now = Date.now()
+      const diffInSeconds = Math.max(0, Math.floor((targetTime - now) / 1000))
+
+      if (diffInSeconds <= 0) {
+        setTimeLeft({ days: 0, hrs: 0, mins: 0, secs: 0, isExpired: true })
+        refetch() // Refetch active offers when offer expires
+        return
+      }
+
+      const days = Math.floor(diffInSeconds / 86400)
+      const hrs = Math.floor((diffInSeconds % 86400) / 3600)
+      const mins = Math.floor((diffInSeconds % 3600) / 60)
+      const secs = diffInSeconds % 60
+
+      setTimeLeft({ days, hrs, mins, secs, isExpired: false })
+    }
+
+    updateTimer()
+    const interval = setInterval(updateTimer, 1000)
+    return () => clearInterval(interval)
+  }, [primaryOffer?.end_at, refetch])
+
+  const formatDigit = (n: number) => {
+    return toPersianDigits(n.toString().padStart(2, "0"))
   }
 
-  if (!isLoading && specialProducts.length === 0) {
+  // If loading finished and no active offer exists, hide section
+  if (!isLoading && (!primaryOffer || specialProducts.length === 0 || timeLeft.isExpired)) {
     return null
   }
 
@@ -57,9 +80,11 @@ export default function SpecialOffers() {
         <div className="flex flex-col gap-1 text-center md:text-start">
           <h2 className="text-xl md:text-2xl font-black text-primary flex items-center justify-center md:justify-start gap-2">
             <Timer className="size-6 text-primary animate-pulse" />
-            {t("specialOffersTitle")}
+            {primaryOffer?.title || t("specialOffersTitle")}
           </h2>
-          <p className="text-xs text-muted-foreground">{t("specialOffersSubtitle")}</p>
+          <p className="text-xs text-muted-foreground">
+            {primaryOffer?.description || t("specialOffersSubtitle")}
+          </p>
         </div>
 
         {/* Countdown Timer Widget */}
@@ -68,19 +93,31 @@ export default function SpecialOffers() {
             {t("timeLeft")}
           </span>
           <div className="flex items-center gap-1">
+            {/* Days if > 0 */}
+            {timeLeft.days > 0 && (
+              <>
+                <div className="flex flex-col items-center justify-center min-w-10 h-10 px-1.5 rounded-xl bg-primary text-primary-foreground font-black text-xs shadow-md">
+                  <span>{toPersianDigits(timeLeft.days)}</span>
+                </div>
+                <span className="font-bold text-primary animate-pulse">:</span>
+              </>
+            )}
+
             {/* Hours */}
             <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground font-black text-sm shadow-md">
-              {translateNum(timeLeft.hrs)}
+              {formatDigit(timeLeft.hrs)}
             </div>
             <span className="font-bold text-primary animate-pulse">:</span>
+
             {/* Minutes */}
             <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground font-black text-sm shadow-md">
-              {translateNum(timeLeft.mins)}
+              {formatDigit(timeLeft.mins)}
             </div>
             <span className="font-bold text-primary animate-pulse">:</span>
+
             {/* Seconds */}
             <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground font-black text-sm shadow-md animate-bounce-slow">
-              {translateNum(timeLeft.secs)}
+              {formatDigit(timeLeft.secs)}
             </div>
           </div>
         </div>
@@ -95,7 +132,7 @@ export default function SpecialOffers() {
         </div>
       ) : (
         <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-          {specialProducts.map((product) => (
+          {specialProducts.map((product: any) => (
             <ProductBox key={product.id} product={product} />
           ))}
         </div>

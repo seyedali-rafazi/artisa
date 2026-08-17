@@ -51,6 +51,12 @@ export default function AdminSidebar({
       superAdminOnly: false,
     },
     {
+      title: 'پیشنهادات ویژه و تخفیف‌ها',
+      href: '/admin/special-offers',
+      icon: Sparkles,
+      superAdminOnly: false,
+    },
+    {
       title: 'سفارشات مشتریان',
       href: '/admin/orders',
       icon: ShoppingBag,
