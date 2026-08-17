@@ -11,6 +11,7 @@ import {
   Clock,
   Trash2,
   ChevronLeft,
+  ArrowRight,
   ShoppingBag,
   Sparkles,
   ArrowUpRight,
@@ -18,6 +19,7 @@ import {
 } from "lucide-react";
 import { useApp, Product } from "@/components/AppContext";
 import { useLanguage } from "@/components/LanguageContext";
+import { useScrollLock } from "@/hooks/useScrollLock";
 import { api } from "@/lib/api";
 
 interface SearchModalProps {
@@ -29,7 +31,7 @@ interface SearchModalProps {
 interface CategorySuggestion {
   id: string;
   name: string;
-  badge: string; // e.g. "دسته‌بندی", "در تابلو", "در تابلو شاسی"
+  badge: string;
   categoryFilter: string;
   icon?: "grid" | "search";
 }
@@ -94,11 +96,19 @@ export default function SearchModal({
       } catch {
         // ignore
       }
-      setTimeout(() => {
-        inputRef.current?.focus();
-      }, 50);
+      const timeout = setTimeout(() => {
+        if (inputRef.current) {
+          inputRef.current.focus();
+          // Move cursor to end of text
+          const len = inputRef.current.value.length;
+          inputRef.current.setSelectionRange(len, len);
+        }
+      }, 80);
+      return () => clearTimeout(timeout);
     }
   }, [isOpen, initialQuery]);
+
+  useScrollLock(isOpen);
 
   // Handle Escape key
   useEffect(() => {
@@ -186,7 +196,7 @@ export default function SearchModal({
       try {
         const res = await api.get<{ items: Product[]; total: number }>("/api/v1/products", {
           search: trimmed,
-          limit: 6,
+          limit: 8,
         });
 
         if (res && res.items) {
@@ -202,7 +212,7 @@ export default function SearchModal({
       } finally {
         setIsLoadingProducts(false);
       }
-    }, 250);
+    }, 200);
 
     return () => clearTimeout(timer);
   }, [query]);
@@ -219,302 +229,293 @@ export default function SearchModal({
   if (!isOpen) return null;
 
   return (
-    <>
-      {/* ── Low-transparent darkened backdrop overlay (Mobile) ── */}
-      <div
-        className="fixed inset-0 z-40 bg-black/25 backdrop-blur-[1px] transition-opacity duration-200 animate-fade-in md:hidden"
-        onClick={onClose}
-        aria-hidden="true"
-      />
-
-      {/* ── Mobile Floating Modal anchored at top ── */}
-      <div
-        className="fixed top-2.5 left-1/2 -translate-x-1/2 w-[calc(100%-1.5rem)] max-w-xl z-50 flex flex-col animate-fade-in md:hidden"
-        dir="rtl"
-        role="dialog"
-        aria-modal="true"
-      >
-        <div
-          className="w-full bg-card/95 backdrop-blur-xl border border-border/80 rounded-3xl shadow-2xl overflow-hidden flex flex-col max-h-[85vh] transition-all"
-          onClick={(e) => e.stopPropagation()}
+    <div
+      className="fixed inset-0 z-[100] w-full h-[100dvh] bg-white flex flex-col overflow-hidden animate-in fade-in duration-200 select-none md:hidden"
+      dir="rtl"
+      role="dialog"
+      aria-modal="true"
+    >
+      {/* ── Top Header: Back Button + Search Input + Clear Button ── */}
+      <header className="sticky top-0 z-20 flex items-center gap-2 px-3 py-2.5 bg-white border-b border-gray-200 shadow-xs shrink-0">
+        {/* Back Button (RTL: Arrow pointing right to return) */}
+        <button
+          type="button"
+          onClick={onClose}
+          className="flex size-10 items-center justify-center rounded-full text-gray-700 hover:bg-gray-100 active:bg-gray-200 transition-colors cursor-pointer shrink-0"
+          title="بازگشت"
+          aria-label="بازگشت"
         >
-          {/* ── Header: Pill Search Input matching the photo ── */}
-          <div className="p-3 sm:p-3.5 border-b border-border/40 bg-background/50">
-            <form
-              onSubmit={(e) => {
-                e.preventDefault();
-                if (query.trim()) {
-                  executeSearch(query);
-                }
+          <ArrowRight className="size-5 text-gray-800" />
+        </button>
+
+        {/* Search Input Container */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (query.trim()) {
+              executeSearch(query);
+            }
+          }}
+          className="relative flex-1 flex items-center min-w-0"
+        >
+          <input
+            ref={inputRef}
+            type="search"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="جستجو در آرتیسا..."
+            className="w-full h-11 pr-4 pl-10 rounded-2xl bg-gray-100 text-gray-900 placeholder:text-gray-400 text-sm font-medium border border-transparent focus:border-amber-600/50 focus:bg-white focus:outline-none transition-all shadow-inner"
+            autoComplete="off"
+            autoCorrect="off"
+            spellCheck="false"
+          />
+
+          {/* Clear (✕) Button */}
+          {query ? (
+            <button
+              type="button"
+              onClick={() => {
+                setQuery("");
+                inputRef.current?.focus();
               }}
-              className="relative flex items-center"
+              className="absolute left-2.5 top-1/2 -translate-y-1/2 flex size-7 items-center justify-center rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-200/80 active:bg-gray-300 transition-colors cursor-pointer"
+              title="پاک کردن"
             >
-              {/* Search Icon (RTL Right side) */}
-              <div className="absolute right-3.5 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none">
-                <Search className="size-4.5 text-muted-foreground/80" />
-              </div>
+              <X className="size-4" />
+            </button>
+          ) : (
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none">
+              <Search className="size-4" />
+            </div>
+          )}
+        </form>
+      </header>
 
-              {/* Input Field */}
-              <input
-                ref={inputRef}
-                type="text"
-                value={query}
-                onChange={(e) => setQuery(e.target.value)}
-                placeholder="جستجو..."
-                className="w-full h-11 pr-10 pl-12 rounded-2xl bg-muted/40 dark:bg-muted/20 border border-transparent focus:border-primary/40 focus:bg-background text-foreground text-sm font-medium focus:outline-none transition-all placeholder:text-muted-foreground/60"
-              />
-
-              {/* Clear (✕) Button (RTL Left side) */}
-              <div className="absolute left-2.5 top-1/2 -translate-y-1/2 flex items-center">
-                {query ? (
+      {/* ── Body: Pure White Full-Screen Scrollable Content ── */}
+      <div className="flex-1 overflow-y-auto bg-white overscroll-contain">
+        {query.trim() ? (
+          <div className="divide-y divide-gray-100 pb-20">
+            {/* 1. Category Suggestions matching query */}
+            {matchingSuggestions.length > 0 && (
+              <div className="bg-white">
+                {matchingSuggestions.map((item) => (
                   <button
-                    type="button"
-                    onClick={() => {
-                      setQuery("");
-                      inputRef.current?.focus();
-                    }}
-                    className="p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
-                    title="پاک کردن"
+                    key={item.id}
+                    onClick={() => executeSearch(item.name)}
+                    className="w-full px-4 py-3.5 flex items-center justify-between hover:bg-gray-50 active:bg-gray-100 border-b border-gray-100 last:border-b-0 transition-colors group cursor-pointer text-right"
                   >
-                    <X className="size-4 text-muted-foreground" />
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={onClose}
-                    className="p-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/80 transition-colors cursor-pointer"
-                    title="بستن"
-                  >
-                    <X className="size-4 text-muted-foreground" />
-                  </button>
-                )}
-              </div>
-            </form>
-          </div>
-
-          {/* ── Body: Live Suggestions List / Products / Trends ── */}
-          <div className="flex-1 overflow-y-auto divide-y divide-border/30 min-h-[200px]">
-            {query.trim() ? (
-              <>
-                {/* 1. Category Suggestions matching the photo */}
-                {matchingSuggestions.length > 0 && (
-                  <div>
-                    {matchingSuggestions.map((item) => (
-                      <button
-                        key={item.id}
-                        onClick={() => executeSearch(item.name)}
-                        className="w-full px-4 py-3 flex items-center justify-between hover:bg-muted/40 border-b border-border/30 last:border-b-0 transition-colors group cursor-pointer text-right"
-                      >
-                        {/* Right: Icon + Suggestion title */}
-                        <div className="flex items-center gap-3 min-w-0">
-                          <div className="text-muted-foreground/70 group-hover:text-primary transition-colors shrink-0">
-                            {item.icon === "search" ? (
-                              <Search className="size-4" />
-                            ) : (
-                              <LayoutGrid className="size-4" />
-                            )}
-                          </div>
-                          <span className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors truncate">
-                            {item.name}
-                          </span>
-                        </div>
-
-                        {/* Left: Blue Contextual Badge (e.g. "دسته‌بندی", "در تابلو") */}
-                        <span className="text-xs font-bold text-sky-600 dark:text-sky-400 shrink-0">
-                          {item.badge}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {/* 2. Direct Keyword Search Item */}
-                <button
-                  onClick={() => executeSearch(query)}
-                  className="w-full px-4 py-2.5 flex items-center justify-between bg-primary/5 hover:bg-primary/10 transition-colors group cursor-pointer text-right border-y border-primary/20"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Search className="size-4 text-primary" />
-                    <span className="text-xs font-bold text-foreground">
-                      جستجو برای «<strong className="text-primary">{query}</strong>»
-                    </span>
-                  </div>
-                  <ArrowUpRight className="size-4 text-primary group-hover:-translate-x-0.5 transition-transform" />
-                </button>
-
-                {/* 3. Live Backend Products */}
-                <div className="p-3.5 space-y-2.5">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-extrabold text-muted-foreground flex items-center gap-1.5">
-                      <ShoppingBag className="size-3.5 text-primary" />
-                      <span>کالاهای مرتبط</span>
-                    </span>
-                    {isLoadingProducts && (
-                      <Loader2 className="size-3.5 text-primary animate-spin" />
-                    )}
-                  </div>
-
-                  {isLoadingProducts && liveProducts.length === 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {[1, 2, 3, 4].map((n) => (
-                        <div
-                          key={n}
-                          className="h-14 rounded-2xl bg-muted/40 animate-pulse border border-border/30"
-                        />
-                      ))}
-                    </div>
-                  ) : liveProducts.length > 0 ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      {liveProducts.map((prod) => (
-                        <div
-                          key={prod.id}
-                          onClick={() => handleProductClick(prod.id)}
-                          className="flex items-center gap-2.5 p-2 rounded-2xl border border-border/40 bg-background/80 hover:border-primary/50 hover:bg-primary/5 transition-all cursor-pointer group"
-                        >
-                          <div className="relative size-11 rounded-xl overflow-hidden bg-muted shrink-0">
-                            <Image
-                              src={prod.image || "/placeholder.jpg"}
-                              alt={prod.name}
-                              fill
-                              className="object-cover group-hover:scale-105 transition-transform duration-300"
-                            />
-                          </div>
-                          <div className="flex flex-col min-w-0 flex-1">
-                            <span className="text-xs font-bold text-foreground truncate group-hover:text-primary transition-colors">
-                              {prod.name}
-                            </span>
-                            <span className="text-[10px] text-muted-foreground truncate">
-                              {prod.category}
-                            </span>
-                            <span className="text-xs font-black text-primary mt-0.5">
-                              {prod.price.toLocaleString("fa-IR")} تومان
-                            </span>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  ) : !isLoadingProducts && matchingSuggestions.length === 0 ? (
-                    <div className="text-center py-6 text-xs text-muted-foreground font-medium">
-                      کالایی با عبارت «{query}» یافت نشد.
-                    </div>
-                  ) : null}
-                </div>
-              </>
-            ) : (
-              /* ── Default View: Recent & Trending ── */
-              <div className="p-4 space-y-5">
-                {/* Recent Searches */}
-                {recentSearches.length > 0 && (
-                  <div className="space-y-2.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-extrabold text-foreground flex items-center gap-1.5">
-                        <Clock className="size-3.5 text-muted-foreground" />
-                        <span>جستجوهای اخیر</span>
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="text-gray-400 group-hover:text-amber-700 transition-colors shrink-0">
+                        {item.icon === "search" ? (
+                          <Search className="size-4.5" />
+                        ) : (
+                          <LayoutGrid className="size-4.5" />
+                        )}
+                      </div>
+                      <span className="text-sm font-bold text-gray-800 group-hover:text-amber-700 transition-colors truncate">
+                        {item.name}
                       </span>
+                    </div>
+
+                    <span className="text-xs font-bold text-sky-600 bg-sky-50 px-2.5 py-0.5 rounded-full shrink-0">
+                      {item.badge}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* 2. Direct Keyword Search Action */}
+            <button
+              onClick={() => executeSearch(query)}
+              className="w-full px-4 py-3 flex items-center justify-between bg-amber-50/60 hover:bg-amber-100/60 active:bg-amber-100 transition-colors group cursor-pointer text-right"
+            >
+              <div className="flex items-center gap-2.5 min-w-0">
+                <Search className="size-4 text-amber-700 shrink-0" />
+                <span className="text-xs font-bold text-gray-800 truncate">
+                  جستجو برای «<strong className="text-amber-700">{query}</strong>»
+                </span>
+              </div>
+              <ArrowUpRight className="size-4 text-amber-700 group-hover:-translate-x-0.5 transition-transform shrink-0" />
+            </button>
+
+            {/* 3. Live Products Results */}
+            <div className="p-4 space-y-3 bg-white">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-extrabold text-gray-700 flex items-center gap-1.5">
+                  <ShoppingBag className="size-4 text-amber-700" />
+                  <span>کالاهای مرتبط</span>
+                  {totalLiveCount > 0 && (
+                    <span className="text-[11px] font-bold text-gray-400 mr-1">
+                      ({totalLiveCount})
+                    </span>
+                  )}
+                </span>
+                {isLoadingProducts && (
+                  <Loader2 className="size-4 text-amber-700 animate-spin" />
+                )}
+              </div>
+
+              {isLoadingProducts && liveProducts.length === 0 ? (
+                <div className="grid grid-cols-1 gap-2.5">
+                  {[1, 2, 3, 4].map((n) => (
+                    <div
+                      key={n}
+                      className="h-16 rounded-2xl bg-gray-100 animate-pulse border border-gray-200/60"
+                    />
+                  ))}
+                </div>
+              ) : liveProducts.length > 0 ? (
+                <div className="grid grid-cols-1 gap-2.5">
+                  {liveProducts.map((prod) => (
+                    <div
+                      key={prod.id}
+                      onClick={() => handleProductClick(prod.id)}
+                      className="flex items-center gap-3 p-2.5 rounded-2xl border border-gray-100 bg-white hover:border-amber-600/40 hover:bg-amber-50/30 active:bg-gray-50 shadow-xs transition-all cursor-pointer group"
+                    >
+                      <div className="relative size-14 rounded-xl overflow-hidden bg-gray-100 shrink-0 border border-gray-100">
+                        <Image
+                          src={prod.image || "/placeholder.jpg"}
+                          alt={prod.name}
+                          fill
+                          className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                      </div>
+                      <div className="flex flex-col min-w-0 flex-1 justify-center">
+                        <span className="text-xs font-bold text-gray-900 truncate group-hover:text-amber-800 transition-colors">
+                          {prod.name}
+                        </span>
+                        <span className="text-[11px] text-gray-500 truncate mt-0.5">
+                          {prod.category}
+                        </span>
+                        <span className="text-xs font-black text-amber-800 mt-1">
+                          {prod.price.toLocaleString("fa-IR")} تومان
+                        </span>
+                      </div>
+                      <ChevronLeft className="size-4 text-gray-300 group-hover:text-amber-700 group-hover:-translate-x-0.5 transition-all shrink-0" />
+                    </div>
+                  ))}
+                </div>
+              ) : !isLoadingProducts && matchingSuggestions.length === 0 ? (
+                <div className="text-center py-10 text-xs text-gray-500 font-medium">
+                  کالایی با عبارت «{query}» یافت نشد.
+                </div>
+              ) : null}
+            </div>
+          </div>
+        ) : (
+          /* ── Default View: Recent & Trending & Categories ── */
+          <div className="p-4 space-y-6 pb-20 bg-white">
+            {/* Recent Searches */}
+            {recentSearches.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-extrabold text-gray-800 flex items-center gap-1.5">
+                    <Clock className="size-4 text-gray-400" />
+                    <span>جستجوهای اخیر</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={clearAllRecent}
+                    className="text-[11px] font-bold text-gray-400 hover:text-red-600 flex items-center gap-1 transition-colors cursor-pointer"
+                  >
+                    <Trash2 className="size-3.5" />
+                    <span>پاک کردن همه</span>
+                  </button>
+                </div>
+
+                <div className="flex flex-wrap gap-2">
+                  {recentSearches.map((term, idx) => (
+                    <div
+                      key={idx}
+                      onClick={() => executeSearch(term)}
+                      className="inline-flex items-center gap-2 px-3.5 py-2 rounded-full border border-gray-200 bg-gray-50 hover:bg-gray-100 active:bg-gray-200 text-xs font-bold text-gray-800 transition-all cursor-pointer group"
+                    >
+                      <Clock className="size-3.5 text-gray-400 group-hover:text-amber-700 transition-colors" />
+                      <span>{term}</span>
                       <button
                         type="button"
-                        onClick={clearAllRecent}
-                        className="text-[11px] text-muted-foreground hover:text-destructive flex items-center gap-1 transition-colors cursor-pointer"
+                        onClick={(e) => removeRecentSearch(e, term)}
+                        className="text-gray-400 hover:text-red-600 p-0.5 rounded-full"
+                        title="حذف"
                       >
-                        <Trash2 className="size-3" />
-                        <span>پاک کردن همه</span>
+                        <X className="size-3.5" />
                       </button>
                     </div>
-
-                    <div className="flex flex-wrap gap-2">
-                      {recentSearches.map((term, idx) => (
-                        <div
-                          key={idx}
-                          onClick={() => executeSearch(term)}
-                          className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-border/60 bg-muted/20 hover:border-primary hover:bg-primary/5 text-xs font-bold text-foreground transition-all cursor-pointer group"
-                        >
-                          <Clock className="size-3 text-muted-foreground group-hover:text-primary transition-colors" />
-                          <span>{term}</span>
-                          <button
-                            type="button"
-                            onClick={(e) => removeRecentSearch(e, term)}
-                            className="text-muted-foreground hover:text-destructive p-0.5 rounded-full"
-                            title="حذف"
-                          >
-                            <X className="size-3" />
-                          </button>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* Popular Searches */}
-                <div className="space-y-2.5">
-                  <span className="text-xs font-extrabold text-foreground flex items-center gap-1.5">
-                    <TrendingUp className="size-3.5 text-rose-500" />
-                    <span>بیشترین جستجوهای آرتیسا</span>
-                  </span>
-
-                  <div className="flex flex-wrap gap-2">
-                    {POPULAR_SEARCHES.map((term, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => executeSearch(term)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-border/60 bg-background hover:border-primary hover:text-primary text-xs font-bold text-muted-foreground transition-all cursor-pointer"
-                      >
-                        <Sparkles className="size-3 text-amber-500" />
-                        <span>{term}</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Categories Quick Grid */}
-                <div className="space-y-2.5 pt-1">
-                  <span className="text-xs font-extrabold text-foreground flex items-center gap-1.5">
-                    <LayoutGrid className="size-3.5 text-primary" />
-                    <span>دسته‌بندی‌های برگزیده</span>
-                  </span>
-
-                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                    {[
-                      { name: "تابلو نقاشی" },
-                      { name: "هنر دیواری" },
-                      { name: "مجسمه و دکوری" },
-                      { name: "قاب و فریم" },
-                      { name: "هنر مدرن" },
-                      { name: "پیشنهادات شگفت‌انگیز" },
-                    ].map((cat, idx) => (
-                      <button
-                        key={idx}
-                        onClick={() => executeSearch(cat.name)}
-                        className="p-2.5 rounded-2xl border border-border/60 bg-muted/20 hover:border-primary hover:bg-primary/5 text-xs font-extrabold text-foreground text-center transition-all cursor-pointer"
-                      >
-                        {cat.name}
-                      </button>
-                    ))}
-                  </div>
+                  ))}
                 </div>
               </div>
             )}
-          </div>
 
-          {/* ── Footer ── */}
-          {query.trim() && (
-            <div className="p-3 border-t border-border/40 bg-muted/10 flex items-center justify-between">
-              <span className="text-xs text-muted-foreground font-medium">
-                {totalLiveCount > 0
-                  ? `${totalLiveCount} کالا در پایگاه داده یافت شد`
-                  : "مشاهده تمام نتایج"}
+            {/* Popular Searches */}
+            <div className="space-y-3">
+              <span className="text-xs font-extrabold text-gray-800 flex items-center gap-1.5">
+                <TrendingUp className="size-4 text-rose-500" />
+                <span>بیشترین جستجوهای آرتیسا</span>
               </span>
 
-              <button
-                onClick={() => executeSearch(query)}
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-primary text-primary-foreground text-xs font-extrabold hover:bg-primary/90 transition-all cursor-pointer"
-              >
-                <span>مشاهده نتایج جستجو</span>
-                <ChevronLeft className="size-4" />
-              </button>
+              <div className="flex flex-wrap gap-2">
+                {POPULAR_SEARCHES.map((term, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => executeSearch(term)}
+                    className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full border border-gray-200 bg-white hover:border-amber-600/60 hover:text-amber-800 active:bg-gray-50 text-xs font-bold text-gray-700 transition-all cursor-pointer shadow-2xs"
+                  >
+                    <Sparkles className="size-3.5 text-amber-500" />
+                    <span>{term}</span>
+                  </button>
+                ))}
+              </div>
             </div>
-          )}
-        </div>
+
+            {/* Categories Quick Access Grid */}
+            <div className="space-y-3 pt-1">
+              <span className="text-xs font-extrabold text-gray-800 flex items-center gap-1.5">
+                <LayoutGrid className="size-4 text-amber-700" />
+                <span>دسته‌بندی‌های برگزیده</span>
+              </span>
+
+              <div className="grid grid-cols-2 gap-2.5">
+                {[
+                  { name: "تابلو نقاشی" },
+                  { name: "هنر دیواری" },
+                  { name: "مجسمه و دکوری" },
+                  { name: "قاب و فریم" },
+                  { name: "هنر مدرن" },
+                  { name: "پیشنهادات شگفت‌انگیز" },
+                ].map((cat, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => executeSearch(cat.name)}
+                    className="p-3 rounded-2xl border border-gray-200 bg-gray-50 hover:border-amber-600/40 hover:bg-amber-50/40 active:bg-gray-100 text-xs font-extrabold text-gray-800 text-center transition-all cursor-pointer shadow-2xs"
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )}
       </div>
-    </>
+
+      {/* ── Sticky Bottom Footer: Show All Search Results ── */}
+      {query.trim() && (
+        <footer className="fixed bottom-0 inset-x-0 z-20 p-3 bg-white border-t border-gray-200 shadow-lg flex items-center justify-between">
+          <span className="text-xs text-gray-500 font-medium">
+            {totalLiveCount > 0
+              ? `${totalLiveCount} کالا یافت شد`
+              : "مشاهده تمام نتایج"}
+          </span>
+
+          <button
+            onClick={() => executeSearch(query)}
+            className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-amber-700 active:bg-amber-800 text-white text-xs font-extrabold hover:bg-amber-800 transition-all cursor-pointer shadow-sm"
+          >
+            <span>مشاهده همه نتایج</span>
+            <ChevronLeft className="size-4" />
+          </button>
+        </footer>
+      )}
+    </div>
   );
 }

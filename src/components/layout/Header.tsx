@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import SearchModal from "./SearchModal";
 import HeaderSearchBar from "./HeaderSearchBar";
+import { useScrollLock } from "@/hooks/useScrollLock";
 
 const profileNavItems = [
   {
@@ -58,7 +59,8 @@ export default function Header() {
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
-  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [isDesktopSearchOpen, setIsDesktopSearchOpen] = useState(false);
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
 
   const profileMenuRef = useRef<HTMLDivElement>(null);
@@ -76,7 +78,11 @@ export default function Header() {
       }
       if (((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") || e.key === "/") {
         e.preventDefault();
-        setIsSearchModalOpen(true);
+        if (typeof window !== "undefined" && window.innerWidth < 768) {
+          setIsMobileSearchOpen(true);
+        } else {
+          setIsDesktopSearchOpen(true);
+        }
       }
     };
     window.addEventListener("keydown", handleKeyDown);
@@ -96,25 +102,7 @@ export default function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  useEffect(() => {
-    if (!mobileMenuOpen) return;
-
-    const scrollY = window.scrollY;
-    document.body.style.position = "fixed";
-    document.body.style.top = `-${scrollY}px`;
-    document.body.style.left = "0";
-    document.body.style.right = "0";
-    document.body.style.overflow = "hidden";
-
-    return () => {
-      document.body.style.position = "";
-      document.body.style.top = "";
-      document.body.style.left = "";
-      document.body.style.right = "";
-      document.body.style.overflow = "";
-      window.scrollTo(0, scrollY);
-    };
-  }, [mobileMenuOpen]);
+  useScrollLock(mobileMenuOpen);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,13 +135,13 @@ export default function Header() {
     <>
       <header className="sticky top-0 z-50 w-full border-b border-border bg-background/80 backdrop-blur-md">
         {/* Main Header Row */}
-        <div className="flex h-16 w-full items-center justify-between px-4 md:h-20 md:px-8">
-          {/* Logo and Menu Trigger (Mobile) */}
+        <div className="relative flex h-16 w-full items-center justify-between px-4 md:h-20 md:px-8">
+          {/* Menu Trigger (Mobile) + Desktop Logo */}
           <div className="flex items-center gap-3">
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="rounded-md p-1.5 hover:bg-muted md:hidden"
-              aria-label="Toggle menu"
+              className="rounded-xl p-2 text-foreground hover:bg-muted md:hidden cursor-pointer transition-colors"
+              aria-label="منوی سایت"
             >
               {mobileMenuOpen ? (
                 <X className="size-6" />
@@ -168,18 +156,18 @@ export default function Header() {
                 setSearchQuery("");
                 setSearchInput("");
               }}
-              className="flex cursor-pointer items-center gap-2.5"
+              className="hidden md:flex cursor-pointer items-center gap-2.5 group"
             >
               <Image
                 src="/logo.png"
                 alt={t("brandName")}
                 width={160}
                 height={160}
-                className="h-11 w-auto md:h-14 object-contain"
+                className="h-14 w-auto object-contain transition-transform group-hover:scale-105"
                 priority
               />
               <div className="flex flex-col">
-                <span className="text-lg font-extrabold tracking-tight md:text-xl text-foreground">
+                <span className="text-lg font-extrabold tracking-tight md:text-xl text-foreground group-hover:text-primary transition-colors">
                   {t("brandName")}
                 </span>
                 <span className="text-[9px] text-muted-foreground hidden sm:inline leading-3">
@@ -189,19 +177,44 @@ export default function Header() {
             </Link>
           </div>
 
+          {/* Mobile Centered Circular Logo (Only Logo, Circle Shape, Centered, No Brand Name) */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 md:hidden">
+            <Link
+              href="/"
+              onClick={() => {
+                setSearchQuery("");
+                setSearchInput("");
+              }}
+              className="flex items-center justify-center cursor-pointer group"
+              aria-label={t("brandName")}
+            >
+              <div className="relative size-11 rounded-full overflow-hidden bg-white border border-border/80 shadow-xs flex items-center justify-center p-1 ring-2 ring-primary/20 group-hover:ring-primary/50 group-active:scale-95 transition-all">
+                <Image
+                  src="/logo.png"
+                  alt={t("brandName")}
+                  width={88}
+                  height={88}
+                  className="size-full object-cover rounded-full scale-110"
+                  priority
+                />
+              </div>
+            </Link>
+          </div>
+
           {/* Desktop Search bar — EXACT size and location with anchored suggestions dropdown */}
           <HeaderSearchBar
-            isOpen={isSearchModalOpen}
-            onOpen={() => setIsSearchModalOpen(true)}
-            onClose={() => setIsSearchModalOpen(false)}
+            isOpen={isDesktopSearchOpen}
+            onOpen={() => setIsDesktopSearchOpen(true)}
+            onClose={() => setIsDesktopSearchOpen(false)}
           />
 
-          {/* Action icons (Search, Cart, Profile Popup) */}
-          <div className="flex items-center gap-2 md:gap-3">
+          {/* Action icons (Mobile Search, Cart, Profile Popup) */}
+          <div className="flex items-center gap-1.5 md:gap-3">
             {/* Mobile Search Button */}
             <button
-              onClick={() => setIsSearchModalOpen(true)}
-              className="flex size-10 items-center justify-center rounded-full hover:bg-muted/80 text-foreground transition-all md:hidden cursor-pointer"
+              type="button"
+              onClick={() => setIsMobileSearchOpen(true)}
+              className="hidden md:flex size-10 items-center justify-center rounded-full text-foreground hover:bg-muted/80 active:bg-muted transition-all cursor-pointer md:hidden"
               title="جستجو"
               aria-label="جستجو"
             >
@@ -227,11 +240,10 @@ export default function Header() {
               <div className="relative" ref={profileMenuRef}>
                 <button
                   onClick={() => setProfileMenuOpen(!profileMenuOpen)}
-                  className={`flex items-center gap-1.5 px-2.5 py-1.5 md:px-3 md:py-2 rounded-full border transition-all cursor-pointer ${
-                    isOnProfile || profileMenuOpen
-                      ? "border-primary bg-primary/10 text-primary"
-                      : "border-border bg-muted/20 text-foreground hover:border-primary hover:bg-primary/5"
-                  }`}
+                  className={`flex items-center gap-1.5 px-2.5 py-1.5 md:px-3 md:py-2 rounded-full border transition-all cursor-pointer ${isOnProfile || profileMenuOpen
+                    ? "border-primary bg-primary/10 text-primary"
+                    : "border-border bg-muted/20 text-foreground hover:border-primary hover:bg-primary/5"
+                    }`}
                   title="پروفایل کاربری"
                   aria-label="منوی پروفایل"
                   aria-expanded={profileMenuOpen}
@@ -269,11 +281,10 @@ export default function Header() {
                         <Link
                           href="/admin/dashboard"
                           onClick={() => setProfileMenuOpen(false)}
-                          className={`flex items-center gap-2.5 rounded-xl px-3 py-2 transition-colors ${
-                            isOnAdmin
-                              ? "bg-primary/15 text-primary font-bold"
-                              : "text-foreground hover:bg-muted hover:text-primary"
-                          }`}
+                          className={`flex items-center gap-2.5 rounded-xl px-3 py-2 transition-colors ${isOnAdmin
+                            ? "bg-primary/15 text-primary font-bold"
+                            : "text-foreground hover:bg-muted hover:text-primary"
+                            }`}
                           aria-current={isOnAdmin ? "page" : undefined}
                         >
                           <LayoutDashboard
@@ -290,11 +301,10 @@ export default function Header() {
                               key={tab}
                               href={href}
                               onClick={() => setProfileMenuOpen(false)}
-                              className={`flex items-center gap-2.5 rounded-xl px-3 py-2 transition-colors ${
-                                isActive
-                                  ? "bg-primary/15 text-primary font-bold"
-                                  : "text-foreground hover:bg-muted hover:text-primary"
-                              }`}
+                              className={`flex items-center gap-2.5 rounded-xl px-3 py-2 transition-colors ${isActive
+                                ? "bg-primary/15 text-primary font-bold"
+                                : "text-foreground hover:bg-muted hover:text-primary"
+                                }`}
                               aria-current={isActive ? "page" : undefined}
                             >
                               <Icon
@@ -367,11 +377,10 @@ export default function Header() {
                           onClick={() => {
                             setSearchQuery(cat.filter);
                           }}
-                          className={`rounded-lg px-3 py-2 text-start text-xs font-medium transition-all cursor-pointer ${
-                            isActive
-                              ? "bg-primary/15 text-primary font-bold"
-                              : "hover:bg-muted/80 hover:text-primary"
-                          }`}
+                          className={`rounded-lg px-3 py-2 text-start text-xs font-medium transition-all cursor-pointer ${isActive
+                            ? "bg-primary/15 text-primary font-bold"
+                            : "hover:bg-muted/80 hover:text-primary"
+                            }`}
                           aria-current={isActive ? "true" : undefined}
                         >
                           {t(cat.key)}
@@ -436,34 +445,41 @@ export default function Header() {
           aria-label="Mobile menu"
         >
           <div className="mb-4 flex items-center justify-between">
-            <Image
-              src="/logo.png"
-              alt={t("brandName")}
-              width={120}
-              height={120}
-              className="h-10 w-auto object-contain"
-            />
+            <div className="flex items-center gap-2.5">
+              <div className="relative size-10 rounded-full overflow-hidden bg-white border border-border/80 shadow-xs flex items-center justify-center p-0.5 ring-2 ring-primary/20">
+                <Image
+                  src="/logo.png"
+                  alt={t("brandName")}
+                  width={80}
+                  height={80}
+                  className="size-full object-cover rounded-full scale-110"
+                />
+              </div>
+              <span className="text-sm font-extrabold text-foreground">{t("brandName")}</span>
+            </div>
             <button
               type="button"
               onClick={() => setMobileMenuOpen(false)}
-              className="rounded-md p-1.5 hover:bg-muted"
-              aria-label="Close menu"
+              className="rounded-xl p-2 hover:bg-muted cursor-pointer transition-colors"
+              aria-label="بستن منو"
             >
               <X className="size-6" />
             </button>
           </div>
 
-          {/* Mobile Search button */}
+          {/* Mobile Search button in Sidebar */}
           <div
             onClick={() => {
               setMobileMenuOpen(false);
-              setIsSearchModalOpen(true);
+              setIsMobileSearchOpen(true);
             }}
-            className="mb-6 cursor-pointer"
+            className="mb-5 cursor-pointer group"
           >
-            <div className="relative flex items-center justify-between pr-10 pl-3 py-2.5 rounded-2xl bg-muted/40 border border-border text-xs text-muted-foreground">
-              <span className="truncate">{searchQuery ? `جستجو: «${searchQuery}»` : t("searchPlaceholder")}</span>
-              <Search className="absolute right-3.5 size-4 text-muted-foreground" />
+            <div className="relative flex items-center justify-between pr-10 pl-3.5 py-3 rounded-2xl bg-muted/40 hover:bg-muted/70 active:scale-[0.99] border border-border/80 group-hover:border-primary/40 transition-all text-xs text-muted-foreground shadow-xs">
+              <span className="truncate font-medium">
+                {searchQuery ? `جستجو: «${searchQuery}»` : "جستجو در آرتیسا..."}
+              </span>
+              <Search className="absolute right-3.5 size-4 text-muted-foreground group-hover:text-primary transition-colors" />
             </div>
           </div>
 
@@ -475,11 +491,10 @@ export default function Header() {
                 setMobileMenuOpen(false);
                 setSearchQuery("");
               }}
-              className={`flex items-center text-start rounded-xl px-3 py-2.5 transition-colors ${
-                pathname === "/" && !searchQuery
-                  ? "bg-primary/15 text-primary"
-                  : "hover:bg-muted hover:text-primary"
-              }`}
+              className={`flex items-center text-start rounded-xl px-3 py-2.5 transition-colors ${pathname === "/" && !searchQuery
+                ? "bg-primary/15 text-primary"
+                : "hover:bg-muted hover:text-primary"
+                }`}
             >
               {t("home")}
             </Link>
@@ -489,44 +504,40 @@ export default function Header() {
                 setSearchQuery("special");
                 setMobileMenuOpen(false);
               }}
-              className={`flex items-center text-start rounded-xl px-3 py-2.5 transition-colors ${
-                searchQuery === "special"
-                  ? "bg-primary/15 text-primary"
-                  : "hover:bg-muted hover:text-primary"
-              }`}
+              className={`flex items-center text-start rounded-xl px-3 py-2.5 transition-colors ${searchQuery === "special"
+                ? "bg-primary/15 text-primary"
+                : "hover:bg-muted hover:text-primary"
+                }`}
             >
               {t("amazingOffers")}
             </Link>
             <Link
               href="/blog"
               onClick={() => setMobileMenuOpen(false)}
-              className={`flex items-center text-start rounded-xl px-3 py-2.5 transition-colors ${
-                pathname === "/blog"
-                  ? "bg-primary/15 text-primary"
-                  : "hover:bg-muted hover:text-primary"
-              }`}
+              className={`flex items-center text-start rounded-xl px-3 py-2.5 transition-colors ${pathname === "/blog"
+                ? "bg-primary/15 text-primary"
+                : "hover:bg-muted hover:text-primary"
+                }`}
             >
               {t("blog")}
             </Link>
             <Link
               href="/faq"
               onClick={() => setMobileMenuOpen(false)}
-              className={`flex items-center text-start rounded-xl px-3 py-2.5 transition-colors ${
-                pathname === "/faq"
-                  ? "bg-primary/15 text-primary"
-                  : "hover:bg-muted hover:text-primary"
-              }`}
+              className={`flex items-center text-start rounded-xl px-3 py-2.5 transition-colors ${pathname === "/faq"
+                ? "bg-primary/15 text-primary"
+                : "hover:bg-muted hover:text-primary"
+                }`}
             >
               {t("faqTitle")}
             </Link>
             <Link
               href="/track-order"
               onClick={() => setMobileMenuOpen(false)}
-              className={`flex items-center text-start rounded-xl px-3 py-2.5 transition-colors ${
-                pathname === "/track-order"
-                  ? "bg-primary/15 text-primary"
-                  : "hover:bg-muted hover:text-primary"
-              }`}
+              className={`flex items-center text-start rounded-xl px-3 py-2.5 transition-colors ${pathname === "/track-order"
+                ? "bg-primary/15 text-primary"
+                : "hover:bg-muted hover:text-primary"
+                }`}
             >
               {t("trackOrder")}
             </Link>
@@ -557,10 +568,10 @@ export default function Header() {
         </div>
       </div>
 
-      {/* Digikala-Style Search Modal */}
+      {/* Digikala-Style Mobile Search Modal */}
       <SearchModal
-        isOpen={isSearchModalOpen}
-        onClose={() => setIsSearchModalOpen(false)}
+        isOpen={isMobileSearchOpen}
+        onClose={() => setIsMobileSearchOpen(false)}
         initialQuery={searchQuery}
       />
     </>

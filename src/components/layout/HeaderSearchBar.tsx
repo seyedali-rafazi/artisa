@@ -19,6 +19,7 @@ import {
 } from "lucide-react";
 import { useApp, Product } from "@/components/AppContext";
 import { useLanguage } from "@/components/LanguageContext";
+import { useScrollLock } from "@/hooks/useScrollLock";
 import { api } from "@/lib/api";
 
 interface CategorySuggestion {
@@ -85,6 +86,8 @@ export default function HeaderSearchBar({
 
   const inputRef = useRef<HTMLInputElement>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
+
+  useScrollLock(isOpen);
 
   useEffect(() => {
     setMounted(true);
@@ -259,11 +262,11 @@ export default function HeaderSearchBar({
     <>
       {/* ── Search Bar Trigger in Navbar (Exact Original Size & Position) ── */}
       <div
-        ref={triggerRef}
         className="relative hidden max-w-md flex-1 px-4 md:block"
         dir="rtl"
       >
         <div
+          ref={triggerRef}
           onClick={onOpen}
           className="w-full flex items-center justify-between pr-10 pl-3 py-2 rounded-2xl border border-border/80 bg-muted/30 hover:bg-muted/60 hover:border-primary/50 transition-all text-xs text-muted-foreground select-none cursor-pointer group"
         >
@@ -284,7 +287,7 @@ export default function HeaderSearchBar({
           <>
             {/* 1. Global low-transparent backdrop covering entire window (navbar + page) */}
             <div
-              className="fixed inset-0 z-[60] bg-black/25 backdrop-blur-[1px] transition-opacity duration-200 animate-fade-in"
+              className="fixed inset-0 z-[60] bg-black/25 backdrop-blur-[1px] transition-opacity duration-200 animate-fade-in hidden md:block"
               onClick={onClose}
               aria-hidden="true"
             />
@@ -294,10 +297,10 @@ export default function HeaderSearchBar({
               style={{
                 position: "fixed",
                 top: `${boxRect.top}px`,
-                left: `${boxRect.left + 16}px`, // compensate for px-4
-                width: `${boxRect.width - 32}px`, // compensate for px-4
+                left: `${boxRect.left}px`,
+                width: `${boxRect.width}px`,
               }}
-              className="z-[70] flex flex-col pointer-events-auto"
+              className="z-[70] hidden md:flex flex-col pointer-events-auto"
               dir="rtl"
               role="dialog"
               aria-modal="true"

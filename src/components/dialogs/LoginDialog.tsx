@@ -7,6 +7,7 @@ import { Button } from "../ui/button"
 import { Input } from "../ui/input"
 import { X, Lock, Mail, UserCheck, AlertCircle, Loader2, CheckCircle2 } from "lucide-react"
 import { useLogin, useRegister, useGoogleLoginAuth, useVerifyEmail, useResendVerification } from "@/hooks/useAuth"
+import { useScrollLock } from "@/hooks/useScrollLock"
 import GoogleLoginButton from "../auth/GoogleLoginButton"
 import OTPInput from "../auth/OTPInput"
 import ResendTimer from "../auth/ResendTimer"
@@ -15,6 +16,8 @@ import { CredentialResponse } from "@react-oauth/google"
 export default function LoginDialog() {
   const router = useRouter()
   const { showLogin, setShowLogin } = useApp()
+  useScrollLock(showLogin)
+
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isRegister, setIsRegister] = useState(false)
