@@ -6,13 +6,13 @@ import Image from "next/image"
 import { useLanguage } from "../LanguageContext"
 import { Input } from "../ui/input"
 import { Button } from "../ui/button"
-import { 
-  Camera, 
-  MessageCircle, 
-  Send, 
-  Phone, 
-  Mail, 
-  Clock, 
+import {
+  Camera,
+  MessageCircle,
+  Send,
+  Phone,
+  Mail,
+  Clock,
   Info
 } from "lucide-react"
 
@@ -36,7 +36,7 @@ export default function Footer() {
           <h3 className="text-base font-extrabold text-foreground">{t("newsletterTitle")}</h3>
           <p className="text-xs text-muted-foreground">{t("newsletterDesc")}</p>
         </div>
-        
+
         <form onSubmit={handleSubscribe} className="flex w-full max-w-md items-center gap-2">
           <Input
             type="email"
@@ -70,7 +70,7 @@ export default function Footer() {
           <p className="text-xs text-muted-foreground leading-5">
             {t("footerAbout")}
           </p>
-          
+
           <div className="flex items-center gap-3 mt-2">
             <a href="#" className="flex size-8 items-center justify-center rounded-full bg-muted hover:bg-primary hover:text-primary-foreground transition-all">
               <Camera className="size-4" />
@@ -141,10 +141,10 @@ export default function Footer() {
         {/* Column 4: Contact Info */}
         <div className="flex flex-col gap-4 text-xs text-muted-foreground">
           <h4 className="text-sm font-bold text-foreground">اطلاعات تماس</h4>
-          
+
           <div className="flex items-center gap-2">
             <Phone className="size-4 text-primary shrink-0" />
-            <span dir="ltr">021-88888888</span>
+            <span dir="ltr">0919-444-0839</span>
           </div>
           <div className="flex items-center gap-2">
             <Mail className="size-4 text-primary shrink-0" />
@@ -152,11 +152,7 @@ export default function Footer() {
           </div>
           <div className="flex items-center gap-2">
             <Clock className="size-4 text-primary shrink-0" />
-            <span>شنبه تا پنجشنبه ۸:۰۰ الی ۲۰:۰۰</span>
-          </div>
-          <div className="flex items-start gap-2">
-            <Info className="size-4 text-primary shrink-0 mt-0.5" />
-            <span>شعبه مرکزی: تهران، میدان ونک، خیابان ملاصدرا، پلاک ۱۱۰</span>
+            <span>شنبه تا جمعه ۸:۰۰ الی ۲۰:۰۰</span>
           </div>
         </div>
       </div>

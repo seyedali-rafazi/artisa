@@ -177,29 +177,6 @@ export default function Header() {
             </Link>
           </div>
 
-          {/* Mobile Centered Circular Logo (Only Logo, Circle Shape, Centered, No Brand Name) */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 md:hidden">
-            <Link
-              href="/"
-              onClick={() => {
-                setSearchQuery("");
-                setSearchInput("");
-              }}
-              className="flex items-center justify-center cursor-pointer group"
-              aria-label={t("brandName")}
-            >
-              <div className="relative size-11 rounded-full overflow-hidden bg-white border border-border/80 shadow-xs flex items-center justify-center p-1 ring-2 ring-primary/20 group-hover:ring-primary/50 group-active:scale-95 transition-all">
-                <Image
-                  src="/logo.png"
-                  alt={t("brandName")}
-                  width={88}
-                  height={88}
-                  className="size-full object-cover rounded-full scale-110"
-                  priority
-                />
-              </div>
-            </Link>
-          </div>
 
           {/* Desktop Search bar — EXACT size and location with anchored suggestions dropdown */}
           <HeaderSearchBar
@@ -562,7 +539,7 @@ export default function Header() {
                 {t("contactUs")}
               </Link>
               <span>•</span>
-              <span>021-88888888</span>
+              <span>0919-444-0839</span>
             </div>
           </div>
         </div>
