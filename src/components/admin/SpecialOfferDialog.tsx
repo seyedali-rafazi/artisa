@@ -8,6 +8,7 @@ import {
   useUpdateSpecialOffer,
 } from '@/hooks/useSpecialOffers';
 import ProductSelector from './ProductSelector';
+import ShamsiDateTimePicker from './ShamsiDateTimePicker';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -19,59 +20,17 @@ import {
 } from '@/components/ui/dialog';
 import {
   Sparkles,
-  Calendar,
-  Clock,
   Save,
   Loader2,
   AlertCircle,
-  CheckCircle2,
   Info,
+  X,
 } from 'lucide-react';
 
 interface SpecialOfferDialogProps {
   isOpen: boolean;
   onClose: () => void;
   offerToEdit?: SpecialOffer | null;
-}
-
-/**
- * Converts an ISO string into `YYYY-MM-DDTHH:mm` in Asia/Tehran timezone.
- */
-function toTehranInputDatetime(isoString?: string): string {
-  if (!isoString) return '';
-  try {
-    const d = new Date(isoString);
-    if (isNaN(d.getTime())) return '';
-    // Format to Asia/Tehran parts
-    const formatter = new Intl.DateTimeFormat('en-CA', {
-      timeZone: 'Asia/Tehran',
-      year: 'numeric',
-      month: '2-digit',
-      day: '2-digit',
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: false,
-    });
-    const parts = formatter.formatToParts(d);
-    const getPart = (type: string) => parts.find((p) => p.type === type)?.value || '';
-    const year = getPart('year');
-    const month = getPart('month');
-    const day = getPart('day');
-    const hour = getPart('hour');
-    const minute = getPart('minute');
-    return `${year}-${month}-${day}T${hour}:${minute}`;
-  } catch {
-    return '';
-  }
-}
-
-/**
- * Formats a local datetime-local string (assumed to be Asia/Tehran) into an ISO string.
- */
-function tehranInputToIso(datetimeLocalStr: string): string {
-  if (!datetimeLocalStr) return '';
-  // Append standard Iran timezone offset or let backend parse with Asia/Tehran context
-  return `${datetimeLocalStr}:00+03:30`;
 }
 
 export default function SpecialOfferDialog({
@@ -97,8 +56,8 @@ export default function SpecialOfferDialog({
       if (offerToEdit) {
         setTitle(offerToEdit.title || '');
         setDescription(offerToEdit.description || '');
-        setStartAt(toTehranInputDatetime(offerToEdit.start_at_tehran || offerToEdit.start_at));
-        setEndAt(toTehranInputDatetime(offerToEdit.end_at_tehran || offerToEdit.end_at));
+        setStartAt(offerToEdit.start_at_tehran || offerToEdit.start_at || '');
+        setEndAt(offerToEdit.end_at_tehran || offerToEdit.end_at || '');
         setSelectedProductIds(offerToEdit.product_ids || []);
         setIsActive(offerToEdit.is_active !== undefined ? offerToEdit.is_active : true);
       } else {
@@ -107,8 +66,8 @@ export default function SpecialOfferDialog({
         const nextWeek = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
         setTitle('');
         setDescription('');
-        setStartAt(toTehranInputDatetime(now.toISOString()));
-        setEndAt(toTehranInputDatetime(nextWeek.toISOString()));
+        setStartAt(now.toISOString());
+        setEndAt(nextWeek.toISOString());
         setSelectedProductIds([]);
         setIsActive(true);
       }
@@ -146,8 +105,8 @@ export default function SpecialOfferDialog({
       title: title.trim(),
       description: description.trim() || undefined,
       product_ids: selectedProductIds,
-      start_at: tehranInputToIso(startAt),
-      end_at: tehranInputToIso(endAt),
+      start_at: startAt,
+      end_at: endAt,
       is_active: isActive,
     };
 
@@ -179,34 +138,46 @@ export default function SpecialOfferDialog({
 
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto p-0 rounded-3xl" dir="rtl">
-        <form onSubmit={handleSubmit}>
+      <DialogContent
+        className="w-[95vw] sm:max-w-3xl md:max-w-4xl lg:max-w-5xl max-h-[90vh] p-0 rounded-3xl overflow-hidden flex flex-col gap-0 border border-border/80 shadow-2xl bg-background"
+        dir="rtl"
+        showCloseButton={false}
+      >
+        <form onSubmit={handleSubmit} className="flex flex-col h-full max-h-[90vh] overflow-hidden">
           {/* Header */}
-          <DialogHeader className="p-6 border-b border-border/60 bg-muted/20">
-            <DialogTitle className="text-lg font-black text-foreground flex items-center gap-2">
+          <DialogHeader className="p-6 border-b border-border/60 bg-muted/20 shrink-0 flex flex-row items-center justify-between gap-4">
+            <DialogTitle className="text-base sm:text-lg font-black text-foreground flex items-center gap-2">
               <Sparkles className="size-5 text-primary" />
               <span>{isEditing ? 'ویرایش پیشنهاد ویژه' : 'ایجاد پیشنهاد ویژه جدید'}</span>
             </DialogTitle>
+            <button
+              type="button"
+              onClick={onClose}
+              className="p-1.5 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+              title="بستن"
+            >
+              <X className="size-4" />
+            </button>
           </DialogHeader>
 
           {/* Body */}
-          <div className="p-6 flex flex-col gap-6">
+          <div className="p-6 flex flex-col gap-6 overflow-y-auto overflow-x-hidden flex-1">
             {formError && (
-              <div className="flex items-center gap-2 p-3 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-bold animate-in fade-in duration-200">
+              <div className="flex items-center gap-2 p-3.5 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-bold animate-in fade-in duration-200">
                 <AlertCircle className="size-4 shrink-0" />
                 <span>{formError}</span>
               </div>
             )}
 
             {/* Timezone Notice Banner */}
-            <div className="flex items-start gap-2.5 p-3 rounded-2xl bg-primary/5 border border-primary/15 text-xs text-muted-foreground font-semibold">
+            <div className="flex items-start gap-2.5 p-3.5 rounded-2xl bg-primary/5 border border-primary/15 text-xs text-muted-foreground font-semibold">
               <Info className="size-4 text-primary shrink-0 mt-0.5" />
-              <div>
-                <span className="font-extrabold text-foreground block">
-                  منطقه زمانی تهران (Asia/Tehran)
+              <div className="flex flex-col gap-0.5">
+                <span className="font-extrabold text-foreground">
+                  تقویم خورشیدی (شمسی) و ساعت رسمی تهران
                 </span>
                 <span>
-                  کلیه زمان‌های شروع و پایان بر اساس ساعت رسمی تهران محاسبه می‌شوند و انقضای پیشنهاد به صورت خودکار اعمال خواهد شد.
+                  کلیه زمان‌های شروع و انقضای کمپین بر اساس تقویم شمسی و ساعت رسمی ایران (Asia/Tehran) محاسبه و به صورت خودکار مدیریت می‌شوند.
                 </span>
               </div>
             </div>
@@ -222,7 +193,7 @@ export default function SpecialOfferDialog({
                   placeholder="مثال: جشنواره شگفت‌انگیز تابستانه نقاشی"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="rounded-xl h-11 text-xs bg-background"
+                  className="rounded-2xl h-11 text-xs bg-background"
                   required
                 />
               </div>
@@ -236,47 +207,32 @@ export default function SpecialOfferDialog({
                   placeholder="توضیحات کوتاه درباره تخفیف‌ها یا شرایط کمپین..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="p-3 rounded-xl border border-input bg-background text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary w-full resize-none"
+                  className="p-3 rounded-2xl border border-input bg-background text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary w-full resize-none"
                 />
               </div>
             </div>
 
-            {/* Start and End Date Time Inputs (Asia/Tehran) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-2xl bg-muted/30 border border-border/60">
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-black text-foreground flex items-center gap-1.5">
-                  <Calendar className="size-3.5 text-primary" />
-                  <span>زمان شروع (به وقت تهران)</span>
-                  <span className="text-destructive">*</span>
-                </label>
-                <Input
-                  type="datetime-local"
-                  value={startAt}
-                  onChange={(e) => setStartAt(e.target.value)}
-                  className="rounded-xl h-11 text-xs bg-background"
-                  required
-                />
-              </div>
+            {/* Start and End Date Time Inputs (Shamsi & Asia/Tehran) */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-3xl bg-muted/30 border border-border/60">
+              <ShamsiDateTimePicker
+                label="زمان شروع پیشنهاد (شمسی)"
+                value={startAt}
+                onChange={setStartAt}
+                required
+              />
 
-              <div className="flex flex-col gap-1.5">
-                <label className="text-xs font-black text-foreground flex items-center gap-1.5">
-                  <Clock className="size-3.5 text-primary" />
-                  <span>زمان پایان (به وقت تهران)</span>
-                  <span className="text-destructive">*</span>
-                </label>
-                <Input
-                  type="datetime-local"
-                  value={endAt}
-                  onChange={(e) => setEndAt(e.target.value)}
-                  className="rounded-xl h-11 text-xs bg-background"
-                  required
-                />
-              </div>
+              <ShamsiDateTimePicker
+                label="زمان پایان پیشنهاد (شمسی)"
+                value={endAt}
+                onChange={setEndAt}
+                minDate={startAt}
+                required
+              />
             </div>
 
             {/* Active Toggle Switch */}
-            <div className="flex items-center justify-between p-3.5 rounded-2xl bg-card border border-border">
-              <div className="flex flex-col">
+            <div className="flex items-center justify-between p-4 rounded-3xl bg-card border border-border/80 shadow-xs">
+              <div className="flex flex-col gap-0.5">
                 <span className="text-xs font-black text-foreground">
                   وضعیت فعال‌سازی دستی
                 </span>
@@ -303,19 +259,19 @@ export default function SpecialOfferDialog({
           </div>
 
           {/* Footer */}
-          <DialogFooter className="p-4 border-t border-border/60 bg-muted/20 flex flex-row items-center justify-end gap-2">
+          <DialogFooter className="p-4 border-t border-border/60 bg-muted/20 flex flex-row items-center justify-end gap-2 shrink-0">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
-              className="rounded-xl text-xs font-bold cursor-pointer"
+              className="rounded-2xl text-xs font-bold cursor-pointer"
               disabled={isSubmitting}
             >
               انصراف
             </Button>
             <Button
               type="submit"
-              className="rounded-xl text-xs font-extrabold gap-2 cursor-pointer shadow-md shadow-primary/20"
+              className="rounded-2xl text-xs font-extrabold gap-2 cursor-pointer shadow-md shadow-primary/20"
               disabled={isSubmitting}
             >
               {isSubmitting ? (

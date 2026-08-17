@@ -13,7 +13,6 @@ import {
   Plus,
   X,
   Package,
-  Sparkles,
   Loader2,
   Trash2,
   AlertCircle,
@@ -70,14 +69,14 @@ export default function ProductSelector({
   });
 
   return (
-    <div className="flex flex-col gap-4 w-full" dir="rtl">
+    <div className="flex flex-col gap-4 w-full min-w-0" dir="rtl">
       <div className="flex items-center justify-between">
         <label className="text-xs font-black text-foreground flex items-center gap-1.5">
           <Package className="size-4 text-primary" />
-          <span>انتخاب محصولات تخفیف‌دار</span>
+          <span>انتخاب آثار و محصولات متصل به پیشنهاد</span>
           <span className="text-destructive">*</span>
-          <span className="text-[11px] font-semibold text-muted-foreground mr-2">
-            ({toPersianDigits(selectedIds.length)} محصول انتخاب شده)
+          <span className="text-[11px] font-semibold text-muted-foreground mr-1">
+            ({toPersianDigits(selectedIds.length)} مورد انتخاب شده)
           </span>
         </label>
 
@@ -94,7 +93,7 @@ export default function ProductSelector({
       </div>
 
       {error && (
-        <div className="flex items-center gap-2 p-2.5 rounded-xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-bold">
+        <div className="flex items-center gap-2 p-3 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-bold">
           <AlertCircle className="size-4 shrink-0" />
           <span>{error}</span>
         </div>
@@ -102,17 +101,17 @@ export default function ProductSelector({
 
       {/* Selected Products Tray */}
       {selectedIds.length > 0 && (
-        <div className="p-3 rounded-2xl bg-muted/40 border border-border/60 flex flex-col gap-2">
-          <span className="text-[11px] font-bold text-muted-foreground">
-            لیست محصولات انتخاب شده برای این پیشنهاد:
+        <div className="p-3.5 rounded-3xl bg-muted/40 border border-border/60 flex flex-col gap-2.5 min-w-0">
+          <span className="text-[11px] font-extrabold text-muted-foreground">
+            لیست آثار انتخاب شده:
           </span>
-          <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-1">
+          <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-1 min-w-0">
             {selectedIds.map((id) => {
               const product = selectedProductsMap.get(id);
               return (
                 <div
                   key={id}
-                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-background border border-primary/20 shadow-xs text-xs font-bold text-foreground animate-in fade-in zoom-in-95 duration-150"
+                  className="flex items-center gap-2 px-2.5 py-1.5 rounded-2xl bg-background border border-primary/20 shadow-xs text-xs font-bold text-foreground animate-in fade-in zoom-in-95 duration-150 max-w-full"
                 >
                   {product?.image ? (
                     <div className="size-6 rounded-lg overflow-hidden shrink-0 border border-border">
@@ -127,13 +126,13 @@ export default function ProductSelector({
                   ) : (
                     <Package className="size-4 text-primary shrink-0" />
                   )}
-                  <span className="truncate max-w-[140px] sm:max-w-[200px]">
+                  <span className="truncate max-w-[140px] sm:max-w-[220px]">
                     {product?.name || `شناسه: ${id.slice(-6)}`}
                   </span>
                   <button
                     type="button"
                     onClick={() => handleRemoveProduct(id)}
-                    className="p-1 rounded-md hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
+                    className="p-1 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors cursor-pointer shrink-0"
                     title="حذف از پیشنهاد"
                   >
                     <X className="size-3" />
@@ -146,21 +145,21 @@ export default function ProductSelector({
       )}
 
       {/* Product Search & Category Bar */}
-      <div className="flex flex-col sm:flex-row items-center gap-2">
-        <div className="relative flex-1 w-full">
-          <Search className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
+      <div className="flex flex-col sm:flex-row items-center gap-2.5 min-w-0">
+        <div className="relative flex-1 w-full min-w-0">
+          <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
           <Input
             type="text"
-            placeholder="جستجوی نام اثر، تکنیک یا هنرمند..."
+            placeholder="جستجوی نام اثر، سبک یا هنرمند..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="pr-9 h-10 rounded-xl text-xs bg-background"
+            className="pr-10 h-11 rounded-2xl text-xs bg-background"
           />
           {search && (
             <button
               type="button"
               onClick={() => setSearch('')}
-              className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground cursor-pointer"
             >
               <X className="size-3.5" />
             </button>
@@ -170,9 +169,9 @@ export default function ProductSelector({
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value)}
-          className="h-10 px-3 rounded-xl border border-input bg-background text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary w-full sm:w-44 cursor-pointer"
+          className="h-11 px-3.5 rounded-2xl border border-input bg-background text-xs font-black text-foreground focus:outline-none focus:ring-2 focus:ring-primary w-full sm:w-48 cursor-pointer shrink-0"
         >
-          <option value="">همه دسته‌ها</option>
+          <option value="">همه دسته‌بندی‌ها</option>
           <option value="تابلو نقاشی">تابلو نقاشی</option>
           <option value="هنر دیواری">هنر دیواری</option>
           <option value="مجسمه و دکوری">مجسمه و دکوری</option>
@@ -182,12 +181,12 @@ export default function ProductSelector({
       </div>
 
       {/* Product Items Picker List */}
-      <div className="border border-border/80 rounded-2xl bg-card overflow-hidden">
-        <div className="max-h-64 overflow-y-auto divide-y divide-border/40">
+      <div className="border border-border/80 rounded-3xl bg-card overflow-hidden min-w-0 shadow-xs">
+        <div className="max-h-64 overflow-y-auto divide-y divide-border/40 min-w-0">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-10 text-muted-foreground gap-2">
               <Loader2 className="size-6 animate-spin text-primary" />
-              <span className="text-xs font-semibold">در حال بارگذاری آثار...</span>
+              <span className="text-xs font-bold">در حال بارگذاری آثار...</span>
             </div>
           ) : availableProducts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-10 text-muted-foreground gap-2">
@@ -201,15 +200,15 @@ export default function ProductSelector({
                 <div
                   key={product.id}
                   onClick={() => handleToggleProduct(product.id)}
-                  className={`flex items-center justify-between p-3 transition-colors cursor-pointer select-none ${
+                  className={`flex items-center justify-between p-3.5 transition-colors cursor-pointer select-none gap-3 min-w-0 ${
                     isSelected
                       ? 'bg-primary/10 hover:bg-primary/15'
                       : 'hover:bg-muted/50'
                   }`}
                 >
-                  <div className="flex items-center gap-3 min-w-0">
+                  <div className="flex items-center gap-3 min-w-0 flex-1">
                     <div
-                      className={`size-5 rounded-md flex items-center justify-center border transition-all ${
+                      className={`size-5 rounded-lg flex items-center justify-center border transition-all shrink-0 ${
                         isSelected
                           ? 'bg-primary border-primary text-primary-foreground'
                           : 'border-muted-foreground/40 bg-background'
@@ -218,21 +217,21 @@ export default function ProductSelector({
                       {isSelected && <Check className="size-3.5 stroke-[3]" />}
                     </div>
 
-                    <div className="size-10 rounded-xl overflow-hidden shrink-0 border border-border bg-muted">
+                    <div className="size-11 rounded-2xl overflow-hidden shrink-0 border border-border bg-muted">
                       <ProductImage
                         src={product.image}
                         alt={product.name}
-                        width={40}
-                        height={40}
+                        width={44}
+                        height={44}
                         className="size-full object-cover"
                       />
                     </div>
 
-                    <div className="flex flex-col min-w-0">
+                    <div className="flex flex-col min-w-0 flex-1">
                       <span className="text-xs font-extrabold text-foreground truncate">
                         {product.name}
                       </span>
-                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-semibold mt-0.5">
+                      <div className="flex items-center gap-2 text-[10px] text-muted-foreground font-semibold mt-0.5 flex-wrap">
                         <span>{product.category}</span>
                         <span>•</span>
                         <span className="text-primary font-bold">
@@ -251,7 +250,7 @@ export default function ProductSelector({
                     type="button"
                     size="sm"
                     variant={isSelected ? 'default' : 'outline'}
-                    className={`h-7 px-3 text-[11px] font-extrabold rounded-xl transition-all cursor-pointer ${
+                    className={`h-8 px-3 text-[11px] font-black rounded-xl transition-all cursor-pointer shrink-0 ${
                       isSelected
                         ? 'bg-primary text-primary-foreground'
                         : 'border-border hover:border-primary text-foreground'
