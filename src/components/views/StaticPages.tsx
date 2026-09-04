@@ -22,7 +22,7 @@ export function AboutUsView() {
         </p>
 
         <p>
-          گالری آنلاین آرتیسا از سال ۱۴۰۰ با هدف در دسترس قرار دادن آثار هنری اورجینال برای همه علاقه‌مندان هنر شروع به فعالیت کرد. ما باور داریم که هنر باید در زندگی روزمره حضور داشته باشد و هر خانه‌ای لایق زیباترین آثار است.
+          گالری آنلاین آرتیسا از سال 1405 با هدف در دسترس قرار دادن آثار هنری اورجینال برای همه علاقه‌مندان هنر شروع به فعالیت کرد. ما باور داریم که هنر باید در زندگی روزمره حضور داشته باشد و هر خانه‌ای لایق زیباترین آثار است.
         </p>
 
         <p>
@@ -81,12 +81,12 @@ export function ContactUsView() {
         {/* Info Column */}
         <div className="flex flex-col gap-6 border border-border/40 bg-muted/10 p-6 md:p-8 rounded-3xl text-xs sm:text-sm text-muted-foreground leading-7">
           <h3 className="text-base font-black text-foreground mb-2">راه‌های ارتباطی</h3>
-          
+
           <div className="flex items-center gap-3">
             <Phone className="size-5 text-primary shrink-0" />
             <div className="flex flex-col">
               <span className="font-bold text-foreground">شماره تماس:</span>
-              <span dir="ltr" className="text-start">021-77777777</span>
+              <span dir="ltr" className="text-start">0919-444-0839</span>
             </div>
           </div>
 
@@ -94,15 +94,7 @@ export function ContactUsView() {
             <Mail className="size-5 text-primary shrink-0" />
             <div className="flex flex-col">
               <span className="font-bold text-foreground">پست الکترونیکی:</span>
-              <span>gallery@آرتیسا.ir</span>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3">
-            <MapPin className="size-5 text-primary shrink-0 mt-0.5" />
-            <div className="flex flex-col">
-              <span className="font-bold text-foreground">آدرس گالری:</span>
-              <span>تهران، سعادت‌آباد، خیابان ۲۴ متری، پلاک ۸۵</span>
+              <span>artisaartgallery@gmail.com</span>
             </div>
           </div>
 
@@ -115,7 +107,7 @@ export function ContactUsView() {
         {/* Contact Form Column */}
         <div className="border border-border/40 rounded-3xl p-6 bg-background shadow-sm">
           <h3 className="text-base font-black text-foreground mb-6">ارسال پیام به گالری</h3>
-          
+
           <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
               <label className="text-xs font-bold text-muted-foreground">نام شما *</label>

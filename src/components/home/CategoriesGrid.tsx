@@ -67,8 +67,7 @@ export default function CategoriesGrid() {
           return (
             <Link
               key={idx}
-              href="/"
-              onClick={() => handleCategoryClick(cat.filter)}
+              href={`/products?category=${encodeURIComponent(cat.filter)}`}
               className="flex flex-col items-center justify-center p-6 rounded-2xl cursor-pointer border border-border hover:border-primary shadow-sm hover:shadow-md transition-all duration-300 hover:-translate-y-1 group bg-card"
             >
               <div className="p-4 rounded-xl mb-3 transition-transform duration-300 group-hover:scale-110 bg-secondary text-primary shadow-sm">

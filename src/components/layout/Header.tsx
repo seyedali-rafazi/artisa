@@ -14,6 +14,7 @@ import {
   Menu,
   X,
   ChevronDown,
+  ChevronLeft,
   ShoppingBag,
   Heart,
   MapPin,
@@ -62,6 +63,7 @@ export default function Header() {
   const [isDesktopSearchOpen, setIsDesktopSearchOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
+  const [mobileCategoriesOpen, setMobileCategoriesOpen] = useState(false);
 
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const activeProfileTab = pathname.startsWith("/profile")
@@ -79,6 +81,7 @@ export default function Header() {
       if (((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "k") || e.key === "/") {
         e.preventDefault();
         if (typeof window !== "undefined" && window.innerWidth < 768) {
+          setMobileMenuOpen(false);
           setIsMobileSearchOpen(true);
         } else {
           setIsDesktopSearchOpen(true);
@@ -128,6 +131,7 @@ export default function Header() {
     { key: "categorySculpture", filter: "مجسمه و دکوری" },
     { key: "categoryFrame", filter: "قاب و فریم" },
     { key: "categoryModernArt", filter: "هنر مدرن" },
+    { key: "categoryGift", filter: "هدایای هنری" },
   ];
   const isCategoryActive = categories.some((cat) => searchQuery === cat.filter);
 
@@ -185,18 +189,11 @@ export default function Header() {
             onClose={() => setIsDesktopSearchOpen(false)}
           />
 
-          {/* Action icons (Mobile Search, Cart, Profile Popup) */}
-          <div className="flex items-center gap-1.5 md:gap-3">
-            {/* Mobile Search Button */}
-            <button
-              type="button"
-              onClick={() => setIsMobileSearchOpen(true)}
-              className="hidden md:flex size-10 items-center justify-center rounded-full text-foreground hover:bg-muted/80 active:bg-muted transition-all cursor-pointer md:hidden"
-              title="جستجو"
-              aria-label="جستجو"
-            >
-              <Search className="size-5" />
-            </button>
+          {/* Mobile Search bar trigger in Navbar — directly opens SearchModal without opening sidebar */}
+
+
+          {/* Action icons (Cart, Profile Popup) */}
+          <div className="flex items-center gap-1.5 md:gap-3 shrink-0">
 
             {/* Cart Button */}
             <Link
@@ -336,46 +333,41 @@ export default function Header() {
               >
                 {t("home")}
               </Link>
-              {/* Categories dropdown */}
-              <div
-                className={`group relative flex h-12 cursor-pointer items-center gap-1 transition-colors `}
-              >
-                <span>{t("categories")}</span>
-                <ChevronDown className="size-4" />
-                {/* Dropdown panel */}
-                <div className="absolute top-12 right-6 z-50 hidden w-60 rounded-xl border border-border bg-popover p-2 shadow-xl group-hover:block left-0">
+              {/* Products dropdown */}
+              <div className="group relative flex h-12 items-center">
+                <Link
+                  href="/products"
+                  className={`flex items-center gap-1.5 py-2 cursor-pointer transition-colors ${
+                    pathname === "/products" ? "text-primary font-bold" : "text-foreground hover:text-primary"
+                  }`}
+                >
+                  <span>{t("products")}</span>
+                  <ChevronDown className="size-4 text-muted-foreground transition-transform duration-200 group-hover:rotate-180 group-hover:text-primary" />
+                </Link>
+
+                {/* Dropdown panel on hover */}
+                <div className="absolute top-12 right-0 z-50 hidden w-64 rounded-2xl border border-border bg-popover p-2.5 shadow-2xl group-hover:block left-auto animate-in fade-in zoom-in-95 duration-150">
                   <div className="flex flex-col gap-0.5">
-                    {categories.map((cat) => {
-                      const isActive = searchQuery === cat.filter;
-                      return (
-                        <button
-                          type="button"
-                          key={cat.key}
-                          onClick={() => {
-                            setSearchQuery(cat.filter);
-                          }}
-                          className={`rounded-lg px-3 py-2 text-start text-xs font-medium transition-all cursor-pointer ${isActive
-                            ? "bg-primary/15 text-primary font-bold"
-                            : "hover:bg-muted/80 hover:text-primary"
-                            }`}
-                          aria-current={isActive ? "true" : undefined}
-                        >
-                          {t(cat.key)}
-                        </button>
-                      );
-                    })}
+                    <Link
+                      href="/products"
+                      className="flex items-center justify-between rounded-xl px-3 py-2 text-start text-xs font-bold text-primary bg-primary/10 hover:bg-primary/20 transition-all mb-1"
+                    >
+                      <span>مشاهده همه محصولات</span>
+                      <ChevronLeft className="size-3.5" />
+                    </Link>
+                    <div className="h-px bg-border/60 my-0.5" />
+                    {categories.map((cat) => (
+                      <Link
+                        key={cat.key}
+                        href={`/products?category=${encodeURIComponent(cat.filter)}`}
+                        className="rounded-xl px-3 py-2 text-start text-xs font-medium text-foreground hover:bg-muted/80 hover:text-primary transition-all"
+                      >
+                        {t(cat.key)}
+                      </Link>
+                    ))}
                   </div>
                 </div>
               </div>
-              <Link
-                href="/"
-                onClick={() => {
-                  setSearchQuery("special");
-                }}
-                className={`cursor-pointer transition-colors py-2 ${searchQuery === "special" ? "text-primary font-bold" : "hover:text-primary"}`}
-              >
-                {t("amazingOffers")}
-              </Link>
               <Link
                 href="/blog"
                 className={`cursor-pointer transition-colors py-2 ${pathname === "/blog" ? "text-primary font-bold" : "hover:text-primary"}`}
@@ -409,16 +401,16 @@ export default function Header() {
       </header>
 
       {/* Mobile drawer — rendered outside header to avoid backdrop-blur transparency */}
-      <div className="fixed inset-0 z-[60] md:hidden pointer-events-none">
+      <div className={`fixed inset-0 z-[60] md:hidden ${mobileMenuOpen && !isMobileSearchOpen ? "pointer-events-auto" : "pointer-events-none"}`}>
         <button
           type="button"
           onClick={() => setMobileMenuOpen(false)}
-          className={`fixed inset-0 bg-black/30 transition-opacity duration-300 ${mobileMenuOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
+          className={`fixed inset-0 bg-black/30 transition-opacity duration-300 ${mobileMenuOpen && !isMobileSearchOpen ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}
           aria-hidden="true"
         />
 
         <div
-          className={`fixed inset-y-0 right-0 z-[60] flex w-full max-w-sm flex-col overflow-y-auto border-l border-border bg-background p-6 pt-4 shadow-2xl transition-transform duration-300 ease-in-out ${mobileMenuOpen ? "translate-x-0 pointer-events-auto" : "translate-x-full"}`}
+          className={`fixed inset-y-0 right-0 z-[60] flex w-full max-w-sm flex-col overflow-y-auto border-l border-border bg-background p-6 pt-4 shadow-2xl transition-transform duration-300 ease-in-out ${mobileMenuOpen && !isMobileSearchOpen ? "translate-x-0 pointer-events-auto" : "translate-x-full pointer-events-none"}`}
           aria-label="Mobile menu"
         >
           <div className="mb-4 flex items-center justify-between">
@@ -475,19 +467,60 @@ export default function Header() {
             >
               {t("home")}
             </Link>
-            <Link
-              href="/"
-              onClick={() => {
-                setSearchQuery("special");
-                setMobileMenuOpen(false);
-              }}
-              className={`flex items-center text-start rounded-xl px-3 py-2.5 transition-colors ${searchQuery === "special"
-                ? "bg-primary/15 text-primary"
-                : "hover:bg-muted hover:text-primary"
+            {/* Products link & Collapsible Categories in Mobile Sidebar */}
+            <div className="flex flex-col">
+              <div
+                className={`flex items-center justify-between rounded-xl transition-colors ${
+                  pathname === "/products" ? "bg-primary/15 text-primary" : "hover:bg-muted"
                 }`}
-            >
-              {t("amazingOffers")}
-            </Link>
+              >
+                <Link
+                  href="/products"
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex-1 flex items-center text-start px-3 py-2.5 ${
+                    pathname === "/products" ? "text-primary font-bold" : "text-foreground hover:text-primary"
+                  }`}
+                >
+                  <span>{t("products")}</span>
+                </Link>
+                <button
+                  type="button"
+                  onClick={() => setMobileCategoriesOpen(!mobileCategoriesOpen)}
+                  className="p-2.5 text-muted-foreground hover:text-primary cursor-pointer transition-colors"
+                  aria-label="نمایش دسته‌بندی‌ها"
+                >
+                  <ChevronDown
+                    className={`size-4 transition-transform duration-200 ${
+                      mobileCategoriesOpen ? "rotate-180 text-primary" : ""
+                    }`}
+                  />
+                </button>
+              </div>
+
+              {/* Collapsible Category Links */}
+              {mobileCategoriesOpen && (
+                <div className="mr-3 my-1 flex flex-col gap-0.5 border-r-2 border-primary/20 pr-3 text-sm font-medium animate-in fade-in slide-in-from-top-1 duration-150">
+                  <Link
+                    href="/products"
+                    onClick={() => setMobileMenuOpen(false)}
+                    className="rounded-lg px-2.5 py-1.5 text-xs text-primary font-bold hover:bg-muted transition-colors flex items-center justify-between"
+                  >
+                    <span>همه محصولات</span>
+                    <ChevronLeft className="size-3" />
+                  </Link>
+                  {categories.map((cat) => (
+                    <Link
+                      key={cat.key}
+                      href={`/products?category=${encodeURIComponent(cat.filter)}`}
+                      onClick={() => setMobileMenuOpen(false)}
+                      className="rounded-lg px-2.5 py-1.5 text-xs text-muted-foreground hover:text-primary hover:bg-muted transition-colors"
+                    >
+                      {t(cat.key)}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
             <Link
               href="/blog"
               onClick={() => setMobileMenuOpen(false)}
@@ -548,7 +581,10 @@ export default function Header() {
       {/* Digikala-Style Mobile Search Modal */}
       <SearchModal
         isOpen={isMobileSearchOpen}
-        onClose={() => setIsMobileSearchOpen(false)}
+        onClose={() => {
+          setIsMobileSearchOpen(false);
+          setMobileMenuOpen(false);
+        }}
         initialQuery={searchQuery}
       />
     </>

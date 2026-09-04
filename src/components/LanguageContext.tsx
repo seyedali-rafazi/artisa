@@ -16,6 +16,7 @@ const translations: Record<string, string> = {
   cart: "سبد خرید",
   trackOrder: "پیگیری سفارش",
   home: "خانه",
+  products: "محصولات",
   categories: "دسته‌بندی آثار",
   amazingOffers: "پیشنهادات ویژه",
   bestSellers: "پرفروش‌ترین‌ها",
