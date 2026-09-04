@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
 import { useLanguage } from "../LanguageContext";
 import { Button } from "../ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronLeft, ChevronRight, Palette } from "lucide-react";
 import { useBanners } from "@/hooks/useBanners";
 
 interface SlideItem {
@@ -191,8 +191,9 @@ export default function HeroSlider() {
           >
             {/* Slide Content */}
             <div className="absolute top-1/2 -translate-y-1/2 max-w-xl px-8 md:px-16 text-white flex flex-col gap-4 right-0 text-right">
-              <div className="inline-flex w-fit rounded-full bg-white/20 backdrop-blur-md px-3 py-1 text-xs font-semibold tracking-wide">
-                🎨 {slide.badge || t("brandName")}
+              <div className="inline-flex items-center gap-1.5 w-fit rounded-full bg-white/20 backdrop-blur-md px-3 py-1 text-xs font-semibold tracking-wide">
+                <Palette className="size-3.5 shrink-0" />
+                <span>{slide.badge || t("brandName")}</span>
               </div>
               <h1 className="text-3xl md:text-5xl text-white/80 leading-tight drop-shadow-md">
                 {slide.title}

@@ -17,6 +17,7 @@ import {
   Sparkles,
   ChevronLeft,
   X,
+  BookOpen,
 } from 'lucide-react';
 
 interface AdminSidebarProps {
@@ -54,6 +55,12 @@ export default function AdminSidebar({
       title: 'پیشنهادات ویژه و تخفیف‌ها',
       href: '/admin/special-offers',
       icon: Sparkles,
+      superAdminOnly: false,
+    },
+    {
+      title: 'مدیریت مقالات بلاگ',
+      href: '/admin/blog',
+      icon: BookOpen,
       superAdminOnly: false,
     },
     {

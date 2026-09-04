@@ -21,6 +21,7 @@ interface ProductCommentsSectionProps {
   setShowLogin: (show: boolean) => void
   showToast: (message: string, type: "success" | "error" | "info") => void
   t: (key: string) => string
+  contextType?: "product" | "article"
 }
 
 export default function ProductCommentsSection({
@@ -29,6 +30,7 @@ export default function ProductCommentsSection({
   setShowLogin,
   showToast,
   t,
+  contextType = "product",
 }: ProductCommentsSectionProps) {
   const [commentText, setCommentText] = useState("")
   const [rating, setRating] = useState(5)
@@ -158,7 +160,11 @@ export default function ProductCommentsSection({
 
         {/* Subtitle */}
         <p className="text-xs sm:text-sm font-medium text-muted-foreground mb-5">
-          {user ? "نظر یا سوال خود را درباره این محصول ثبت کنید" : "برای درج نظر وارد شو یا ثبت‌نام کن"}
+          {user
+            ? contextType === "article"
+              ? "نظر، سوال یا دیدگاه خود را درباره این مقاله بنویسید"
+              : "نظر یا سوال خود را درباره این محصول ثبت کنید"
+            : "برای درج نظر وارد شو یا ثبت‌نام کن"}
         </p>
 
         {/* Login / Register Pill Button in Primary Theme Styling */}

@@ -3,7 +3,7 @@
 import React, { useState } from "react"
 import { Button } from "../ui/button"
 import { Input } from "../ui/input"
-import { Mail, Phone, MapPin, Send } from "lucide-react"
+import { Mail, Phone, MapPin, Send, Palette } from "lucide-react"
 
 // About Us View Component
 export function AboutUsView() {
@@ -99,7 +99,10 @@ export function ContactUsView() {
           </div>
 
           <div className="mt-4 p-4 rounded-2xl bg-primary/5 border border-primary/10 text-xs leading-6">
-            <p className="font-bold text-foreground mb-1">🎨 مشاوره هنری رایگان</p>
+            <p className="font-bold text-foreground mb-1 flex items-center gap-1.5">
+              <Palette className="size-4 text-primary shrink-0" />
+              <span>مشاوره هنری رایگان</span>
+            </p>
             <p>عکس فضای موردنظر را در واتساپ برایمان بفرستید تا بهترین اثر را پیشنهاد دهیم.</p>
           </div>
         </div>

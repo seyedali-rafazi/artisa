@@ -412,3 +412,80 @@ export function useDeleteAdminComment() {
   });
 }
 
+// ─── BLOG ARTICLES ─────────────────────────────────────────────────────────
+
+export interface AdminArticle {
+  id: string;
+  articleId?: string;
+  title: string;
+  desc?: string;
+  content?: string;
+  date: string;
+  author: string;
+  image: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface AdminArticlePayload {
+  title: string;
+  desc?: string;
+  content?: string;
+  image: string;
+  author?: string;
+  date?: string;
+}
+
+export function useAdminBlogPosts(params: { page?: number; limit?: number; search?: string }) {
+  return useQuery({
+    queryKey: ['admin-blog-articles', params],
+    queryFn: () => api.get<PaginatedResult<AdminArticle>>('/api/v1/admin/blog/articles', params),
+  });
+}
+
+export function useAdminBlogPost(id: string) {
+  return useQuery({
+    queryKey: ['admin-blog-article', id],
+    queryFn: () => api.get<AdminArticle>(`/api/v1/blog/articles/${id}`),
+    enabled: Boolean(id),
+  });
+}
+
+export function useCreateBlogPost() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (payload: AdminArticlePayload) =>
+      api.post<AdminArticle>('/api/v1/admin/blog/articles', payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-blog-articles'] });
+      queryClient.invalidateQueries({ queryKey: ['blog-articles'] });
+    },
+  });
+}
+
+export function useUpdateBlogPost() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, ...payload }: Partial<AdminArticlePayload> & { id: string }) =>
+      api.put<AdminArticle>(`/api/v1/admin/blog/articles/${id}`, payload),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-blog-articles'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-blog-article'] });
+      queryClient.invalidateQueries({ queryKey: ['blog-articles'] });
+      queryClient.invalidateQueries({ queryKey: ['blog-article'] });
+    },
+  });
+}
+
+export function useDeleteBlogPost() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      api.delete(`/api/v1/admin/blog/articles/${id}`),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['admin-blog-articles'] });
+      queryClient.invalidateQueries({ queryKey: ['blog-articles'] });
+    },
+  });
+}
+
