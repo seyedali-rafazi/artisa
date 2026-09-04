@@ -277,6 +277,7 @@ function ProductsContent() {
   return (
     <div className="min-h-screen py-4 md:py-8" dir="rtl">
       {/* Breadcrumb */}
+      {/* Breadcrumb Navigation */}
       <nav aria-label="راهنمای مسیر" className="mb-6 text-xs text-muted-foreground">
         <ol className="flex items-center gap-2">
           <li>
@@ -286,7 +287,11 @@ function ProductsContent() {
           </li>
           <li className="text-muted-foreground/60">•</li>
           <li className="font-bold text-foreground">
-            {selectedCategory ? `محصولات / ${selectedCategory}` : "همه محصولات"}
+            {isSpecial
+              ? "پیشنهادات شگفت‌انگیز و ویژه"
+              : selectedCategory
+              ? `محصولات / ${selectedCategory}`
+              : "همه محصولات"}
           </li>
         </ol>
       </nav>
@@ -295,11 +300,24 @@ function ProductsContent() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-4 border-b border-border">
         <div>
           <h1 className="text-2xl md:text-3xl font-black text-foreground flex items-center gap-2.5">
-            <Package className="size-7 text-primary" />
-            <span>فروشگاه و گالری محصولات</span>
+            {isSpecial ? (
+              <>
+                <div className="size-8 rounded-xl bg-[#ef394e] text-white flex items-center justify-center shadow-xs">
+                  <Tag className="size-4" />
+                </div>
+                <span>پیشنهادات شگفت‌انگیز و تخفیف‌های ویژه</span>
+              </>
+            ) : (
+              <>
+                <Package className="size-7 text-primary" />
+                <span>فروشگاه و گالری محصولات</span>
+              </>
+            )}
           </h1>
           <p className="text-xs md:text-sm text-muted-foreground mt-1 font-medium">
-            مجموعه کامل آثار هنری، تابلوهای نقاشی و دکوراتیو آرتیسا
+            {isSpecial
+              ? "مجموعه برگزیده آثار هنری و دکوراتیو با تخفیف‌های ویژه و شگفت‌انگیز آرتیسا"
+              : "مجموعه کامل آثار هنری، تابلوهای نقاشی و دکوراتیو آرتیسا"}
           </p>
         </div>
 

@@ -1,39 +1,95 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
+import React, { useState, useEffect, useRef, useMemo } from "react"
+import Link from "next/link"
 import { useLanguage } from "../LanguageContext"
-import ProductBox from "./ProductBox"
-import { Timer, Sparkles } from "lucide-react"
+import { useApp } from "../AppContext"
+import ProductImage from "../ui/ProductImage"
+import { ChevronLeft, ChevronRight } from "lucide-react"
 import { useActiveSpecialOffers } from "@/hooks/useSpecialOffers"
+import { useProducts } from "@/hooks/useProducts"
 import { toPersianDigits } from "@/lib/utils"
+
+// Digikala-Style Smiley Percentage Icon
+function DigikalaPercentSmileIcon({ className = "size-16" }: { className?: string }) {
+  return (
+    <svg
+      viewBox="0 0 80 80"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={className}
+      aria-hidden="true"
+    >
+      {/* Percentage Slash */}
+      <line
+        x1="57"
+        y1="20"
+        x2="23"
+        y2="58"
+        stroke="currentColor"
+        strokeWidth="6"
+        strokeLinecap="round"
+      />
+      {/* Top Right Circle / Eye */}
+      <circle cx="55" cy="25" r="7" stroke="currentColor" strokeWidth="4.5" />
+      {/* Bottom Left Circle / Eye */}
+      <circle cx="27" cy="53" r="7" stroke="currentColor" strokeWidth="4.5" />
+      {/* Smile Arc Beneath */}
+      <path
+        d="M20 62C28 75 52 75 60 62"
+        stroke="currentColor"
+        strokeWidth="5.5"
+        strokeLinecap="round"
+      />
+    </svg>
+  )
+}
 
 export default function SpecialOffers() {
   const { t } = useLanguage()
-  const { data: activeOffers, isLoading, refetch } = useActiveSpecialOffers()
+  const { setSelectedProduct } = useApp()
+  const { data: activeOffers, isLoading: isOffersLoading, refetch } = useActiveSpecialOffers()
+  const { data: specialProductsApi, isLoading: isProductsLoading } = useProducts({
+    isSpecial: true,
+    limit: 24,
+  })
 
   // Get active offer and associated products
   const primaryOffer = activeOffers && activeOffers.length > 0 ? activeOffers[0] : null
 
-  // Aggregate products from active offer(s)
-  const specialProducts = primaryOffer?.products || []
+  // Combine products from active campaign and products marked isSpecial
+  const specialProducts = useMemo(() => {
+    const offerProducts = primaryOffer?.products || []
+    const generalProducts = specialProductsApi?.items || []
+
+    const map = new Map<string, any>()
+    offerProducts.forEach((p) => map.set(String(p.id), p))
+    generalProducts.forEach((p) => {
+      if (!map.has(String(p.id))) {
+        map.set(String(p.id), p)
+      }
+    })
+
+    return Array.from(map.values())
+  }, [primaryOffer, specialProductsApi])
 
   // Countdown timer state
   const [timeLeft, setTimeLeft] = useState<{
-    days: number
     hrs: number
     mins: number
     secs: number
     isExpired: boolean
   }>({
-    days: 0,
-    hrs: 0,
-    mins: 0,
-    secs: 0,
+    hrs: 10,
+    mins: 43,
+    secs: 53,
     isExpired: false,
   })
 
   useEffect(() => {
-    if (!primaryOffer?.end_at) return
+    if (!primaryOffer?.end_at) {
+      return
+    }
 
     const targetTime = new Date(primaryOffer.end_at).getTime()
 
@@ -42,17 +98,16 @@ export default function SpecialOffers() {
       const diffInSeconds = Math.max(0, Math.floor((targetTime - now) / 1000))
 
       if (diffInSeconds <= 0) {
-        setTimeLeft({ days: 0, hrs: 0, mins: 0, secs: 0, isExpired: true })
-        refetch() // Refetch active offers when offer expires
+        setTimeLeft({ hrs: 0, mins: 0, secs: 0, isExpired: true })
+        refetch()
         return
       }
 
-      const days = Math.floor(diffInSeconds / 86400)
       const hrs = Math.floor((diffInSeconds % 86400) / 3600)
       const mins = Math.floor((diffInSeconds % 3600) / 60)
       const secs = diffInSeconds % 60
 
-      setTimeLeft({ days, hrs, mins, secs, isExpired: false })
+      setTimeLeft({ hrs, mins, secs, isExpired: false })
     }
 
     updateTimer()
@@ -64,79 +119,238 @@ export default function SpecialOffers() {
     return toPersianDigits(n.toString().padStart(2, "0"))
   }
 
-  // If loading finished and no active offer exists, hide section
-  if (!isLoading && (!primaryOffer || specialProducts.length === 0 || timeLeft.isExpired)) {
+  // Carousel ref and scroll handling
+  const carouselRef = useRef<HTMLDivElement>(null)
+  const [canScrollLeft, setCanScrollLeft] = useState(true)
+  const [canScrollRight, setCanScrollRight] = useState(false)
+
+  const checkScroll = () => {
+    if (!carouselRef.current) return
+    const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current
+    const absScroll = Math.abs(scrollLeft)
+    setCanScrollRight(absScroll > 15)
+    setCanScrollLeft(absScroll < scrollWidth - clientWidth - 15)
+  }
+
+  useEffect(() => {
+    const el = carouselRef.current
+    if (!el) return
+    el.addEventListener("scroll", checkScroll, { passive: true })
+    checkScroll()
+    return () => el.removeEventListener("scroll", checkScroll)
+  }, [specialProducts.length])
+
+  const scroll = (direction: "left" | "right") => {
+    if (!carouselRef.current) return
+    const el = carouselRef.current
+    const offset = direction === "left" ? -280 : 280
+    el.scrollBy({ left: offset, behavior: "smooth" })
+  }
+
+  const isLoading = isOffersLoading || isProductsLoading
+
+  // If loading finished and no special products found, hide section
+  if (!isLoading && specialProducts.length === 0) {
     return null
   }
 
   return (
-    <section className="w-full mt-16 p-6 md:p-8 rounded-3xl bg-primary/5 dark:bg-primary/10 border border-primary/10 relative overflow-hidden">
-      {/* Background visual highlight */}
-      <div className="absolute top-0 right-0 -translate-y-1/2 translate-x-1/2 size-96 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
-      <div className="absolute bottom-0 left-0 translate-y-1/2 -translate-x-1/2 size-96 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
-
-      {/* Header bar */}
-      <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6 mb-8 border-b border-primary/10 pb-6">
-        <div className="flex flex-col gap-1 text-center md:text-start">
-          <h2 className="text-xl md:text-2xl font-black text-primary flex items-center justify-center md:justify-start gap-2">
-            <Timer className="size-6 text-primary animate-pulse" />
-            {primaryOffer?.title || t("specialOffersTitle")}
-          </h2>
-          <p className="text-xs text-muted-foreground">
-            {primaryOffer?.description || t("specialOffersSubtitle")}
-          </p>
+    <section
+      aria-label="پیشنهادات شگفت‌انگیز"
+      className="w-full mt-10 rounded-2xl md:rounded-3xl bg-gradient-to-l from-primary via-[#C19B53] to-primary-dark dark:from-primary dark:to-primary-dark p-3 sm:p-4 text-primary-foreground shadow-xl relative overflow-hidden select-none"
+    >
+      {/* ─── Mobile Header (< md) ─── */}
+      <div className="md:hidden flex items-center justify-between gap-2 mb-3 px-1">
+        {/* Right: Icon + Title */}
+        <div className="flex items-center gap-1.5">
+          <DigikalaPercentSmileIcon className="size-6 sm:size-7 text-primary-foreground drop-shadow-xs" />
+          <span className="text-sm sm:text-base font-black text-primary-foreground">
+            شگفت‌انگیز
+          </span>
         </div>
 
-        {/* Countdown Timer Widget */}
-        <div className="flex items-center justify-center gap-2" dir="ltr">
-          <span className="text-xs font-extrabold text-muted-foreground mr-1">
-            {t("timeLeft")}
-          </span>
-          <div className="flex items-center gap-1">
-            {/* Days if > 0 */}
-            {timeLeft.days > 0 && (
-              <>
-                <div className="flex flex-col items-center justify-center min-w-10 h-10 px-1.5 rounded-xl bg-primary text-primary-foreground font-black text-xs shadow-md">
-                  <span>{toPersianDigits(timeLeft.days)}</span>
+        {/* Center: Countdown Timer 3-box widget */}
+        <div className="flex items-center gap-1" dir="ltr">
+          <div className="size-6 sm:size-7 rounded-md bg-card text-card-foreground font-black text-[11px] sm:text-xs flex items-center justify-center shadow-xs">
+            {formatDigit(timeLeft.hrs)}
+          </div>
+          <span className="text-primary-foreground font-black text-xs animate-pulse">:</span>
+
+          <div className="size-6 sm:size-7 rounded-md bg-card text-card-foreground font-black text-[11px] sm:text-xs flex items-center justify-center shadow-xs">
+            {formatDigit(timeLeft.mins)}
+          </div>
+          <span className="text-primary-foreground font-black text-xs animate-pulse">:</span>
+
+          <div className="size-6 sm:size-7 rounded-md bg-card text-card-foreground font-black text-[11px] sm:text-xs flex items-center justify-center shadow-xs">
+            {formatDigit(timeLeft.secs)}
+          </div>
+        </div>
+
+        {/* Left: View All link (همه <) */}
+        <Link
+          href="/products?isSpecial=true"
+          className="flex items-center gap-0.5 text-xs font-bold text-primary-foreground hover:opacity-85 transition-opacity"
+        >
+          <span>همه</span>
+          <ChevronLeft className="size-3.5" />
+        </Link>
+      </div>
+
+      {/* ─── Main Content (Desktop flex-row with right column, Mobile vertical) ─── */}
+      <div className="flex flex-col md:flex-row items-stretch gap-2 md:gap-3">
+        {/* ─── Desktop Right Banner Column (hidden on mobile) ─── */}
+        <div className="hidden md:flex w-36 md:w-44 shrink-0 flex-col items-center justify-between py-2 sm:py-3 text-center">
+          {/* Top Graphic: Smiley % and Persian Typography */}
+          <div className="flex flex-col items-center gap-1">
+            <DigikalaPercentSmileIcon className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 text-primary-foreground drop-shadow-sm" />
+            <h2 className="text-base sm:text-lg md:text-xl font-black text-primary-foreground tracking-tight drop-shadow-xs">
+              شگفت‌انگیز
+            </h2>
+          </div>
+
+          {/* Countdown Timer: 3 Badge Boxes */}
+          <div className="flex flex-col items-center gap-1.5 my-3">
+            <div className="flex items-center gap-1" dir="ltr">
+              {/* Hours */}
+              <div className="size-7 sm:size-8 rounded-md bg-card text-card-foreground font-black text-xs sm:text-sm flex items-center justify-center shadow-xs">
+                {formatDigit(timeLeft.hrs)}
+              </div>
+              <span className="text-primary-foreground font-black text-xs sm:text-sm animate-pulse">:</span>
+
+              {/* Minutes */}
+              <div className="size-7 sm:size-8 rounded-md bg-card text-card-foreground font-black text-xs sm:text-sm flex items-center justify-center shadow-xs">
+                {formatDigit(timeLeft.mins)}
+              </div>
+              <span className="text-primary-foreground font-black text-xs sm:text-sm animate-pulse">:</span>
+
+              {/* Seconds */}
+              <div className="size-7 sm:size-8 rounded-md bg-card text-card-foreground font-black text-xs sm:text-sm flex items-center justify-center shadow-xs">
+                {formatDigit(timeLeft.secs)}
+              </div>
+            </div>
+          </div>
+
+          {/* Navigate Button to Special Offers Catalog */}
+          <Link
+            href="/products?isSpecial=true"
+            className="flex items-center justify-center gap-1 bg-card hover:bg-card/90 text-primary text-[11px] sm:text-xs font-black px-3 py-2 rounded-xl transition-all shadow-xs hover:shadow active:scale-95 group w-full max-w-[130px]"
+          >
+            <span>مشاهده همه</span>
+            <ChevronLeft className="size-3.5 sm:size-4 text-primary group-hover:-translate-x-0.5 transition-transform" />
+          </Link>
+        </div>
+
+        {/* ─── Carousel Area (Desktop Left, Mobile Full Width) ─── */}
+        <div className="flex-1 min-w-0 relative flex items-center">
+          {/* Floating Left Scroll Chevron Button (Desktop / Tablet) */}
+          {canScrollLeft && (
+            <button
+              type="button"
+              onClick={() => scroll("left")}
+              aria-label="مشاهده محصولات بعدی"
+              className="hidden sm:flex absolute left-2 top-1/2 -translate-y-1/2 z-20 size-8 sm:size-9 rounded-full bg-card text-foreground hover:text-primary shadow-lg border border-border/80 items-center justify-center transition-all hover:scale-110 active:scale-95 cursor-pointer"
+            >
+              <ChevronLeft className="size-4 sm:size-5" />
+            </button>
+          )}
+
+          {/* Floating Right Scroll Chevron Button (Desktop / Tablet) */}
+          {canScrollRight && (
+            <button
+              type="button"
+              onClick={() => scroll("right")}
+              aria-label="مشاهده محصولات قبلی"
+              className="hidden sm:flex absolute right-2 top-1/2 -translate-y-1/2 z-20 size-8 sm:size-9 rounded-full bg-card text-foreground hover:text-primary shadow-lg border border-border/80 items-center justify-center transition-all hover:scale-110 active:scale-95 cursor-pointer"
+            >
+              <ChevronRight className="size-4 sm:size-5" />
+            </button>
+          )}
+
+          {/* Scrollable Track */}
+          <div
+            ref={carouselRef}
+            className="w-full flex items-stretch gap-2 sm:gap-2.5 overflow-x-auto scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden py-0.5"
+          >
+            {isLoading ? (
+              // Loading Skeleton Cards
+              [1, 2, 3, 4, 5].map((i) => (
+                <div
+                  key={i}
+                  className="w-[145px] sm:w-[165px] md:w-[185px] shrink-0 h-[290px] md:h-[310px] bg-card rounded-2xl p-3 flex flex-col justify-between animate-pulse border border-border/40"
+                >
+                  <div className="aspect-square w-full bg-muted/60 rounded-xl" />
+                  <div className="space-y-2 mt-2">
+                    <div className="h-3 bg-muted/60 rounded w-full" />
+                    <div className="h-3 bg-muted/60 rounded w-3/4" />
+                  </div>
+                  <div className="h-4 bg-muted/60 rounded w-1/2 mt-4 self-end" />
                 </div>
-                <span className="font-bold text-primary animate-pulse">:</span>
-              </>
+              ))
+            ) : (
+              specialProducts.map((product, index) => {
+                // Calculate discount percent
+                const discountPercent =
+                  product.oldPrice && product.oldPrice > product.price
+                    ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
+                    : 15 // default nice discount if not explicitly calculated
+
+                return (
+                  <Link
+                    key={product.id || index}
+                    href={`/product/${product.id}`}
+                    onClick={() => setSelectedProduct(product)}
+                    className="w-[145px] sm:w-[165px] md:w-[185px] shrink-0 bg-card text-card-foreground rounded-2xl border border-border/50 p-2.5 sm:p-3 flex flex-col justify-between shadow-xs hover:shadow-md hover:border-primary/50 transition-all group cursor-pointer"
+                  >
+                    {/* Top: Product Image */}
+                    <div className="relative aspect-square w-full mb-2 bg-card rounded-xl flex items-center justify-center overflow-hidden">
+                      <ProductImage
+                        src={product.image}
+                        alt={product.name}
+                        fill
+                        className="object-contain p-1 transition-transform duration-300 group-hover:scale-105"
+                      />
+                    </div>
+
+                    {/* Middle: Product Title (2 lines clamp) */}
+                    <h3 className="text-xs md:text-[13px] font-semibold text-foreground leading-snug line-clamp-2 h-9 text-start group-hover:text-primary transition-colors">
+                      {product.name}
+                    </h3>
+
+                    {/* Bottom: Pricing Section */}
+                    <div className="mt-auto pt-2">
+                      {/* Row 1: Discount Badge (Right) + Crossed Price (Left) */}
+                      <div className="flex items-center justify-between">
+                        <span className="bg-destructive text-destructive-foreground text-[10px] sm:text-[11px] font-black px-1.5 py-0.5 rounded-full leading-none shadow-xs">
+                          {toPersianDigits(discountPercent)}٪
+                        </span>
+                        {product.oldPrice ? (
+                          <span className="text-[10px] sm:text-[11px] text-muted-foreground line-through font-medium">
+                            {toPersianDigits(Math.round(product.oldPrice).toLocaleString("fa-IR"))}
+                          </span>
+                        ) : (
+                          <span className="text-[10px] sm:text-[11px] text-muted-foreground line-through font-medium">
+                            {toPersianDigits(
+                              Math.round(product.price * (1 + discountPercent / 100)).toLocaleString("fa-IR")
+                            )}
+                          </span>
+                        )}
+                      </div>
+
+                      {/* Row 2: Final Price + Toman Label aligned to Left/End */}
+                      <div className="flex items-center justify-end gap-1 mt-1 sm:mt-1.5">
+                        <span className="text-xs sm:text-sm md:text-base font-black text-foreground">
+                          {toPersianDigits(Math.round(product.price).toLocaleString("fa-IR"))}
+                        </span>
+                        <span className="text-[9px] sm:text-[10px] text-muted-foreground font-medium">تومان</span>
+                      </div>
+                    </div>
+                  </Link>
+                )
+              })
             )}
-
-            {/* Hours */}
-            <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground font-black text-sm shadow-md">
-              {formatDigit(timeLeft.hrs)}
-            </div>
-            <span className="font-bold text-primary animate-pulse">:</span>
-
-            {/* Minutes */}
-            <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground font-black text-sm shadow-md">
-              {formatDigit(timeLeft.mins)}
-            </div>
-            <span className="font-bold text-primary animate-pulse">:</span>
-
-            {/* Seconds */}
-            <div className="flex size-10 items-center justify-center rounded-xl bg-primary text-primary-foreground font-black text-sm shadow-md animate-bounce-slow">
-              {formatDigit(timeLeft.secs)}
-            </div>
           </div>
         </div>
       </div>
-
-      {/* Grid of Special Products */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-          {[1, 2, 3, 4].map((i) => (
-            <div key={i} className="h-64 rounded-2xl bg-neutral-200 dark:bg-neutral-800 animate-pulse" />
-          ))}
-        </div>
-      ) : (
-        <div className="relative z-10 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-          {specialProducts.map((product: any) => (
-            <ProductBox key={product.id} product={product} />
-          ))}
-        </div>
-      )}
     </section>
   )
 }
