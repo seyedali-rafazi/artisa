@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useCreateProduct } from '@/hooks/useAdmin';
 import ImageUploader from '@/components/admin/ImageUploader';
+import ProductDescriptionInput from '@/components/admin/ProductDescriptionInput';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowRight, Save, Loader2, Plus, Trash2 } from 'lucide-react';
@@ -223,16 +224,11 @@ export default function NewProductPage() {
             </label>
           </div>
 
-          <div className="flex flex-col gap-1.5">
-            <label className="text-xs font-bold text-muted-foreground">توضیحات کامل محصول</label>
-            <textarea
-              rows={4}
-              value={description}
-              onChange={(e) => setDescription(e.target.value)}
-              placeholder="توضیحات جامع درباره سبک، متریال، نحوه ساخت و ویژگی‌های تابلو..."
-              className="rounded-xl border border-border bg-background p-3 text-xs focus:outline-none focus:ring-2 focus:ring-primary"
-            />
-          </div>
+          <ProductDescriptionInput
+            value={description}
+            onChange={setDescription}
+            placeholder="توضیحات جامع درباره سبک، متریال، نحوه ساخت و ویژگی‌های تابلو..."
+          />
         </div>
 
         {/* Media Card */}

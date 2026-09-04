@@ -68,6 +68,7 @@ const translations: Record<string, string> = {
 
   // Product details
   productDetails: "جزئیات اثر",
+  specifications: "مشخصات فنی",
   addToCart: "افزودن به سبد خرید",
   addedToCart: "به سبد خرید اضافه شد",
   installment: "خرید اقساطی",

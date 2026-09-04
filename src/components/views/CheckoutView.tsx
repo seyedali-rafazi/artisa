@@ -571,8 +571,8 @@ export default function CheckoutView() {
               <hr className="border-border/60" />
 
               <div className="flex items-center justify-between text-xs text-muted-foreground font-semibold">
-                <span>هزینه ارسال سراسری:</span>
-                <span className="text-emerald-500 font-bold">رایگان</span>
+                <span>هزینه ارسال :</span>
+                <span className="text-emerald-500 font-bold">بر عهده خریدار</span>
               </div>
 
               <div className="flex items-center justify-between text-sm font-black text-foreground">

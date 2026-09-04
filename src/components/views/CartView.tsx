@@ -54,7 +54,7 @@ export default function CartView() {
         {/* Items List Column */}
         <div className="lg:col-span-2 flex flex-col gap-4">
           {cart.map((item) => (
-            <div 
+            <div
               key={item.id}
               className="flex items-center gap-4 p-4 border border-border/40 rounded-2xl bg-background hover:shadow-sm transition-all"
             >
@@ -75,7 +75,7 @@ export default function CartView() {
 
               {/* Quantity Counter */}
               <div className="flex items-center border border-border/60 rounded-xl bg-muted/20 shrink-0">
-                <button 
+                <button
                   onClick={() => updateCartQty(item.id, item.quantity - 1)}
                   className="p-1.5 hover:text-primary transition-colors cursor-pointer"
                   aria-label="Decrease quantity"
@@ -85,7 +85,7 @@ export default function CartView() {
                 <span className="px-2.5 text-xs font-black text-foreground">
                   {item.quantity.toLocaleString("fa-IR")}
                 </span>
-                <button 
+                <button
                   onClick={() => updateCartQty(item.id, item.quantity + 1)}
                   className="p-1.5 hover:text-primary transition-colors cursor-pointer"
                   aria-label="Increase quantity"
@@ -120,7 +120,7 @@ export default function CartView() {
 
             <div className="flex items-center justify-between text-xs text-muted-foreground font-semibold">
               <span>هزینه ارسال:</span>
-              <span className="text-emerald-500 font-bold">رایگان</span>
+              <span className="text-emerald-500 font-bold">بر عهده خریدار</span>
             </div>
 
             <hr className="border-border/60" />

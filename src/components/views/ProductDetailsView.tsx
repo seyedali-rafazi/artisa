@@ -5,11 +5,11 @@ import Link from "next/link"
 import { useLanguage } from "../LanguageContext"
 import { useApp } from "../AppContext"
 import { Button } from "../ui/button"
-import { 
-  Star, 
-  ShoppingCart, 
-  ShieldCheck, 
-  Truck, 
+import {
+  Star,
+  ShoppingCart,
+  ShieldCheck,
+  Truck,
   CreditCard,
   MessageSquare,
   ChevronLeft,
@@ -23,6 +23,7 @@ import { useProductComments } from "@/hooks/useComments"
 import { useProducts } from "@/hooks/useProducts"
 import ProductCommentsSection from "@/components/comments/ProductCommentsSection"
 import ProductImageSlider from "@/components/product/ProductImageSlider"
+import ProductDescription from "@/components/product/ProductDescription"
 import { Product } from "../AppContext"
 
 interface ProductDetailsViewProps {
@@ -31,16 +32,16 @@ interface ProductDetailsViewProps {
 
 export default function ProductDetailsView({ product: propProduct }: ProductDetailsViewProps = {}) {
   const { t } = useLanguage()
-  const { 
-    selectedProduct: contextProduct, 
-    addToCart, 
-    cart, 
-    setSelectedProduct, 
-    user, 
+  const {
+    selectedProduct: contextProduct,
+    addToCart,
+    cart,
+    setSelectedProduct,
+    user,
     setShowLogin,
     showToast,
-    isFavorited, 
-    toggleFavorite 
+    isFavorited,
+    toggleFavorite
   } = useApp()
 
   const selectedProduct = propProduct || contextProduct
@@ -128,9 +129,9 @@ export default function ProductDetailsView({ product: propProduct }: ProductDeta
           <div className="flex items-center gap-2 mb-6">
             <div className="flex text-amber-400">
               {[...Array(5)].map((_, i) => (
-                <Star 
-                  key={i} 
-                  className={`size-4 ${i < Math.floor(selectedProduct.rating) ? "fill-amber-400" : "text-border"}`} 
+                <Star
+                  key={i}
+                  className={`size-4 ${i < Math.floor(selectedProduct.rating) ? "fill-amber-400" : "text-border"}`}
                 />
               ))}
             </div>
@@ -157,16 +158,10 @@ export default function ProductDetailsView({ product: propProduct }: ProductDeta
             <div className="flex items-center gap-2">
               <ShieldCheck className="size-5 text-primary shrink-0" />
               <div className="text-xs text-foreground">
-                <span className="font-extrabold">{t("vendor")}</span> گالری آرتیسا (بسته‌بندی تخصصی)
+                <span className="font-extrabold">{t("vendor")}</span>  پریسا بابایی
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <CreditCard className="size-5 text-primary shrink-0" />
-              <div className="text-xs text-foreground">
-                <span className="font-extrabold">{t("installment")}:</span> {t("installmentDesc")}
-              </div>
-            </div>
 
             <div className="flex items-center gap-2">
               <Truck className="size-5 text-primary shrink-0" />
@@ -196,14 +191,12 @@ export default function ProductDetailsView({ product: propProduct }: ProductDeta
               size="lg"
               aria-label={isFavorited(selectedProduct.id) ? "حذف از علاقه‌مندی‌ها" : "افزودن به علاقه‌مندی‌ها"}
               aria-pressed={isFavorited(selectedProduct.id)}
-              className={`gap-2 rounded-2xl font-extrabold cursor-pointer transition-all border-border ${
-                isFavorited(selectedProduct.id) ? "text-rose-500 bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800" : "hover:text-rose-500"
-              }`}
+              className={`gap-2 rounded-2xl font-extrabold cursor-pointer transition-all border-border ${isFavorited(selectedProduct.id) ? "text-rose-500 bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800" : "hover:text-rose-500"
+                }`}
             >
               <Heart
-                className={`size-5 transition-all ${
-                  isFavorited(selectedProduct.id) ? "fill-rose-500 text-rose-500" : ""
-                }`}
+                className={`size-5 transition-all ${isFavorited(selectedProduct.id) ? "fill-rose-500 text-rose-500" : ""
+                  }`}
               />
               <span className="hidden sm:inline">
                 {isFavorited(selectedProduct.id) ? "علاقه‌مندی" : "افزودن به علاقه‌مندی"}
@@ -214,30 +207,54 @@ export default function ProductDetailsView({ product: propProduct }: ProductDeta
       </div>
 
       {/* Description & Specifications */}
-      <div className="mb-16">
-        <h2 className="text-lg font-black text-foreground mb-4">{t("productDetails")}</h2>
-        <div className="rounded-2xl border border-border/40 p-6 bg-background shadow-sm leading-7 text-xs sm:text-sm text-muted-foreground">
-          <p className="mb-6 font-medium text-foreground/80">
-            {selectedProduct.description}
-          </p>
-          
-          {selectedProduct.specifications && (
-            <div className="flex flex-col border border-border/40 rounded-xl overflow-hidden mt-6">
-              {Object.entries(selectedProduct.specifications).map(([key, val], idx) => (
-                <div 
-                  key={key} 
-                  className={`grid grid-cols-2 p-3 text-xs md:text-sm border-b border-border/40 ${
-                    idx % 2 === 0 ? "bg-muted/30" : "bg-background"
-                  } last:border-b-0`}
-                >
-                  <span className="font-bold text-foreground/80">{key}</span>
-                  <span className="text-muted-foreground">{val}</span>
+      {(() => {
+        let specsObj: Record<string, string> | undefined = undefined
+        if (selectedProduct.specifications) {
+          if (typeof selectedProduct.specifications === "string") {
+            try {
+              specsObj = JSON.parse(selectedProduct.specifications)
+            } catch {
+              specsObj = undefined
+            }
+          } else if (typeof selectedProduct.specifications === "object") {
+            specsObj = selectedProduct.specifications
+          }
+        }
+        const specEntries = specsObj ? Object.entries(specsObj).filter(([k, v]) => Boolean(k && v)) : []
+
+        return (
+          <div className="mb-16">
+            <h2 className="text-lg font-black text-foreground mb-4">{t("productDetails")}</h2>
+            <div className="rounded-2xl border border-border/40 p-6 bg-background shadow-sm text-xs sm:text-sm text-muted-foreground">
+              {/* Formatted Description */}
+              <ProductDescription description={selectedProduct.description} />
+
+              {/* Specifications */}
+              {specEntries.length > 0 && (
+                <div className="mt-8 pt-6 border-t border-border/40">
+                  <h3 className="text-xs sm:text-sm font-black text-foreground mb-4 flex items-center gap-2">
+                    <span className="w-1.5 h-3.5 bg-primary rounded-full shrink-0" />
+                    <span>{t("specifications")}</span>
+                  </h3>
+                  <div className="flex flex-col border border-border/40 rounded-xl overflow-hidden">
+                    {specEntries.map(([key, val], idx) => (
+                      <div
+                        key={key}
+                        className={`grid grid-cols-2 p-3 text-xs md:text-sm border-b border-border/40 ${
+                          idx % 2 === 0 ? "bg-muted/30" : "bg-background"
+                        } last:border-b-0`}
+                      >
+                        <span className="font-bold text-foreground/90">{key}</span>
+                        <span className="text-muted-foreground">{val}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-              ))}
+              )}
             </div>
-          )}
-        </div>
-      </div>
+          </div>
+        )
+      })()}
 
       {/* Centered Reviews & Comments Section */}
       <ProductCommentsSection
@@ -255,10 +272,10 @@ export default function ProductDetailsView({ product: propProduct }: ProductDeta
             <h2 className="text-lg font-black text-foreground">محصولات مشابه</h2>
             <div className="h-1 w-10 bg-primary rounded-full" />
           </div>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {similarProducts.map((p) => (
-              <div 
+              <div
                 key={p.id}
                 onClick={() => { setSelectedProduct(p); window.scrollTo(0, 0); }}
                 className="flex items-center gap-3 border border-border/40 rounded-2xl p-3 hover:border-primary/25 cursor-pointer bg-background hover:shadow-md transition-all group"
