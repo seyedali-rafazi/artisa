@@ -86,11 +86,11 @@ export default function HeroSlider() {
     if (touchStartX === null || touchEndX === null) return;
     const diff = touchStartX - touchEndX;
 
-    // Left-to-Right swipe (touchStartX < touchEndX => diff < -40): Next slide
-    // Right-to-Left swipe (touchStartX > touchEndX => diff > 40): Prev slide
-    if (diff < -40) {
+    // Swipe RIGHT -> LEFT (touchStartX > touchEndX => diff > 40): Next slide
+    // Swipe LEFT -> RIGHT (touchStartX < touchEndX => diff < -40): Prev slide
+    if (diff > 40) {
       handleNext();
-    } else if (diff > 40) {
+    } else if (diff < -40) {
       handlePrev();
     }
     setTouchStartX(null);
@@ -112,9 +112,9 @@ export default function HeroSlider() {
   const handleMouseUp = () => {
     if (isMouseDown && mouseStartX !== null && mouseEndX !== null) {
       const diff = mouseStartX - mouseEndX;
-      if (diff < -40) {
+      if (diff > 40) {
         handleNext();
-      } else if (diff > 40) {
+      } else if (diff < -40) {
         handlePrev();
       }
     }
@@ -126,9 +126,9 @@ export default function HeroSlider() {
   const handleMouseLeave = () => {
     if (isMouseDown && mouseStartX !== null && mouseEndX !== null) {
       const diff = mouseStartX - mouseEndX;
-      if (diff < -40) {
+      if (diff > 40) {
         handleNext();
-      } else if (diff > 40) {
+      } else if (diff < -40) {
         handlePrev();
       }
     }
@@ -224,31 +224,31 @@ export default function HeroSlider() {
       {/* Navigation Arrows */}
       {slides.length > 1 && (
         <>
-          {/* Right Arrow (Next) */}
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              handleNext();
-            }}
-            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 flex size-10 items-center justify-center rounded-full bg-black/30 hover:bg-black/60 text-white backdrop-blur-sm transition-all hover:scale-110 active:scale-95 cursor-pointer"
-            aria-label="Next slide"
-          >
-            <ChevronRight className="size-6" />
-          </button>
-
-          {/* Left Arrow (Previous) */}
+          {/* Right Arrow (Previous in RTL) */}
           <button
             onClick={(e) => {
               e.stopPropagation();
               handlePrev();
             }}
-            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 flex size-10 items-center justify-center rounded-full bg-black/30 hover:bg-black/60 text-white backdrop-blur-sm transition-all hover:scale-110 active:scale-95 cursor-pointer"
+            className="absolute right-4 top-1/2 -translate-y-1/2 z-20 flex size-10 items-center justify-center rounded-full bg-black/30 hover:bg-black/60 text-white backdrop-blur-sm transition-all hover:scale-110 active:scale-95 cursor-pointer"
             aria-label="Previous slide"
+          >
+            <ChevronRight className="size-6" />
+          </button>
+
+          {/* Left Arrow (Next in RTL) */}
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              handleNext();
+            }}
+            className="absolute left-4 top-1/2 -translate-y-1/2 z-20 flex size-10 items-center justify-center rounded-full bg-black/30 hover:bg-black/60 text-white backdrop-blur-sm transition-all hover:scale-110 active:scale-95 cursor-pointer"
+            aria-label="Next slide"
           >
             <ChevronLeft className="size-6" />
           </button>
 
-          {/* Slide Indicators */}
+          {/* Slide Indicators (RTL flow) */}
           <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-20 flex gap-2">
             {slides.map((_, idx) => (
               <button

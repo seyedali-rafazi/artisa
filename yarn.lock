@@ -1693,6 +1693,7 @@ __metadata:
     react-hook-form: "npm:^7.84.0"
     sonner: "npm:^2.0.8"
     source-map-js: "npm:^1.2.1"
+    swiper: "npm:^14.2.0"
     tailwind-merge: "npm:^3.6.0"
     tailwindcss: "npm:^4"
     typescript: "npm:^5"
@@ -4509,6 +4510,13 @@ __metadata:
   version: 1.0.0
   resolution: "supports-preserve-symlinks-flag@npm:1.0.0"
   checksum: 10c0/6c4032340701a9950865f7ae8ef38578d8d7053f5e10518076e6554a9381fa91bd9c6850193695c141f32b21f979c985db07265a758867bac95de05f7d8aeb39
+  languageName: node
+  linkType: hard
+
+"swiper@npm:^14.2.0":
+  version: 14.2.0
+  resolution: "swiper@npm:14.2.0"
+  checksum: 10c0/af1822ea895878d34d09214c1ea9d884a930d85b28ec37f334a6a6ab5f38a47fae52a4ed2d0648464662dd854210ebf051c422b489b4d2a9d134e2a435b7f5dd
   languageName: node
   linkType: hard
 

@@ -11,6 +11,12 @@ import {
   Sparkles,
   Layers
 } from "lucide-react"
+import { Swiper, SwiperSlide } from "swiper/react"
+import { Keyboard, A11y } from "swiper/modules"
+import type { Swiper as SwiperClass } from "swiper"
+
+// Import Swiper core styles
+import "swiper/css"
 
 interface ProductImageSliderProps {
   productName: string
@@ -35,17 +41,9 @@ export default function ProductImageSlider({
   const [isLightboxOpen, setIsLightboxOpen] = useState<boolean>(false)
   const [isZoomed, setIsZoomed] = useState<boolean>(false)
 
-  // Touch gesture coordinates
-  const [touchStartX, setTouchStartX] = useState<number | null>(null)
-  const [touchEndX, setTouchEndX] = useState<number | null>(null)
-
-  // Mouse drag coordinates
-  const [isMouseDown, setIsMouseDown] = useState<boolean>(false)
-  const [mouseStartX, setMouseStartX] = useState<number | null>(null)
-  const [mouseEndX, setMouseEndX] = useState<number | null>(null)
-
+  const mainSwiperRef = useRef<SwiperClass | null>(null)
+  const lightboxSwiperRef = useRef<SwiperClass | null>(null)
   const thumbnailContainerRef = useRef<HTMLDivElement>(null)
-  const wheelTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Deduplicate and consolidate all image sources
   const allImages = useMemo(() => {
@@ -62,11 +60,44 @@ export default function ProductImageSlider({
     return unique.length > 0 ? unique : ["/placeholder.png"]
   }, [image, gallery, images])
 
-  // Reset activeIndex if image list changes or selected product changes
+  const total = allImages.length
+  const hasMultiple = total > 1
+
+  // Reset activeIndex and swiper position when product or images change
   useEffect(() => {
     setActiveIndex(0)
     setIsZoomed(false)
-  }, [image, gallery])
+    if (mainSwiperRef.current) {
+      if (hasMultiple) {
+        mainSwiperRef.current.slideToLoop(0, 0)
+      } else {
+        mainSwiperRef.current.slideTo(0, 0)
+      }
+    }
+  }, [image, gallery, hasMultiple])
+
+  // Navigate to slide index helper
+  const goToIndex = useCallback((idx: number) => {
+    if (!mainSwiperRef.current) return
+    if (hasMultiple) {
+      mainSwiperRef.current.slideToLoop(idx)
+    } else {
+      mainSwiperRef.current.slideTo(idx)
+    }
+  }, [hasMultiple])
+
+  // RTL navigation:
+  // Left button is Next in Persian RTL (advances 1 -> 2 -> 3)
+  const handleNext = useCallback(() => {
+    if (!hasMultiple || !mainSwiperRef.current) return
+    mainSwiperRef.current.slideNext()
+  }, [hasMultiple])
+
+  // Right button is Prev in Persian RTL (returns 3 -> 2 -> 1)
+  const handlePrev = useCallback(() => {
+    if (!hasMultiple || !mainSwiperRef.current) return
+    mainSwiperRef.current.slidePrev()
+  }, [hasMultiple])
 
   // Auto-scroll thumbnail container to keep active thumbnail visible
   useEffect(() => {
@@ -82,18 +113,16 @@ export default function ProductImageSlider({
     }
   }, [activeIndex])
 
-  const total = allImages.length
-  const hasMultiple = total > 1
-
-  const goToNext = useCallback(() => {
-    if (!hasMultiple) return
-    setActiveIndex((prev) => (prev + 1) % total)
-  }, [hasMultiple, total])
-
-  const goToPrev = useCallback(() => {
-    if (!hasMultiple) return
-    setActiveIndex((prev) => (prev - 1 + total) % total)
-  }, [hasMultiple, total])
+  // Synchronize Lightbox swiper when Lightbox modal is opened
+  useEffect(() => {
+    if (isLightboxOpen && lightboxSwiperRef.current) {
+      if (hasMultiple) {
+        lightboxSwiperRef.current.slideToLoop(activeIndex, 0)
+      } else {
+        lightboxSwiperRef.current.slideTo(activeIndex, 0)
+      }
+    }
+  }, [isLightboxOpen, activeIndex, hasMultiple])
 
   // Keyboard navigation when Lightbox is open
   useEffect(() => {
@@ -103,98 +132,20 @@ export default function ProductImageSlider({
       if (e.key === "Escape") {
         setIsLightboxOpen(false)
         setIsZoomed(false)
-      } else if (e.key === "ArrowRight") {
-        goToNext()
       } else if (e.key === "ArrowLeft") {
-        goToPrev()
+        if (lightboxSwiperRef.current && hasMultiple) {
+          lightboxSwiperRef.current.slideNext()
+        }
+      } else if (e.key === "ArrowRight") {
+        if (lightboxSwiperRef.current && hasMultiple) {
+          lightboxSwiperRef.current.slidePrev()
+        }
       }
     }
 
     window.addEventListener("keydown", handleKeyDown)
     return () => window.removeEventListener("keydown", handleKeyDown)
-  }, [isLightboxOpen, goToNext, goToPrev])
-
-  // ─── Touch swipe handling ───
-  const handleTouchStart = (e: React.TouchEvent) => {
-    setTouchStartX(e.targetTouches[0].clientX)
-    setTouchEndX(null)
-  }
-
-  const handleTouchMove = (e: React.TouchEvent) => {
-    setTouchEndX(e.targetTouches[0].clientX)
-  }
-
-  const handleTouchEnd = () => {
-    if (touchStartX === null || touchEndX === null) return
-    const diff = touchStartX - touchEndX
-
-    // Left-to-Right swipe (touchStartX < touchEndX => diff < -40): advance to next slide
-    // Right-to-Left swipe (touchStartX > touchEndX => diff > 40): return to previous slide
-    if (diff < -40) {
-      goToNext()
-    } else if (diff > 40) {
-      goToPrev()
-    }
-    setTouchStartX(null)
-    setTouchEndX(null)
-  }
-
-  // ─── Mouse drag handling ───
-  const handleMouseDown = (e: React.MouseEvent) => {
-    setIsMouseDown(true)
-    setMouseStartX(e.clientX)
-    setMouseEndX(null)
-  }
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isMouseDown) return
-    setMouseEndX(e.clientX)
-  }
-
-  const handleMouseUp = () => {
-    if (isMouseDown && mouseStartX !== null && mouseEndX !== null) {
-      const diff = mouseStartX - mouseEndX
-      if (diff < -40) {
-        goToNext()
-      } else if (diff > 40) {
-        goToPrev()
-      }
-    }
-    setIsMouseDown(false)
-    setMouseStartX(null)
-    setMouseEndX(null)
-  }
-
-  const handleMouseLeave = () => {
-    if (isMouseDown && mouseStartX !== null && mouseEndX !== null) {
-      const diff = mouseStartX - mouseEndX
-      if (diff < -40) {
-        goToNext()
-      } else if (diff > 40) {
-        goToPrev()
-      }
-    }
-    setIsMouseDown(false)
-    setMouseStartX(null)
-    setMouseEndX(null)
-  }
-
-  // ─── Trackpad / Mouse horizontal wheel scroll ───
-  const handleWheel = (e: React.WheelEvent) => {
-    if (Math.abs(e.deltaX) > 25) {
-      if (wheelTimeoutRef.current) return
-      if (e.deltaX > 25) {
-        // Scrolled left to right
-        goToNext()
-      } else if (e.deltaX < -25) {
-        // Scrolled right to left
-        goToPrev()
-      }
-      wheelTimeoutRef.current = setTimeout(() => {
-        wheelTimeoutRef.current = null
-      }, 300)
-    }
-  }
+  }, [isLightboxOpen, hasMultiple])
 
   // Calculate discount percentage
   const discountPercent =
@@ -208,49 +159,39 @@ export default function ProductImageSlider({
 
   return (
     <div className="flex flex-col gap-3.5 w-full select-none" dir="rtl">
-      {/* ─── Main Image Stage ─── */}
-      <div
-        className="relative aspect-square w-full rounded-3xl overflow-hidden border border-border/50 bg-gradient-to-b from-muted/20 to-muted/5 shadow-md group cursor-grab active:cursor-grabbing"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseLeave}
-        onWheel={handleWheel}
-      >
-        {/* ─── Real Horizontal Sliding Track ─── */}
-        <div className="w-full h-full overflow-hidden" dir="ltr">
-          <div
-            className="flex w-full h-full transition-transform duration-500 ease-out"
-            style={{
-              transform: `translateX(-${activeIndex * 100}%)`,
-            }}
-          >
-            {allImages.map((imgSrc, idx) => (
-              <div
-                key={`${imgSrc}-${idx}`}
-                className="w-full h-full shrink-0 flex items-center justify-center p-3 sm:p-4 select-none"
-              >
-                <img
-                  src={imgSrc}
-                  alt={`${productName} - تصویر ${idx + 1}`}
-                  onClick={(e) => {
-                    // Prevent trigger if dragging
-                    if (mouseStartX !== null && mouseEndX !== null && Math.abs(mouseStartX - mouseEndX) > 10) {
-                      return
-                    }
-                    setIsLightboxOpen(true)
-                  }}
-                  draggable={false}
-                  className="w-full h-full object-contain rounded-2xl cursor-zoom-in transition-transform duration-300 hover:scale-[1.02]"
-                  loading={idx === 0 ? "eager" : "lazy"}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
+      {/* ─── Main Image Stage with Swiper ─── */}
+      <div className="relative aspect-square w-full rounded-3xl overflow-hidden border border-border/50 bg-gradient-to-b from-muted/20 to-muted/5 shadow-md group">
+        <Swiper
+          modules={[Keyboard, A11y]}
+          dir="rtl"
+          loop={hasMultiple}
+          speed={450}
+          spaceBetween={0}
+          slidesPerView={1}
+          onSwiper={(swiper) => {
+            mainSwiperRef.current = swiper
+          }}
+          onSlideChange={(swiper) => {
+            setActiveIndex(swiper.realIndex)
+          }}
+          className="w-full h-full [&_.swiper-wrapper]:h-full [&_.swiper-slide]:h-full"
+        >
+          {allImages.map((imgSrc, idx) => (
+            <SwiperSlide
+              key={`${imgSrc}-${idx}`}
+              className="w-full h-full flex items-center justify-center p-3 sm:p-4 select-none"
+            >
+              <img
+                src={imgSrc}
+                alt={`${productName} - تصویر ${idx + 1}`}
+                onClick={() => setIsLightboxOpen(true)}
+                draggable={false}
+                className="w-full h-full object-contain rounded-2xl cursor-zoom-in transition-transform duration-300 hover:scale-[1.02]"
+                loading={idx === 0 ? "eager" : "lazy"}
+              />
+            </SwiperSlide>
+          ))}
+        </Swiper>
 
         {/* ─── Badges (Top right & left) ─── */}
         <div className="absolute top-3 right-3 z-20 flex flex-col gap-2 pointer-events-none">
@@ -292,30 +233,30 @@ export default function ProductImageSlider({
           </button>
         </div>
 
-        {/* ─── Floating Navigation Arrows ─── */}
+        {/* ─── Floating Navigation Arrows (RTL: Left is Next 1->2, Right is Prev 2->1) ─── */}
         {hasMultiple && (
           <>
-            {/* Right Button (Advance / Next) */}
+            {/* Right Button (Previous in Persian RTL) */}
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation()
-                goToNext()
+                handlePrev()
               }}
-              aria-label="تصویر بعدی"
+              aria-label="تصویر قبلی"
               className="absolute right-3 top-1/2 -translate-y-1/2 z-20 size-10 rounded-full bg-background/80 hover:bg-background backdrop-blur-md border border-border/50 text-foreground/80 hover:text-primary flex items-center justify-center shadow-lg transition-all opacity-80 group-hover:opacity-100 hover:scale-110 active:scale-95 cursor-pointer"
             >
               <ChevronRight className="size-5" />
             </button>
 
-            {/* Left Button (Return / Previous) */}
+            {/* Left Button (Next in Persian RTL: goes from 1 to 2) */}
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation()
-                goToPrev()
+                handleNext()
               }}
-              aria-label="تصویر قبلی"
+              aria-label="تصویر بعدی"
               className="absolute left-3 top-1/2 -translate-y-1/2 z-20 size-10 rounded-full bg-background/80 hover:bg-background backdrop-blur-md border border-border/50 text-foreground/80 hover:text-primary flex items-center justify-center shadow-lg transition-all opacity-80 group-hover:opacity-100 hover:scale-110 active:scale-95 cursor-pointer"
             >
               <ChevronLeft className="size-5" />
@@ -323,16 +264,16 @@ export default function ProductImageSlider({
           </>
         )}
 
-        {/* ─── Dot Indicators (Bottom center) ─── */}
+        {/* ─── Dot Indicators (Bottom center, RTL flow) ─── */}
         {hasMultiple && (
-          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-background/75 backdrop-blur-md border border-border/40 shadow-sm">
+          <div className="absolute bottom-3 left-1/2 -translate-x-1/2 z-20 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-background/75 backdrop-blur-md border border-border/40 shadow-sm pointer-events-auto">
             {allImages.map((_, idx) => (
               <button
                 key={idx}
                 type="button"
                 onClick={(e) => {
                   e.stopPropagation()
-                  setActiveIndex(idx)
+                  goToIndex(idx)
                 }}
                 aria-label={`رفتن به تصویر ${idx + 1}`}
                 className={`transition-all duration-300 rounded-full cursor-pointer ${
@@ -346,7 +287,7 @@ export default function ProductImageSlider({
         )}
       </div>
 
-      {/* ─── Thumbnail Gallery Strip ─── */}
+      {/* ─── Thumbnail Gallery Strip (RTL flow) ─── */}
       {hasMultiple && (
         <div
           ref={thumbnailContainerRef}
@@ -358,7 +299,7 @@ export default function ProductImageSlider({
               <button
                 key={`${imgSrc}-thumb-${idx}`}
                 type="button"
-                onClick={() => setActiveIndex(idx)}
+                onClick={() => goToIndex(idx)}
                 aria-label={`انتخاب تصویر ${idx + 1}`}
                 className={`relative size-16 sm:size-20 shrink-0 rounded-2xl overflow-hidden border-2 transition-all duration-200 bg-muted/10 cursor-pointer ${
                   isActive
@@ -379,7 +320,7 @@ export default function ProductImageSlider({
         </div>
       )}
 
-      {/* ─── Fullscreen Lightbox Modal ─── */}
+      {/* ─── Fullscreen Lightbox Modal with Swiper ─── */}
       {isLightboxOpen && (
         <div
           className="fixed inset-0 z-50 bg-black/95 backdrop-blur-xl flex flex-col justify-between p-4 sm:p-6 animate-in fade-in duration-200"
@@ -437,33 +378,60 @@ export default function ProductImageSlider({
             {hasMultiple && (
               <button
                 type="button"
-                onClick={goToNext}
-                aria-label="تصویر بعدی"
+                onClick={() => lightboxSwiperRef.current?.slidePrev()}
+                aria-label="تصویر قبلی"
                 className="absolute right-2 sm:right-6 z-20 size-12 rounded-full bg-white/10 hover:bg-white/25 text-white flex items-center justify-center backdrop-blur-md transition-all hover:scale-110 active:scale-95 cursor-pointer"
               >
                 <ChevronRight className="size-7" />
               </button>
             )}
 
-            <div
-              className={`w-full h-full transition-all duration-300 flex items-center justify-center ${
-                isZoomed ? "scale-150 cursor-zoom-out" : "scale-100 cursor-zoom-in"
-              }`}
-              onClick={() => setIsZoomed((prev) => !prev)}
+            <Swiper
+              modules={[Keyboard, A11y]}
+              dir="rtl"
+              loop={hasMultiple}
+              speed={400}
+              spaceBetween={0}
+              slidesPerView={1}
+              initialSlide={activeIndex}
+              onSwiper={(swiper) => {
+                lightboxSwiperRef.current = swiper
+              }}
+              onSlideChange={(swiper) => {
+                setActiveIndex(swiper.realIndex)
+                if (mainSwiperRef.current && hasMultiple) {
+                  mainSwiperRef.current.slideToLoop(swiper.realIndex, 0)
+                }
+              }}
+              className="w-full h-full [&_.swiper-wrapper]:h-full [&_.swiper-slide]:h-full"
             >
-              <img
-                src={allImages[activeIndex]}
-                alt={productName}
-                draggable={false}
-                className="max-w-full max-h-[75vh] object-contain rounded-xl shadow-2xl select-none"
-              />
-            </div>
+              {allImages.map((imgSrc, idx) => (
+                <SwiperSlide
+                  key={`modal-${imgSrc}-${idx}`}
+                  className="w-full h-full flex items-center justify-center"
+                >
+                  <div
+                    className={`w-full h-full transition-all duration-300 flex items-center justify-center ${
+                      isZoomed ? "scale-150 cursor-zoom-out" : "scale-100 cursor-zoom-in"
+                    }`}
+                    onClick={() => setIsZoomed((prev) => !prev)}
+                  >
+                    <img
+                      src={imgSrc}
+                      alt={productName}
+                      draggable={false}
+                      className="max-w-full max-h-[75vh] object-contain rounded-xl shadow-2xl select-none"
+                    />
+                  </div>
+                </SwiperSlide>
+              ))}
+            </Swiper>
 
             {hasMultiple && (
               <button
                 type="button"
-                onClick={goToPrev}
-                aria-label="تصویر قبلی"
+                onClick={() => lightboxSwiperRef.current?.slideNext()}
+                aria-label="تصویر بعدی"
                 className="absolute left-2 sm:left-6 z-20 size-12 rounded-full bg-white/10 hover:bg-white/25 text-white flex items-center justify-center backdrop-blur-md transition-all hover:scale-110 active:scale-95 cursor-pointer"
               >
                 <ChevronLeft className="size-7" />
@@ -484,7 +452,14 @@ export default function ProductImageSlider({
                     key={`modal-thumb-${idx}`}
                     type="button"
                     onClick={() => {
-                      setActiveIndex(idx)
+                      goToIndex(idx)
+                      if (lightboxSwiperRef.current) {
+                        if (hasMultiple) {
+                          lightboxSwiperRef.current.slideToLoop(idx)
+                        } else {
+                          lightboxSwiperRef.current.slideTo(idx)
+                        }
+                      }
                       setIsZoomed(false)
                     }}
                     className={`size-14 sm:size-16 rounded-xl overflow-hidden border-2 transition-all duration-200 shrink-0 cursor-pointer ${
