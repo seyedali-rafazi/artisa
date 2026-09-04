@@ -27,5 +27,5 @@ export default function ProductPage() {
     )
   }
 
-  return <ProductDetailsView />
+  return <ProductDetailsView product={product} />
 }

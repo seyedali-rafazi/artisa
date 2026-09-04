@@ -22,11 +22,17 @@ import {
 import { useProductComments } from "@/hooks/useComments"
 import { useProducts } from "@/hooks/useProducts"
 import ProductCommentsSection from "@/components/comments/ProductCommentsSection"
+import ProductImageSlider from "@/components/product/ProductImageSlider"
+import { Product } from "../AppContext"
 
-export default function ProductDetailsView() {
+interface ProductDetailsViewProps {
+  product?: Product
+}
+
+export default function ProductDetailsView({ product: propProduct }: ProductDetailsViewProps = {}) {
   const { t } = useLanguage()
   const { 
-    selectedProduct, 
+    selectedProduct: contextProduct, 
     addToCart, 
     cart, 
     setSelectedProduct, 
@@ -36,6 +42,8 @@ export default function ProductDetailsView() {
     isFavorited, 
     toggleFavorite 
   } = useApp()
+
+  const selectedProduct = propProduct || contextProduct
 
   const productId = selectedProduct?.id || ""
   const { data: commentsResponse } = useProductComments(productId, { limit: 1 })
@@ -96,13 +104,15 @@ export default function ProductDetailsView() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8 md:gap-12 mb-16">
         {/* Gallery column */}
         <div className="flex flex-col gap-4">
-          <div className="aspect-square w-full rounded-3xl overflow-hidden border border-border/40 bg-muted/10 shadow-sm">
-            <img
-              src={selectedProduct.image}
-              alt={selectedProduct.name}
-              className="w-full h-full object-cover"
-            />
-          </div>
+          <ProductImageSlider
+            productName={selectedProduct.name}
+            image={selectedProduct.image}
+            gallery={selectedProduct.gallery}
+            images={selectedProduct.images}
+            isSpecial={selectedProduct.isSpecial}
+            oldPrice={selectedProduct.oldPrice}
+            price={selectedProduct.price}
+          />
         </div>
 
         {/* Purchase & Details column */}

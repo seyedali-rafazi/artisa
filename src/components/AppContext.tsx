@@ -23,6 +23,8 @@ export interface Product {
   price: number
   oldPrice?: number
   image: string
+  gallery?: string[]
+  images?: string[]
   category: string
   categoryEn: string
   rating: number
