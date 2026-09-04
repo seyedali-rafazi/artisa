@@ -34,10 +34,18 @@ export default function ProductImageSlider({
   const [activeIndex, setActiveIndex] = useState<number>(0)
   const [isLightboxOpen, setIsLightboxOpen] = useState<boolean>(false)
   const [isZoomed, setIsZoomed] = useState<boolean>(false)
+
+  // Touch gesture coordinates
   const [touchStartX, setTouchStartX] = useState<number | null>(null)
   const [touchEndX, setTouchEndX] = useState<number | null>(null)
 
+  // Mouse drag coordinates
+  const [isMouseDown, setIsMouseDown] = useState<boolean>(false)
+  const [mouseStartX, setMouseStartX] = useState<number | null>(null)
+  const [mouseEndX, setMouseEndX] = useState<number | null>(null)
+
   const thumbnailContainerRef = useRef<HTMLDivElement>(null)
+  const wheelTimeoutRef = useRef<NodeJS.Timeout | null>(null)
 
   // Deduplicate and consolidate all image sources
   const allImages = useMemo(() => {
@@ -95,9 +103,9 @@ export default function ProductImageSlider({
       if (e.key === "Escape") {
         setIsLightboxOpen(false)
         setIsZoomed(false)
-      } else if (e.key === "ArrowLeft") {
-        goToNext()
       } else if (e.key === "ArrowRight") {
+        goToNext()
+      } else if (e.key === "ArrowLeft") {
         goToPrev()
       }
     }
@@ -106,7 +114,7 @@ export default function ProductImageSlider({
     return () => window.removeEventListener("keydown", handleKeyDown)
   }, [isLightboxOpen, goToNext, goToPrev])
 
-  // Touch swipe handling
+  // ─── Touch swipe handling ───
   const handleTouchStart = (e: React.TouchEvent) => {
     setTouchStartX(e.targetTouches[0].clientX)
     setTouchEndX(null)
@@ -119,16 +127,73 @@ export default function ProductImageSlider({
   const handleTouchEnd = () => {
     if (touchStartX === null || touchEndX === null) return
     const diff = touchStartX - touchEndX
-    // Swipe threshold
-    if (diff > 45) {
-      // Swiped left -> Next
+
+    // Left-to-Right swipe (touchStartX < touchEndX => diff < -40): advance to next slide
+    // Right-to-Left swipe (touchStartX > touchEndX => diff > 40): return to previous slide
+    if (diff < -40) {
       goToNext()
-    } else if (diff < -45) {
-      // Swiped right -> Prev
+    } else if (diff > 40) {
       goToPrev()
     }
     setTouchStartX(null)
     setTouchEndX(null)
+  }
+
+  // ─── Mouse drag handling ───
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsMouseDown(true)
+    setMouseStartX(e.clientX)
+    setMouseEndX(null)
+  }
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isMouseDown) return
+    setMouseEndX(e.clientX)
+  }
+
+  const handleMouseUp = () => {
+    if (isMouseDown && mouseStartX !== null && mouseEndX !== null) {
+      const diff = mouseStartX - mouseEndX
+      if (diff < -40) {
+        goToNext()
+      } else if (diff > 40) {
+        goToPrev()
+      }
+    }
+    setIsMouseDown(false)
+    setMouseStartX(null)
+    setMouseEndX(null)
+  }
+
+  const handleMouseLeave = () => {
+    if (isMouseDown && mouseStartX !== null && mouseEndX !== null) {
+      const diff = mouseStartX - mouseEndX
+      if (diff < -40) {
+        goToNext()
+      } else if (diff > 40) {
+        goToPrev()
+      }
+    }
+    setIsMouseDown(false)
+    setMouseStartX(null)
+    setMouseEndX(null)
+  }
+
+  // ─── Trackpad / Mouse horizontal wheel scroll ───
+  const handleWheel = (e: React.WheelEvent) => {
+    if (Math.abs(e.deltaX) > 25) {
+      if (wheelTimeoutRef.current) return
+      if (e.deltaX > 25) {
+        // Scrolled left to right
+        goToNext()
+      } else if (e.deltaX < -25) {
+        // Scrolled right to left
+        goToPrev()
+      }
+      wheelTimeoutRef.current = setTimeout(() => {
+        wheelTimeoutRef.current = null
+      }, 300)
+    }
   }
 
   // Calculate discount percentage
@@ -145,31 +210,46 @@ export default function ProductImageSlider({
     <div className="flex flex-col gap-3.5 w-full select-none" dir="rtl">
       {/* ─── Main Image Stage ─── */}
       <div
-        className="relative aspect-square w-full rounded-3xl overflow-hidden border border-border/50 bg-gradient-to-b from-muted/20 to-muted/5 shadow-md group"
+        className="relative aspect-square w-full rounded-3xl overflow-hidden border border-border/50 bg-gradient-to-b from-muted/20 to-muted/5 shadow-md group cursor-grab active:cursor-grabbing"
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        onMouseDown={handleMouseDown}
+        onMouseMove={handleMouseMove}
+        onMouseUp={handleMouseUp}
+        onMouseLeave={handleMouseLeave}
+        onWheel={handleWheel}
       >
-        {/* Slides container */}
-        <div className="relative w-full h-full">
-          {allImages.map((imgSrc, idx) => (
-            <div
-              key={`${imgSrc}-${idx}`}
-              className={`absolute inset-0 w-full h-full transition-all duration-500 ease-out flex items-center justify-center p-3 sm:p-4 ${
-                idx === activeIndex
-                  ? "opacity-100 scale-100 z-10 pointer-events-auto"
-                  : "opacity-0 scale-95 z-0 pointer-events-none"
-              }`}
-            >
-              <img
-                src={imgSrc}
-                alt={`${productName} - تصویر ${idx + 1}`}
-                onClick={() => setIsLightboxOpen(true)}
-                className="w-full h-full object-contain rounded-2xl cursor-zoom-in transition-transform duration-300 hover:scale-[1.02]"
-                loading={idx === 0 ? "eager" : "lazy"}
-              />
-            </div>
-          ))}
+        {/* ─── Real Horizontal Sliding Track ─── */}
+        <div className="w-full h-full overflow-hidden" dir="ltr">
+          <div
+            className="flex w-full h-full transition-transform duration-500 ease-out"
+            style={{
+              transform: `translateX(-${activeIndex * 100}%)`,
+            }}
+          >
+            {allImages.map((imgSrc, idx) => (
+              <div
+                key={`${imgSrc}-${idx}`}
+                className="w-full h-full shrink-0 flex items-center justify-center p-3 sm:p-4 select-none"
+              >
+                <img
+                  src={imgSrc}
+                  alt={`${productName} - تصویر ${idx + 1}`}
+                  onClick={(e) => {
+                    // Prevent trigger if dragging
+                    if (mouseStartX !== null && mouseEndX !== null && Math.abs(mouseStartX - mouseEndX) > 10) {
+                      return
+                    }
+                    setIsLightboxOpen(true)
+                  }}
+                  draggable={false}
+                  className="w-full h-full object-contain rounded-2xl cursor-zoom-in transition-transform duration-300 hover:scale-[1.02]"
+                  loading={idx === 0 ? "eager" : "lazy"}
+                />
+              </div>
+            ))}
+          </div>
         </div>
 
         {/* ─── Badges (Top right & left) ─── */}
@@ -201,7 +281,10 @@ export default function ProductImageSlider({
 
           <button
             type="button"
-            onClick={() => setIsLightboxOpen(true)}
+            onClick={(e) => {
+              e.stopPropagation()
+              setIsLightboxOpen(true)
+            }}
             aria-label="بزرگ‌نمایی تصویر"
             className="size-8 rounded-full bg-background/80 hover:bg-background backdrop-blur-md border border-border/50 text-foreground/80 hover:text-primary flex items-center justify-center shadow-sm transition-all hover:scale-105 cursor-pointer"
           >
@@ -212,21 +295,27 @@ export default function ProductImageSlider({
         {/* ─── Floating Navigation Arrows ─── */}
         {hasMultiple && (
           <>
-            {/* Right Button (Previous in Persian RTL) */}
+            {/* Right Button (Advance / Next) */}
             <button
               type="button"
-              onClick={goToPrev}
-              aria-label="تصویر قبلی"
+              onClick={(e) => {
+                e.stopPropagation()
+                goToNext()
+              }}
+              aria-label="تصویر بعدی"
               className="absolute right-3 top-1/2 -translate-y-1/2 z-20 size-10 rounded-full bg-background/80 hover:bg-background backdrop-blur-md border border-border/50 text-foreground/80 hover:text-primary flex items-center justify-center shadow-lg transition-all opacity-80 group-hover:opacity-100 hover:scale-110 active:scale-95 cursor-pointer"
             >
               <ChevronRight className="size-5" />
             </button>
 
-            {/* Left Button (Next in Persian RTL) */}
+            {/* Left Button (Return / Previous) */}
             <button
               type="button"
-              onClick={goToNext}
-              aria-label="تصویر بعدی"
+              onClick={(e) => {
+                e.stopPropagation()
+                goToPrev()
+              }}
+              aria-label="تصویر قبلی"
               className="absolute left-3 top-1/2 -translate-y-1/2 z-20 size-10 rounded-full bg-background/80 hover:bg-background backdrop-blur-md border border-border/50 text-foreground/80 hover:text-primary flex items-center justify-center shadow-lg transition-all opacity-80 group-hover:opacity-100 hover:scale-110 active:scale-95 cursor-pointer"
             >
               <ChevronLeft className="size-5" />
@@ -241,7 +330,10 @@ export default function ProductImageSlider({
               <button
                 key={idx}
                 type="button"
-                onClick={() => setActiveIndex(idx)}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  setActiveIndex(idx)
+                }}
                 aria-label={`رفتن به تصویر ${idx + 1}`}
                 className={`transition-all duration-300 rounded-full cursor-pointer ${
                   idx === activeIndex
@@ -277,6 +369,7 @@ export default function ProductImageSlider({
                 <img
                   src={imgSrc}
                   alt={`پیش‌نمایش ${idx + 1}`}
+                  draggable={false}
                   className="w-full h-full object-cover"
                   loading="lazy"
                 />
@@ -338,14 +431,14 @@ export default function ProductImageSlider({
 
           {/* Modal Main Image Stage */}
           <div
-            className="relative flex-1 flex items-center justify-center overflow-hidden my-4"
+            className="relative flex-1 w-full max-w-5xl mx-auto flex items-center justify-center overflow-hidden my-4"
             onClick={(e) => e.stopPropagation()}
           >
             {hasMultiple && (
               <button
                 type="button"
-                onClick={goToPrev}
-                aria-label="تصویر قبلی"
+                onClick={goToNext}
+                aria-label="تصویر بعدی"
                 className="absolute right-2 sm:right-6 z-20 size-12 rounded-full bg-white/10 hover:bg-white/25 text-white flex items-center justify-center backdrop-blur-md transition-all hover:scale-110 active:scale-95 cursor-pointer"
               >
                 <ChevronRight className="size-7" />
@@ -353,7 +446,7 @@ export default function ProductImageSlider({
             )}
 
             <div
-              className={`transition-all duration-300 max-w-full max-h-full flex items-center justify-center ${
+              className={`w-full h-full transition-all duration-300 flex items-center justify-center ${
                 isZoomed ? "scale-150 cursor-zoom-out" : "scale-100 cursor-zoom-in"
               }`}
               onClick={() => setIsZoomed((prev) => !prev)}
@@ -361,6 +454,7 @@ export default function ProductImageSlider({
               <img
                 src={allImages[activeIndex]}
                 alt={productName}
+                draggable={false}
                 className="max-w-full max-h-[75vh] object-contain rounded-xl shadow-2xl select-none"
               />
             </div>
@@ -368,8 +462,8 @@ export default function ProductImageSlider({
             {hasMultiple && (
               <button
                 type="button"
-                onClick={goToNext}
-                aria-label="تصویر بعدی"
+                onClick={goToPrev}
+                aria-label="تصویر قبلی"
                 className="absolute left-2 sm:left-6 z-20 size-12 rounded-full bg-white/10 hover:bg-white/25 text-white flex items-center justify-center backdrop-blur-md transition-all hover:scale-110 active:scale-95 cursor-pointer"
               >
                 <ChevronLeft className="size-7" />
@@ -402,6 +496,7 @@ export default function ProductImageSlider({
                     <img
                       src={imgSrc}
                       alt={`تصویر ${idx + 1}`}
+                      draggable={false}
                       className="w-full h-full object-cover"
                     />
                   </button>
