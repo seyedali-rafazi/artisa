@@ -340,18 +340,26 @@ export default function AdminSpecialOffersPage() {
                         </div>
                       </td>
 
-                      {/* Active Toggle Switch */}
+                      {/* Active Toggle Button */}
                       <td className="p-4 whitespace-nowrap">
-                        <label className="relative inline-flex items-center cursor-pointer">
-                          <input
-                            type="checkbox"
-                            checked={offer.is_active}
-                            onChange={() => handleToggleActive(offer.id)}
-                            className="sr-only peer"
-                            disabled={toggleActiveMutation.isPending}
+                        <button
+                          type="button"
+                          onClick={() => handleToggleActive(offer.id)}
+                          disabled={toggleActiveMutation.isPending}
+                          title={offer.is_active ? 'کلیک برای غیرفعال‌سازی' : 'کلیک برای فعال‌سازی'}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all border cursor-pointer ${
+                            offer.is_active
+                              ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/25 border-emerald-500/30'
+                              : 'bg-muted/60 text-muted-foreground hover:bg-muted border-border/80'
+                          }`}
+                        >
+                          <span
+                            className={`size-2 rounded-full ${
+                              offer.is_active ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground/40'
+                            }`}
                           />
-                          <div className="w-9 h-5 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary"></div>
-                        </label>
+                          <span>{offer.is_active ? 'فعال' : 'غیرفعال'}</span>
+                        </button>
                       </td>
 
                       {/* Actions */}

@@ -79,38 +79,38 @@ export default function SpecialOfferDialog({
     e.preventDefault();
     setFormError(null);
 
-    if (!title.trim() || title.trim().length < 2) {
-      setFormError('عنوان پیشنهاد باید حداقل ۲ کاراکتر باشد.');
+    // Basic Validation
+    if (!title.trim()) {
+      setFormError('لطفاً عنوان پیشنهاد ویژه را وارد کنید.');
       return;
     }
-
-    if (!startAt || !endAt) {
-      setFormError('لطفاً تاریخ و زمان شروع و پایان را مشخص نمایید.');
+    if (!startAt) {
+      setFormError('لطفاً زمان شروع پیشنهاد را مشخص کنید.');
       return;
     }
-
-    const startDate = new Date(startAt);
-    const endDate = new Date(endAt);
-    if (endDate <= startDate) {
-      setFormError('زمان پایان پیشنهاد باید بعد از زمان شروع باشد.');
+    if (!endAt) {
+      setFormError('لطفاً زمان پایان پیشنهاد را مشخص کنید.');
       return;
     }
-
+    if (new Date(endAt) <= new Date(startAt)) {
+      setFormError('زمان پایان پیشنهاد باید پس از زمان شروع باشد.');
+      return;
+    }
     if (selectedProductIds.length === 0) {
-      setFormError('حداقل یک محصول باید برای این پیشنهاد ویژه انتخاب شود.');
+      setFormError('لطفاً حداقل یک محصول را برای این پیشنهاد ویژه انتخاب کنید.');
       return;
     }
 
     const payload: SpecialOfferPayload = {
       title: title.trim(),
       description: description.trim() || undefined,
-      product_ids: selectedProductIds,
       start_at: startAt,
       end_at: endAt,
+      product_ids: selectedProductIds,
       is_active: isActive,
     };
 
-    if (isEditing && offerToEdit) {
+    if (isEditing && offerToEdit?.id) {
       updateMutation.mutate(
         { id: offerToEdit.id, ...payload },
         {
@@ -118,7 +118,7 @@ export default function SpecialOfferDialog({
             onClose();
           },
           onError: (err: any) => {
-            setFormError(err.message || 'خطا در ویرایش پیشنهاد ویژه.');
+            setFormError(err.message || 'خطا در بروزرسانی پیشنهاد ویژه.');
           },
         }
       );
@@ -145,23 +145,30 @@ export default function SpecialOfferDialog({
       >
         <form onSubmit={handleSubmit} className="flex flex-col h-full max-h-[90vh] overflow-hidden">
           {/* Header */}
-          <DialogHeader className="p-6 border-b border-border/60 bg-muted/20 shrink-0 flex flex-row items-center justify-between gap-4">
-            <DialogTitle className="text-base sm:text-lg font-black text-foreground flex items-center gap-2">
-              <Sparkles className="size-5 text-primary" />
-              <span>{isEditing ? 'ویرایش پیشنهاد ویژه' : 'ایجاد پیشنهاد ویژه جدید'}</span>
+          <DialogHeader className="p-6 sm:p-7 border-b border-border/60 bg-muted/20 shrink-0 flex flex-row items-center justify-between gap-4">
+            <DialogTitle className="text-base sm:text-lg font-black text-foreground flex items-center gap-3">
+              <div className="size-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                <Sparkles className="size-5" />
+              </div>
+              <div className="flex flex-col text-start">
+                <span>{isEditing ? 'ویرایش پیشنهاد ویژه' : 'ایجاد پیشنهاد ویژه جدید'}</span>
+                <span className="text-xs font-normal text-muted-foreground mt-0.5">
+                  تنظیم بازه زمانی، محصولات متصل و وضعیت فعال‌سازی کمپین تخفیف
+                </span>
+              </div>
             </DialogTitle>
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+              className="p-2 rounded-xl hover:bg-muted text-muted-foreground hover:text-foreground transition-colors cursor-pointer shrink-0"
               title="بستن"
             >
-              <X className="size-4" />
+              <X className="size-5" />
             </button>
           </DialogHeader>
 
           {/* Body */}
-          <div className="p-6 flex flex-col gap-6 overflow-y-auto overflow-x-hidden flex-1">
+          <div className="p-6 sm:p-8 flex flex-col gap-6 overflow-y-auto overflow-x-hidden flex-1">
             {formError && (
               <div className="flex items-center gap-2 p-3.5 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-xs font-bold animate-in fade-in duration-200">
                 <AlertCircle className="size-4 shrink-0" />
@@ -170,21 +177,21 @@ export default function SpecialOfferDialog({
             )}
 
             {/* Timezone Notice Banner */}
-            <div className="flex items-start gap-2.5 p-3.5 rounded-2xl bg-primary/5 border border-primary/15 text-xs text-muted-foreground font-semibold">
-              <Info className="size-4 text-primary shrink-0 mt-0.5" />
+            <div className="flex items-start gap-3 p-4 rounded-2xl bg-primary/5 border border-primary/15 text-xs text-muted-foreground font-semibold">
+              <Info className="size-5 text-primary shrink-0 mt-0.5" />
               <div className="flex flex-col gap-0.5">
                 <span className="font-extrabold text-foreground">
                   تقویم خورشیدی (شمسی) و ساعت رسمی تهران
                 </span>
-                <span>
+                <span className="leading-relaxed">
                   کلیه زمان‌های شروع و انقضای کمپین بر اساس تقویم شمسی و ساعت رسمی ایران (Asia/Tehran) محاسبه و به صورت خودکار مدیریت می‌شوند.
                 </span>
               </div>
             </div>
 
             {/* Title & Description */}
-            <div className="grid grid-cols-1 gap-4">
-              <div className="flex flex-col gap-1.5">
+            <div className="grid grid-cols-1 gap-5">
+              <div className="flex flex-col gap-2">
                 <label className="text-xs font-black text-foreground">
                   عنوان پیشنهاد ویژه / کمپین <span className="text-destructive">*</span>
                 </label>
@@ -193,27 +200,27 @@ export default function SpecialOfferDialog({
                   placeholder="مثال: جشنواره شگفت‌انگیز تابستانه نقاشی"
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
-                  className="rounded-2xl h-11 text-xs bg-background"
+                  className="rounded-2xl h-12 text-xs sm:text-sm px-4 bg-background"
                   required
                 />
               </div>
 
-              <div className="flex flex-col gap-1.5">
+              <div className="flex flex-col gap-2">
                 <label className="text-xs font-bold text-foreground">
                   توضیحات تکمیلی (اختیاری)
                 </label>
                 <textarea
-                  rows={2}
+                  rows={3}
                   placeholder="توضیحات کوتاه درباره تخفیف‌ها یا شرایط کمپین..."
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
-                  className="p-3 rounded-2xl border border-input bg-background text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary w-full resize-none"
+                  className="p-4 rounded-2xl border border-input bg-background text-xs sm:text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary w-full resize-none leading-relaxed"
                 />
               </div>
             </div>
 
             {/* Start and End Date Time Inputs (Shamsi & Asia/Tehran) */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 rounded-3xl bg-muted/30 border border-border/60">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-5 rounded-3xl bg-muted/30 border border-border/60">
               <ShamsiDateTimePicker
                 label="زمان شروع پیشنهاد (شمسی)"
                 value={startAt}
@@ -230,25 +237,52 @@ export default function SpecialOfferDialog({
               />
             </div>
 
-            {/* Active Toggle Switch */}
-            <div className="flex items-center justify-between p-4 rounded-3xl bg-card border border-border/80 shadow-xs">
-              <div className="flex flex-col gap-0.5">
+            {/* Active Status Segmented Selector */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-5 rounded-3xl bg-card border border-border/80 shadow-xs gap-4">
+              <div className="flex flex-col gap-1">
                 <span className="text-xs font-black text-foreground">
                   وضعیت فعال‌سازی دستی
                 </span>
                 <span className="text-[11px] text-muted-foreground font-semibold">
-                  در صورت غیرفعال بودن، پیشنهاد حتی در بازه زمانی تعیین شده نمایش داده نخواهد شد.
+                  در صورت غیرفعال بودن، این پیشنهاد حتی در بازه زمانی تعیین شده در سایت نمایش داده نخواهد شد.
                 </span>
               </div>
-              <label className="relative inline-flex items-center cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={isActive}
-                  onChange={(e) => setIsActive(e.target.checked)}
-                  className="sr-only peer"
-                />
-                <div className="w-11 h-6 bg-muted peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full rtl:peer-checked:after:-translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:start-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
-              </label>
+
+              <div className="grid grid-cols-2 gap-2 w-full sm:w-auto shrink-0">
+                <button
+                  type="button"
+                  onClick={() => setIsActive(true)}
+                  className={`flex items-center justify-center gap-1.5 py-2 px-4 rounded-xl text-xs font-extrabold transition-all border cursor-pointer ${
+                    isActive
+                      ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 shadow-xs'
+                      : 'bg-background text-muted-foreground border-border/60 hover:bg-muted/40'
+                  }`}
+                >
+                  <span
+                    className={`size-2 rounded-full ${
+                      isActive ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground/30'
+                    }`}
+                  />
+                  <span>فعال</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setIsActive(false)}
+                  className={`flex items-center justify-center gap-1.5 py-2 px-4 rounded-xl text-xs font-extrabold transition-all border cursor-pointer ${
+                    !isActive
+                      ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 shadow-xs'
+                      : 'bg-background text-muted-foreground border-border/60 hover:bg-muted/40'
+                  }`}
+                >
+                  <span
+                    className={`size-2 rounded-full ${
+                      !isActive ? 'bg-amber-500' : 'bg-muted-foreground/30'
+                    }`}
+                  />
+                  <span>غیرفعال</span>
+                </button>
+              </div>
             </div>
 
             {/* Product Selector */}
@@ -259,19 +293,19 @@ export default function SpecialOfferDialog({
           </div>
 
           {/* Footer */}
-          <DialogFooter className="p-4 border-t border-border/60 bg-muted/20 flex flex-row items-center justify-end gap-2 shrink-0">
+          <DialogFooter className="p-5 sm:p-6 border-t border-border/60 bg-muted/20 flex flex-row items-center justify-end gap-3 shrink-0">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
-              className="rounded-2xl text-xs font-bold cursor-pointer"
+              className="rounded-2xl text-xs font-bold px-5 h-11 cursor-pointer"
               disabled={isSubmitting}
             >
               انصراف
             </Button>
             <Button
               type="submit"
-              className="rounded-2xl text-xs font-extrabold gap-2 cursor-pointer shadow-md shadow-primary/20"
+              className="rounded-2xl text-xs font-extrabold gap-2 px-6 h-11 cursor-pointer shadow-md shadow-primary/20"
               disabled={isSubmitting}
             >
               {isSubmitting ? (

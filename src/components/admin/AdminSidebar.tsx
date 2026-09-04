@@ -18,6 +18,7 @@ import {
   ChevronLeft,
   X,
   BookOpen,
+  HelpCircle,
 } from 'lucide-react';
 
 interface AdminSidebarProps {
@@ -61,6 +62,12 @@ export default function AdminSidebar({
       title: 'مدیریت مقالات بلاگ',
       href: '/admin/blog',
       icon: BookOpen,
+      superAdminOnly: false,
+    },
+    {
+      title: 'مدیریت سوالات متداول',
+      href: '/admin/faqs',
+      icon: HelpCircle,
       superAdminOnly: false,
     },
     {
