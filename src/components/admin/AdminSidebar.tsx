@@ -21,6 +21,7 @@ import {
   HelpCircle,
   Image as ImageIcon,
   Mail,
+  Newspaper,
 } from 'lucide-react';
 
 interface AdminSidebarProps {
@@ -100,6 +101,12 @@ export default function AdminSidebar({
       title: 'پیام‌های تماس',
       href: '/admin/contact-messages',
       icon: Mail,
+      superAdminOnly: false,
+    },
+    {
+      title: 'اعضای خبرنامه',
+      href: '/admin/newsletter',
+      icon: Newspaper,
       superAdminOnly: false,
     },
     {
