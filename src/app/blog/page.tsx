@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import BlogView from "@/components/views/BlogView";
+import { ArticleItem } from "@/hooks/useBlog";
 import { getSiteUrl, generateBreadcrumbSchema } from "@/lib/seo";
 
 export const metadata: Metadata = {
@@ -18,7 +19,23 @@ export const metadata: Metadata = {
   },
 };
 
-export default function BlogPage() {
+
+async function getArticles(): Promise<ArticleItem[]> {
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://artisa-backend.vercel.app';
+  try {
+    const res = await fetch(`${backendUrl}/api/v1/blog/articles`, {
+      next: { revalidate: 3600 },
+    });
+    if (!res.ok) return [];
+    const data = await res.json();
+    return (data?.items || data?.data || (Array.isArray(data) ? data : [])) as ArticleItem[];
+  } catch {
+    return [];
+  }
+}
+
+export default async function BlogPage() {
+  const articles = await getArticles();
   const breadcrumbSchema = generateBreadcrumbSchema([
     { name: "خانه", url: "/" },
     { name: "مجله هنر", url: "/blog" },
@@ -30,7 +47,7 @@ export default function BlogPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
-      <BlogView />
+      <BlogView initialArticles={articles} />
     </>
   );
 }

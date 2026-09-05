@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { AboutUsView } from "@/components/views/StaticPages";
+import AboutUsView from "@/components/views/AboutUsView";
 import { getSiteUrl } from "@/lib/seo";
 
 export const metadata: Metadata = {

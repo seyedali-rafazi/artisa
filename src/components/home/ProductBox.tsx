@@ -15,7 +15,7 @@ interface ProductBoxProps {
   product: Product
 }
 
-export default function ProductBox({ product }: ProductBoxProps) {
+function ProductBoxComponent({ product }: ProductBoxProps) {
   const { 
     addToCart, 
     cart, 
@@ -147,3 +147,6 @@ export default function ProductBox({ product }: ProductBoxProps) {
     </Link>
   )
 }
+
+const ProductBox = React.memo(ProductBoxComponent)
+export default ProductBox

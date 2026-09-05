@@ -20,12 +20,18 @@ import { formatShamsiDate } from "@/lib/utils";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 
-export default function BlogView() {
+interface BlogViewProps {
+  initialArticles?: ArticleItem[];
+}
+
+export default function BlogView({ initialArticles }: BlogViewProps) {
   const { t } = useLanguage();
   const [searchTerm, setSearchTerm] = useState("");
-  const { data: apiArticles, isLoading, isError, refetch } = useBlogPosts();
+  const { data: apiArticles, isLoading, isError, refetch } = useBlogPosts(undefined, {
+    initialData: initialArticles,
+  });
 
-  const allArticles = useMemo(() => apiArticles || [], [apiArticles]);
+  const allArticles = useMemo(() => apiArticles || initialArticles || [], [apiArticles, initialArticles]);
 
   const filteredArticles = useMemo(() => {
     if (!searchTerm.trim()) return allArticles;
@@ -158,6 +164,7 @@ export default function BlogView() {
                     src={featuredArticle.image}
                     alt={featuredArticle.title}
                     fill
+                    priority
                     sizes="(max-width: 1024px) 100vw, 50vw"
                     className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
                   />

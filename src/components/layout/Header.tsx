@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useLanguage } from "../LanguageContext";
 import { useApp } from "../AppContext";
 import { Input } from "../ui/input";
@@ -55,7 +55,6 @@ const profileNavItems = [
 
 export default function Header() {
   const pathname = usePathname();
-  const searchParams = useSearchParams();
   const { t } = useLanguage();
   const { cart, user, logout, searchQuery, setSearchQuery } = useApp();
 
@@ -66,15 +65,17 @@ export default function Header() {
   const [searchInput, setSearchInput] = useState("");
   const [mobileCategoriesOpen, setMobileCategoriesOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [activeProfileTab, setActiveProfileTab] = useState<string>("profile");
 
   useEffect(() => {
     setMounted(true);
-  }, []);
+    if (pathname.startsWith("/profile") && typeof window !== "undefined") {
+      const tab = new URLSearchParams(window.location.search).get("tab") || "profile";
+      setActiveProfileTab(tab);
+    }
+  }, [pathname]);
 
   const profileMenuRef = useRef<HTMLDivElement>(null);
-  const activeProfileTab = pathname.startsWith("/profile")
-    ? searchParams.get("tab") || "profile"
-    : null;
   const isOnProfile = pathname.startsWith("/profile");
 
   // Global search shortcut (Ctrl+K or /)
@@ -585,14 +586,16 @@ export default function Header() {
       </div>
 
       {/* Digikala-Style Mobile Search Modal */}
-      <SearchModal
-        isOpen={isMobileSearchOpen}
-        onClose={() => {
-          setIsMobileSearchOpen(false);
-          setMobileMenuOpen(false);
-        }}
-        initialQuery={searchQuery}
-      />
+      {isMobileSearchOpen && (
+        <SearchModal
+          isOpen={isMobileSearchOpen}
+          onClose={() => {
+            setIsMobileSearchOpen(false);
+            setMobileMenuOpen(false);
+          }}
+          initialQuery={searchQuery}
+        />
+      )}
     </>
   );
 }

@@ -24,6 +24,7 @@ import {
   ShieldCheck,
   Loader2
 } from "lucide-react"
+import GoogleAuthProvider from "@/components/providers/GoogleAuthProvider"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -211,7 +212,8 @@ export default function LoginPage() {
   }
 
   return (
-    <div dir="rtl" className="min-h-[85vh] flex items-center justify-center py-10 px-4 relative overflow-hidden">
+    <GoogleAuthProvider>
+      <div dir="rtl" className="min-h-[85vh] flex items-center justify-center py-10 px-4 relative overflow-hidden">
       {/* Background Decorative Blur Orbs */}
       <div className="absolute -top-20 -right-20 size-80 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
       <div className="absolute -bottom-20 -left-20 size-80 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
@@ -535,5 +537,6 @@ export default function LoginPage() {
         </div>
       </div>
     </div>
+    </GoogleAuthProvider>
   )
 }

@@ -32,10 +32,11 @@ export interface FAQReorderItem {
 /**
  * Fetch all active FAQs sorted by display order for the public storefront.
  */
-export function useFAQs() {
+export function useFAQs(initialData?: FAQItem[]) {
   return useQuery({
     queryKey: ['faqs'],
     queryFn: () => api.get<FAQItem[]>('/api/v1/faqs'),
+    initialData,
     staleTime: 1000 * 60 * 5, // 5 minutes cache
   });
 }

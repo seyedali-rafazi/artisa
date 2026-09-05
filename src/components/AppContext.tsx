@@ -1,6 +1,6 @@
 "use client"
 
-import React, { createContext, useContext, useState, useEffect } from "react"
+import React, { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react"
 import { useUserProfile, useLogout } from "@/hooks/useAuth"
 import { useFavorites, useFavoriteIds, useToggleFavorite } from "@/hooks/useFavorites"
 import { refreshAccessToken } from "@/lib/api"
@@ -157,23 +157,24 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   const { data: userProfileData } = useUserProfile()
   const logoutMutation = useLogout()
 
-  const user: User | null = userProfileData
-    ? {
-        id: userProfileData.id,
-        name: userProfileData.name,
-        email: userProfileData.email,
-        phone: userProfileData.phone,
-        createdAt: userProfileData.createdAt,
-        role: userProfileData.role,
-      }
-    : null
+  const user: User | null = useMemo(() => {
+    if (!userProfileData) return null
+    return {
+      id: userProfileData.id,
+      name: userProfileData.name,
+      email: userProfileData.email,
+      phone: userProfileData.phone,
+      createdAt: userProfileData.createdAt,
+      role: userProfileData.role,
+    }
+  }, [userProfileData])
 
   // Backend Favorites / Wishlist Sync
   const { data: backendFavoriteProducts = [] } = useFavorites()
   const { data: favoriteIds = [] } = useFavoriteIds()
   const toggleFavoriteMutation = useToggleFavorite()
 
-  const showToast = (message: string, type: "success" | "error" | "info" = "success") => {
+  const showToast = useCallback((message: string, type: "success" | "error" | "info" = "success") => {
     if (type === "error") {
       toast.error(message)
     } else if (type === "info") {
@@ -181,7 +182,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     } else {
       toast.success(message)
     }
-  }
+  }, [])
 
   // Save Cart to LocalStorage (only after initial load has finished)
   useEffect(() => {
@@ -190,7 +191,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }, [cart, isCartLoaded])
 
-  const addToCart = (product: Product) => {
+  const addToCart = useCallback((product: Product) => {
     setCart((prev) => {
       const existing = prev.find((item) => item.id === product.id)
       if (existing) {
@@ -211,30 +212,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       ]
     })
     showToast(`${product.name} به سبد خرید اضافه شد`, "success")
-  }
+  }, [showToast])
 
-  const removeFromCart = (productId: string) => {
+  const removeFromCart = useCallback((productId: string) => {
     setCart((prev) => prev.filter((item) => item.id !== productId))
-  }
+  }, [])
 
-  const updateCartQty = (productId: string, qty: number) => {
+  const updateCartQty = useCallback((productId: string, qty: number) => {
     if (qty <= 0) {
-      removeFromCart(productId)
+      setCart((prev) => prev.filter((item) => item.id !== productId))
       return
     }
     setCart((prev) =>
       prev.map((item) => (item.id === productId ? { ...item, quantity: qty } : item))
     )
-  }
+  }, [])
 
-  const clearCart = () => {
+  const clearCart = useCallback(() => {
     setCart([])
     if (typeof window !== "undefined") {
       localStorage.removeItem("artisa_cart")
     }
-  }
+  }, [])
 
-  const addAddress = (address: Omit<Address, "id">) => {
+  const addAddress = useCallback((address: Omit<Address, "id">) => {
     const newAddr: Address = { ...address, id: `addr-${Date.now()}` }
     setAddresses((prev) => {
       if (address.isDefault) {
@@ -242,9 +243,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
       }
       return [...prev, newAddr]
     })
-  }
+  }, [])
 
-  const updateAddress = (id: string, address: Omit<Address, "id">) => {
+  const updateAddress = useCallback((id: string, address: Omit<Address, "id">) => {
     setAddresses((prev) =>
       prev.map((a) => {
         if (a.id === id) return { ...address, id }
@@ -252,30 +253,30 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         return a
       })
     )
-  }
+  }, [])
 
-  const deleteAddress = (id: string) => {
+  const deleteAddress = useCallback((id: string) => {
     setAddresses((prev) => prev.filter((a) => a.id !== id))
-  }
+  }, [])
 
-  const setDefaultAddress = (id: string) => {
+  const setDefaultAddress = useCallback((id: string) => {
     setAddresses((prev) =>
       prev.map((a) => ({ ...a, isDefault: a.id === id }))
     )
-  }
+  }, [])
 
-  const isFavorited = (productId: string): boolean => {
+  const isFavorited = useCallback((productId: string): boolean => {
     return Boolean(user && favoriteIds.includes(productId))
-  }
+  }, [user, favoriteIds])
 
-  const toggleFavorite = (product: Product) => {
+  const toggleFavorite = useCallback((product: Product) => {
     if (!user) {
       setShowLogin(true)
       showToast("برای افزودن به علاقه‌مندی‌ها ابتدا وارد حساب شوید", "info")
       return
     }
 
-    const currentlyFavorited = isFavorited(product.id)
+    const currentlyFavorited = Boolean(favoriteIds.includes(product.id))
 
     toggleFavoriteMutation.mutate(
       { product, isFavorited: currentlyFavorited },
@@ -292,9 +293,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         },
       }
     )
-  }
+  }, [user, favoriteIds, toggleFavoriteMutation, showToast])
 
-  const logout = () => {
+  const logout = useCallback(() => {
     logoutMutation.mutate(undefined, {
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: ["favorites"] })
@@ -302,44 +303,74 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         queryClient.setQueryData(["favorites", "list"], [])
       },
     })
-  }
+  }, [logoutMutation, queryClient])
+
+  const isFavoriteLoading = toggleFavoriteMutation.isPending
+
+  const contextValue = useMemo<AppContextType>(
+    () => ({
+      currentView,
+      setCurrentView,
+      cart,
+      isCartLoaded,
+      addToCart,
+      removeFromCart,
+      updateCartQty,
+      clearCart,
+      selectedProduct,
+      setSelectedProduct,
+      searchQuery,
+      setSearchQuery,
+      showLogin,
+      setShowLogin,
+      user,
+      setUser: () => {},
+      isAuthLoading,
+      logout,
+      addresses,
+      addAddress,
+      updateAddress,
+      deleteAddress,
+      setDefaultAddress,
+      orders: [],
+      wishlist: backendFavoriteProducts,
+      favoriteIds,
+      isFavorited,
+      toggleWishlist: toggleFavorite,
+      toggleFavorite,
+      isFavoriteLoading,
+      showToast,
+    }),
+    [
+      currentView,
+      cart,
+      isCartLoaded,
+      addToCart,
+      removeFromCart,
+      updateCartQty,
+      clearCart,
+      selectedProduct,
+      searchQuery,
+      showLogin,
+      user,
+      isAuthLoading,
+      logout,
+      addresses,
+      addAddress,
+      updateAddress,
+      deleteAddress,
+      setDefaultAddress,
+      backendFavoriteProducts,
+      favoriteIds,
+      isFavorited,
+      toggleFavorite,
+      isFavoriteLoading,
+      showToast,
+    ]
+  )
 
   return (
-    <AppContext.Provider
-      value={{
-        currentView,
-        setCurrentView,
-        cart,
-        isCartLoaded,
-        addToCart,
-        removeFromCart,
-        updateCartQty,
-        clearCart,
-        selectedProduct,
-        setSelectedProduct,
-        searchQuery,
-        setSearchQuery,
-        showLogin,
-        setShowLogin,
-        user,
-        setUser: () => {},
-        isAuthLoading,
-        logout,
-        addresses,
-        addAddress,
-        updateAddress,
-        deleteAddress,
-        setDefaultAddress,
-        orders: [],
-        wishlist: backendFavoriteProducts,
-        favoriteIds,
-        isFavorited,
-        toggleWishlist: toggleFavorite,
-        toggleFavorite,
-        isFavoriteLoading: toggleFavoriteMutation.isPending,
-        showToast,
-      }}
-    >
+    <AppContext.Provider value={contextValue}>
       {children}
     </AppContext.Provider>
   )

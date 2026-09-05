@@ -7,12 +7,16 @@ import { ChevronDown, HelpCircle, MessageCircle, AlertCircle, RotateCcw } from '
 import { useFAQs, FAQItem } from '@/hooks/useFaqs';
 import { Button } from '@/components/ui/button';
 
-export default function FaqView() {
+interface FaqViewProps {
+  initialData?: FAQItem[];
+}
+
+export default function FaqView({ initialData }: FaqViewProps) {
   const { t } = useLanguage();
-  const { data: apiFaqs, isLoading, isError, refetch } = useFAQs();
+  const { data: apiFaqs, isLoading, isError, refetch } = useFAQs(initialData);
   const [openIndexes, setOpenIndexes] = useState<Record<number, boolean>>({});
 
-  const faqs = apiFaqs || [];
+  const faqs = apiFaqs || initialData || [];
 
   const toggleAccordion = (idx: number) => {
     setOpenIndexes((prev) => ({

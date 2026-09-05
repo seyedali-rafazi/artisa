@@ -1,11 +1,8 @@
-"use client"
-
 import React from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { useLanguage } from "../LanguageContext"
 import { Calendar, User, ArrowLeft } from "lucide-react"
-import { useBlogPosts, ArticleItem } from "@/hooks/useBlog"
+import type { ArticleItem } from "@/hooks/useBlog"
 import { formatShamsiDate } from "@/lib/utils"
 
 interface BlogSectionProps {
@@ -13,15 +10,9 @@ interface BlogSectionProps {
 }
 
 export default function BlogSection({ initialArticles }: BlogSectionProps = {}) {
-  const { t } = useLanguage()
-  const { data: apiArticles, isLoading } = useBlogPosts(
-    undefined,
-    initialArticles ? { initialData: initialArticles } : undefined
-  )
+  const articles = (initialArticles || []).slice(0, 3)
 
-  const articles = (apiArticles || []).slice(0, 3)
-
-  if (!isLoading && articles.length === 0) {
+  if (articles.length === 0) {
     return null
   }
 
@@ -29,44 +20,37 @@ export default function BlogSection({ initialArticles }: BlogSectionProps = {}) 
     <section className="w-full mt-16">
       <div className="flex items-center justify-between mb-8 border-b border-border pb-4">
         <div className="flex flex-col gap-1">
-          <h2 className="text-xl md:text-2xl font-black text-foreground">{t("blogTitle")}</h2>
-          <p className="text-xs text-muted-foreground">{t("blogSubtitle")}</p>
+          <h2 className="text-xl md:text-2xl font-black text-foreground">مجله هنر آرتیسا</h2>
+          <p className="text-xs text-muted-foreground">مقالات، ایده‌ها و راهنمای چیدمان هنری برای خانه شما</p>
         </div>
         <Link 
           href="/blog"
           className="flex items-center gap-1 text-xs font-bold text-primary hover:underline cursor-pointer"
         >
-          <span>{t("viewAll")}</span>
+          <span>مشاهده همه</span>
           <ArrowLeft className="size-4" />
         </Link>
       </div>
 
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {[1, 2, 3].map((i) => (
-            <div key={i} className="h-64 rounded-2xl bg-neutral-200 dark:bg-neutral-800 animate-pulse" />
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {articles.map((art) => {
-            const articleId = art.id || art.articleId;
-            return (
-              <Link 
-                key={articleId} 
-                href={`/blog/${articleId}`}
-                className="flex flex-col overflow-hidden rounded-2xl border border-border/40 bg-background shadow-sm hover:shadow-md hover:border-primary/10 transition-all duration-300 cursor-pointer group"
-              >
-                {/* Image */}
-                <div className="relative h-48 w-full overflow-hidden bg-muted/20">
-                  <Image
-                    src={art.image}
-                    alt={art.title}
-                    fill
-                    sizes="(max-width: 768px) 100vw, 33vw"
-                    className="object-cover transition-transform duration-500 group-hover:scale-105"
-                  />
-                </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {articles.map((art) => {
+          const articleId = art.id || art.articleId;
+          return (
+            <Link 
+              key={articleId} 
+              href={`/blog/${articleId}`}
+              className="flex flex-col overflow-hidden rounded-2xl border border-border/40 bg-background shadow-sm hover:shadow-md hover:border-primary/10 transition-all duration-300 cursor-pointer group"
+            >
+              {/* Image */}
+              <div className="relative h-48 w-full overflow-hidden bg-muted/20">
+                <Image
+                  src={art.image}
+                  alt={art.title}
+                  fill
+                  sizes="(max-width: 768px) 100vw, 33vw"
+                  className="object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+              </div>
 
               {/* Content */}
               <div className="flex flex-col flex-1 p-5">
@@ -78,7 +62,7 @@ export default function BlogSection({ initialArticles }: BlogSectionProps = {}) 
                   </span>
                   <span className="flex items-center gap-1">
                     <User className="size-3.5 text-primary" />
-                    <span>{art.author}</span>
+                    <span>{art.author || "تیم تحریریه آرتیسا"}</span>
                   </span>
                 </div>
 
@@ -94,15 +78,14 @@ export default function BlogSection({ initialArticles }: BlogSectionProps = {}) 
 
                 {/* Link button */}
                 <span className="inline-flex items-center gap-1 text-xs font-bold text-primary group-hover:underline">
-                  <span>{t("readMore")}</span>
+                  <span>ادامه مطلب</span>
                   <ArrowLeft className="size-3.5" />
                 </span>
               </div>
             </Link>
           );
         })}
-        </div>
-      )}
+      </div>
     </section>
   )
 }

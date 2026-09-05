@@ -53,7 +53,7 @@ export default async function FaqPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
       />
-      <FaqView />
+      <FaqView initialData={faqs} />
     </>
   );
 }

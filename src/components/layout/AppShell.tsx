@@ -1,10 +1,11 @@
 "use client"
 
-import React, { Suspense } from "react"
+import React from "react"
 import { usePathname } from "next/navigation"
 import dynamic from "next/dynamic"
 import Header from "./Header"
 import Footer from "./Footer"
+import { useApp } from "../AppContext"
 
 const LoginDialog = dynamic(() => import("../dialogs/LoginDialog"), {
   ssr: false,
@@ -12,22 +13,21 @@ const LoginDialog = dynamic(() => import("../dialogs/LoginDialog"), {
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
+  const { showLogin } = useApp()
   const isAdminRoute = pathname?.startsWith('/admin')
 
   if (isAdminRoute) {
     return (
       <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
         {children}
-        <LoginDialog />
+        {showLogin && <LoginDialog />}
       </div>
     )
   }
 
   return (
     <div className="min-h-screen flex flex-col bg-background text-foreground transition-colors duration-300">
-      <Suspense fallback={<div className="h-16 md:h-[8.25rem] border-b border-border bg-background/80" />}>
-        <Header />
-      </Suspense>
+      <Header />
 
       <main className="flex-1 w-full max-w-7xl mx-auto px-4 py-8 relative">
         {children}
@@ -35,7 +35,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
       <Footer />
 
-      <LoginDialog />
+      {showLogin && <LoginDialog />}
     </div>
   )
 }

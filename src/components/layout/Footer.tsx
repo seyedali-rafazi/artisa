@@ -1,19 +1,12 @@
-"use client"
-
-import React, { useState } from "react"
+import React from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { useLanguage } from "../LanguageContext"
-import { Input } from "../ui/input"
-import { Button } from "../ui/button"
 import {
   Phone,
   Mail,
   Clock,
-  Loader2,
 } from "lucide-react"
-import { toast } from "sonner"
-import { useSubscribeNewsletter } from "@/hooks/useNewsletter"
+import NewsletterForm from "./NewsletterForm"
 
 function InstagramIcon({ className = "size-4" }: { className?: string }) {
   return (
@@ -64,72 +57,16 @@ function BaleIcon({ className = "size-4" }: { className?: string }) {
 }
 
 export default function Footer() {
-  const { t } = useLanguage()
-  const [email, setEmail] = useState("")
-  const subscribeMutation = useSubscribeNewsletter()
-
-  const handleSubscribe = (e: React.FormEvent) => {
-    e.preventDefault()
-    const trimmed = email.trim()
-    if (!trimmed) {
-      toast.error("لطفاً آدرس ایمیل خود را وارد کنید")
-      return
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(trimmed)) {
-      toast.error("فرمت آدرس ایمیل نامعتبر است (مثال: name@gmail.com)")
-      return
-    }
-
-    subscribeMutation.mutate(trimmed, {
-      onSuccess: (res: any) => {
-        const msg = res?.message || "ایمیل شما با موفقیت در خبرنامه گالری آرتیسا ثبت شد!"
-        toast.success(msg)
-        setEmail("")
-      },
-      onError: (err: any) => {
-        toast.error(err?.message || "خطا در ثبت ایمیل در خبرنامه")
-      },
-    })
-  }
-
   return (
     <footer className="w-full bg-muted/30 border-t border-border mt-16">
       {/* Newsletter bar */}
       <div className="max-w-7xl mx-auto px-4 py-8 border-b border-border/80 flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="flex flex-col gap-1 text-center md:text-start">
-          <h3 className="text-base font-extrabold text-foreground">{t("newsletterTitle")}</h3>
-          <p className="text-xs text-muted-foreground">{t("newsletterDesc")}</p>
+          <h3 className="text-base font-extrabold text-foreground">عضویت در خبرنامه آرتیسا</h3>
+          <p className="text-xs text-muted-foreground">از جدیدترین آثار و رویدادهای هنری باخبر شوید</p>
         </div>
 
-        <form onSubmit={handleSubscribe} className="flex w-full max-w-md items-center gap-2">
-          <Input
-            type="email"
-            placeholder="آدرس ایمیل شما (name@gmail.com)"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            disabled={subscribeMutation.isPending}
-            className="rounded-xl border-border bg-background text-sm h-10"
-            dir="ltr"
-            required
-          />
-          <Button
-            type="submit"
-            size="sm"
-            disabled={subscribeMutation.isPending}
-            className="rounded-xl font-bold cursor-pointer shrink-0 gap-1.5 h-10 px-4 shadow-sm"
-          >
-            {subscribeMutation.isPending ? (
-              <>
-                <Loader2 className="size-4 animate-spin" />
-                <span>در حال عضویت...</span>
-              </>
-            ) : (
-              t("subscribeBtn")
-            )}
-          </Button>
-        </form>
+        <NewsletterForm />
       </div>
 
       {/* Main Links Area */}
@@ -139,15 +76,15 @@ export default function Footer() {
           <div className="flex items-center gap-2.5">
             <Image
               src="/logo.png"
-              alt={t("brandName")}
+              alt="آرتیسا"
               width={120}
               height={120}
               className="h-12 w-auto object-contain"
             />
-            <span className="text-lg font-black text-foreground">{t("brandName")}</span>
+            <span className="text-lg font-black text-foreground">آرتیسا</span>
           </div>
           <p className="text-xs text-muted-foreground leading-5">
-            {t("footerAbout")}
+            گالری آنلاین آرتیسا از سال ۱۴۰۵ با هدف در دسترس قرار دادن آثار هنری اورجینال برای علاقه‌مندان هنر فعالیت می‌کند. ما پل ارتباطی بین هنرمندان ایرانی و هنردوستان سراسر کشور هستیم.
           </p>
 
           <div className="flex items-center gap-3 mt-2">
@@ -183,26 +120,26 @@ export default function Footer() {
 
         {/* Column 2: Quick Links */}
         <div className="flex flex-col gap-3">
-          <h4 className="text-sm font-bold text-foreground">{t("quickLinks")}</h4>
+          <h4 className="text-sm font-bold text-foreground">دسترسی سریع</h4>
           <ul className="flex flex-col gap-2.5 text-xs text-muted-foreground">
             <li>
               <Link href="/" className="hover:text-primary cursor-pointer transition-colors text-start">
-                {t("home")}
+                خانه
               </Link>
             </li>
             <li>
               <Link href="/blog" className="hover:text-primary cursor-pointer transition-colors text-start">
-                {t("blog")}
+                مجله هنر
               </Link>
             </li>
             <li>
               <Link href="/faq" className="hover:text-primary cursor-pointer transition-colors text-start">
-                {t("faqTitle")}
+                سوالات متداول
               </Link>
             </li>
             <li>
               <Link href="/track-order" className="hover:text-primary cursor-pointer transition-colors text-start">
-                {t("trackOrder")}
+                پیگیری سفارش
               </Link>
             </li>
           </ul>
@@ -210,16 +147,16 @@ export default function Footer() {
 
         {/* Column 3: Customer Service */}
         <div className="flex flex-col gap-3">
-          <h4 className="text-sm font-bold text-foreground">{t("customerService")}</h4>
+          <h4 className="text-sm font-bold text-foreground">خدمات مشتریان</h4>
           <ul className="flex flex-col gap-2.5 text-xs text-muted-foreground">
             <li>
               <Link href="/about-us" className="hover:text-primary cursor-pointer transition-colors text-start">
-                {t("aboutUs")}
+                درباره ما
               </Link>
             </li>
             <li>
               <Link href="/contact-us" className="hover:text-primary cursor-pointer transition-colors text-start">
-                {t("contactUs")}
+                تماس با ما
               </Link>
             </li>
             <li>
@@ -257,7 +194,7 @@ export default function Footer() {
       {/* Copyright row */}
       <div className="w-full bg-muted/60 py-4 px-4 border-t border-border/60 text-center text-[10px] text-muted-foreground">
         <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-2">
-          <span>{t("copyright")}</span>
+          <span>© ۱۴۰۵ کلیه حقوق برای گالری آرتیسا محفوظ است.</span>
         </div>
       </div>
     </footer>

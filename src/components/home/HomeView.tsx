@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { useSearchParams, useRouter } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useLanguage } from "@/components/LanguageContext";
 import { useApp } from "@/components/AppContext";
 import HeroSlider from "@/components/home/HeroSlider";
@@ -25,21 +25,20 @@ export interface HomeInitialData {
 
 interface HomeViewProps {
   initialData?: HomeInitialData;
+  initialSearch?: string;
 }
 
-export default function HomeView({ initialData }: HomeViewProps = {}) {
+export default function HomeView({ initialData, initialSearch }: HomeViewProps = {}) {
   const { searchQuery, setSearchQuery } = useApp();
   const { t } = useLanguage();
-  const searchParams = useSearchParams();
   const router = useRouter();
 
-  // Sync URL search param with AppContext
+  // Sync initialSearch with AppContext if provided
   useEffect(() => {
-    const param = searchParams.get("search");
-    if (param !== null && param !== searchQuery) {
-      setSearchQuery(param);
+    if (initialSearch !== undefined && initialSearch !== searchQuery) {
+      setSearchQuery(initialSearch);
     }
-  }, [searchParams, searchQuery, setSearchQuery]);
+  }, [initialSearch, searchQuery, setSearchQuery]);
 
   // Dynamic backend fetch for search / category filtering
   const isSpecialSearch = searchQuery === "special";

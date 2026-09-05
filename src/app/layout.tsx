@@ -5,7 +5,6 @@ import { LanguageProvider } from "@/components/LanguageContext";
 import { AppProvider } from "@/components/AppContext";
 import AppShell from "@/components/layout/AppShell";
 import QueryProvider from "@/components/providers/QueryProvider";
-import GoogleAuthProvider from "@/components/providers/GoogleAuthProvider";
 import { Toaster } from "sonner";
 import {
   getSiteUrl,
@@ -27,18 +26,8 @@ const vazirmatn = localFont({
       style: "normal",
     },
     {
-      path: "../../public/fonts/Vazirmatn-SemiBold.woff2",
-      weight: "600",
-      style: "normal",
-    },
-    {
       path: "../../public/fonts/Vazirmatn-Bold.woff2",
       weight: "700",
-      style: "normal",
-    },
-    {
-      path: "../../public/fonts/Vazirmatn-ExtraBold.woff2",
-      weight: "800",
       style: "normal",
     },
   ],
@@ -135,14 +124,12 @@ export default function RootLayout({
       </head>
       <body className="min-h-full flex flex-col font-sans">
         <QueryProvider>
-          <GoogleAuthProvider>
-            <LanguageProvider>
-              <AppProvider>
-                <AppShell>{children}</AppShell>
-                <Toaster position="top-right" dir="rtl" richColors closeButton />
-              </AppProvider>
-            </LanguageProvider>
-          </GoogleAuthProvider>
+          <LanguageProvider>
+            <AppProvider>
+              <AppShell>{children}</AppShell>
+              <Toaster position="top-right" dir="rtl" richColors closeButton />
+            </AppProvider>
+          </LanguageProvider>
         </QueryProvider>
       </body>
     </html>

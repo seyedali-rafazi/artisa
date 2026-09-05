@@ -175,13 +175,6 @@ export default function HeroSlider({ initialBanners }: HeroSliderProps = {}) {
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="relative w-full h-[350px] md:h-[500px] rounded-2xl md:rounded-3xl bg-neutral-800 animate-pulse flex items-center justify-center text-white/50">
-        <span className="text-sm font-medium">در حال بارگذاری بنرها...</span>
-      </div>
-    );
-  }
 
   return (
     <div

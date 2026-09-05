@@ -1,4 +1,3 @@
-import { Suspense } from "react";
 import type { Metadata } from "next";
 import HomeView, { HomeInitialData } from "@/components/home/HomeView";
 
@@ -72,7 +71,15 @@ async function getHomeInitialData(): Promise<HomeInitialData> {
   }
 }
 
-export default async function RootPage() {
+interface RootPageProps {
+  searchParams?: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+export default async function RootPage({ searchParams }: RootPageProps) {
+  const resolvedSearchParams = searchParams ? await searchParams : undefined;
+  const initialSearch =
+    typeof resolvedSearchParams?.search === "string" ? resolvedSearchParams.search : undefined;
+
   const initialData = await getHomeInitialData();
 
   return (
@@ -81,9 +88,8 @@ export default async function RootPage() {
       <h1 className="sr-only">
         گالری آنلاین آثار هنری، تابلو نقاشی اورجینال و هنر دیواری آرتیسا
       </h1>
-      <Suspense fallback={<div className="h-64 animate-pulse rounded-3xl bg-muted/30" />}>
-        <HomeView initialData={initialData} />
-      </Suspense>
+      <HomeView initialData={initialData} initialSearch={initialSearch} />
     </>
   );
 }
+

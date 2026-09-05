@@ -44,6 +44,70 @@ function DigikalaPercentSmileIcon({ className = "size-16" }: { className?: strin
   )
 }
 
+// Isolated Countdown Timer Component - only re-renders its own 3 digits every second
+function CountdownTimer({
+  endAt,
+  onExpire,
+  size = "sm",
+}: {
+  endAt?: string;
+  onExpire?: () => void;
+  size?: "sm" | "md";
+}) {
+  const [timeLeft, setTimeLeft] = useState({
+    hrs: 10,
+    mins: 43,
+    secs: 53,
+  });
+
+  useEffect(() => {
+    if (!endAt) return;
+    const targetTime = new Date(endAt).getTime();
+
+    const updateTimer = () => {
+      const now = Date.now();
+      const diffInSeconds = Math.max(0, Math.floor((targetTime - now) / 1000));
+      if (diffInSeconds <= 0) {
+        setTimeLeft({ hrs: 0, mins: 0, secs: 0 });
+        onExpire?.();
+        return;
+      }
+      const hrs = Math.floor((diffInSeconds % 86400) / 3600);
+      const mins = Math.floor((diffInSeconds % 3600) / 60);
+      const secs = diffInSeconds % 60;
+      setTimeLeft({ hrs, mins, secs });
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, [endAt, onExpire]);
+
+  const boxSize =
+    size === "md"
+      ? "size-7 sm:size-8 text-xs sm:text-sm"
+      : "size-6 sm:size-7 text-[11px] sm:text-xs";
+  const colonSize = size === "md" ? "text-xs sm:text-sm" : "text-xs";
+
+  return (
+    <div className="flex items-center gap-1" dir="ltr">
+      <div className={`${boxSize} rounded-md bg-card text-card-foreground font-black flex items-center justify-center shadow-xs`}>
+        {toPersianDigits(timeLeft.hrs.toString().padStart(2, "0"))}
+      </div>
+      <span className={`text-primary-foreground font-black ${colonSize} animate-pulse`}>:</span>
+
+      <div className={`${boxSize} rounded-md bg-card text-card-foreground font-black flex items-center justify-center shadow-xs`}>
+        {toPersianDigits(timeLeft.mins.toString().padStart(2, "0"))}
+      </div>
+      <span className={`text-primary-foreground font-black ${colonSize} animate-pulse`}>:</span>
+
+      <div className={`${boxSize} rounded-md bg-card text-card-foreground font-black flex items-center justify-center shadow-xs`}>
+        {toPersianDigits(timeLeft.secs.toString().padStart(2, "0"))}
+      </div>
+    </div>
+  );
+}
+
 interface SpecialOffersProps {
   initialOffers?: SpecialOffer[];
   initialProducts?: ProductsPaginatedResponse;
@@ -81,51 +145,8 @@ export default function SpecialOffers({ initialOffers, initialProducts }: Specia
     return Array.from(map.values())
   }, [primaryOffer, specialProductsApi])
 
-  // Countdown timer state
-  const [timeLeft, setTimeLeft] = useState<{
-    hrs: number
-    mins: number
-    secs: number
-    isExpired: boolean
-  }>({
-    hrs: 10,
-    mins: 43,
-    secs: 53,
-    isExpired: false,
-  })
-
-  useEffect(() => {
-    if (!primaryOffer?.end_at) {
-      return
-    }
-
-    const targetTime = new Date(primaryOffer.end_at).getTime()
-
-    const updateTimer = () => {
-      const now = Date.now()
-      const diffInSeconds = Math.max(0, Math.floor((targetTime - now) / 1000))
-
-      if (diffInSeconds <= 0) {
-        setTimeLeft({ hrs: 0, mins: 0, secs: 0, isExpired: true })
-        refetch()
-        return
-      }
-
-      const hrs = Math.floor((diffInSeconds % 86400) / 3600)
-      const mins = Math.floor((diffInSeconds % 3600) / 60)
-      const secs = diffInSeconds % 60
-
-      setTimeLeft({ hrs, mins, secs, isExpired: false })
-    }
-
-    updateTimer()
-    const interval = setInterval(updateTimer, 1000)
-    return () => clearInterval(interval)
-  }, [primaryOffer?.end_at, refetch])
-
-  const formatDigit = (n: number) => {
-    return toPersianDigits(n.toString().padStart(2, "0"))
-  }
+  // Limit carousel items to 16 for optimal mobile DOM size and performance
+  const displayProducts = useMemo(() => specialProducts.slice(0, 16), [specialProducts])
 
   // Carousel ref and scroll handling
   const carouselRef = useRef<HTMLDivElement>(null)
@@ -146,7 +167,7 @@ export default function SpecialOffers({ initialOffers, initialProducts }: Specia
     el.addEventListener("scroll", checkScroll, { passive: true })
     checkScroll()
     return () => el.removeEventListener("scroll", checkScroll)
-  }, [specialProducts.length])
+  }, [displayProducts.length])
 
   const scroll = (direction: "left" | "right") => {
     if (!carouselRef.current) return
@@ -177,22 +198,8 @@ export default function SpecialOffers({ initialOffers, initialProducts }: Specia
           </span>
         </div>
 
-        {/* Center: Countdown Timer 3-box widget */}
-        <div className="flex items-center gap-1" dir="ltr">
-          <div className="size-6 sm:size-7 rounded-md bg-card text-card-foreground font-black text-[11px] sm:text-xs flex items-center justify-center shadow-xs">
-            {formatDigit(timeLeft.hrs)}
-          </div>
-          <span className="text-primary-foreground font-black text-xs animate-pulse">:</span>
-
-          <div className="size-6 sm:size-7 rounded-md bg-card text-card-foreground font-black text-[11px] sm:text-xs flex items-center justify-center shadow-xs">
-            {formatDigit(timeLeft.mins)}
-          </div>
-          <span className="text-primary-foreground font-black text-xs animate-pulse">:</span>
-
-          <div className="size-6 sm:size-7 rounded-md bg-card text-card-foreground font-black text-[11px] sm:text-xs flex items-center justify-center shadow-xs">
-            {formatDigit(timeLeft.secs)}
-          </div>
-        </div>
+        {/* Center: Isolated Countdown Timer */}
+        <CountdownTimer endAt={primaryOffer?.end_at} onExpire={refetch} size="sm" />
 
         {/* Left: View All link (همه <) */}
         <Link
@@ -216,26 +223,9 @@ export default function SpecialOffers({ initialOffers, initialProducts }: Specia
             </h2>
           </div>
 
-          {/* Countdown Timer: 3 Badge Boxes */}
+          {/* Countdown Timer: Isolated Component */}
           <div className="flex flex-col items-center gap-1.5 my-3">
-            <div className="flex items-center gap-1" dir="ltr">
-              {/* Hours */}
-              <div className="size-7 sm:size-8 rounded-md bg-card text-card-foreground font-black text-xs sm:text-sm flex items-center justify-center shadow-xs">
-                {formatDigit(timeLeft.hrs)}
-              </div>
-              <span className="text-primary-foreground font-black text-xs sm:text-sm animate-pulse">:</span>
-
-              {/* Minutes */}
-              <div className="size-7 sm:size-8 rounded-md bg-card text-card-foreground font-black text-xs sm:text-sm flex items-center justify-center shadow-xs">
-                {formatDigit(timeLeft.mins)}
-              </div>
-              <span className="text-primary-foreground font-black text-xs sm:text-sm animate-pulse">:</span>
-
-              {/* Seconds */}
-              <div className="size-7 sm:size-8 rounded-md bg-card text-card-foreground font-black text-xs sm:text-sm flex items-center justify-center shadow-xs">
-                {formatDigit(timeLeft.secs)}
-              </div>
-            </div>
+            <CountdownTimer endAt={primaryOffer?.end_at} onExpire={refetch} size="md" />
           </div>
 
           {/* Navigate Button to Special Offers Catalog */}
@@ -247,6 +237,7 @@ export default function SpecialOffers({ initialOffers, initialProducts }: Specia
             <ChevronLeft className="size-3.5 sm:size-4 text-primary group-hover:-translate-x-0.5 transition-transform" />
           </Link>
         </div>
+
 
         {/* ─── Carousel Area (Desktop Left, Mobile Full Width) ─── */}
         <div className="flex-1 min-w-0 relative flex items-center">
@@ -295,7 +286,7 @@ export default function SpecialOffers({ initialOffers, initialProducts }: Specia
                 </div>
               ))
             ) : (
-              specialProducts.map((product, index) => {
+              displayProducts.map((product, index) => {
                 // Calculate discount percent
                 const discountPercent =
                   product.oldPrice && product.oldPrice > product.price
