@@ -10,6 +10,7 @@
 !.yarn/releases
 !.yarn/versions
 /backend
+/artisa-backend
 
 # testing
 /coverage

@@ -23,6 +23,48 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { toStandardDigits, toPersianDigits } from "@/lib/utils";
+
+// Helper to parse price input: converts Persian/Arabic digits, strips non-digits (commas, spaces)
+function parsePriceInput(val: string | number | null | undefined): number | undefined {
+  if (val === null || val === undefined || val === "") return undefined;
+  const standard = toStandardDigits(String(val)).replace(/[^0-9]/g, "");
+  if (!standard) return undefined;
+  const num = Number(standard);
+  return isNaN(num) || num < 0 ? undefined : num;
+}
+
+// Helper to format price for input display with thousands separator in Persian digits
+function formatPriceInput(val: number | string | undefined | null): string {
+  if (val === null || val === undefined || val === "") return "";
+  const num = typeof val === "number" ? val : parsePriceInput(val);
+  if (num === undefined) return "";
+  return toPersianDigits(num.toLocaleString("en-US"));
+}
+
+// Helper to describe price in words (e.g. 5,000,000 -> ۵ میلیون تومان)
+function describePrice(val: number | undefined): string | null {
+  if (val === undefined || isNaN(val)) return null;
+  if (val === 0) return "۰ تومان";
+  if (val >= 1_000_000) {
+    const millions = val / 1_000_000;
+    const formatted = millions % 1 === 0 ? String(millions) : millions.toFixed(1);
+    return `${toPersianDigits(formatted)} میلیون تومان`;
+  }
+  if (val >= 1_000) {
+    const thousands = Math.round(val / 1_000);
+    return `${toPersianDigits(thousands)} هزار تومان`;
+  }
+  return `${toPersianDigits(val)} تومان`;
+}
+
+const PRICE_PRESETS = [
+  { label: "زیر ۱ میلیون", min: undefined, max: 1000000 },
+  { label: "۱ تا ۳ میلیون", min: 1000000, max: 3000000 },
+  { label: "۳ تا ۵ میلیون", min: 3000000, max: 5000000 },
+  { label: "۵ تا ۸ میلیون", min: 5000000, max: 8000000 },
+  { label: "بالای ۸ میلیون", min: 8000000, max: undefined },
+];
 
 const CATEGORIES = [
   { id: "all", label: "همه محصولات", value: "" },
@@ -59,8 +101,8 @@ export default function ProductsView({ initialData }: ProductsViewProps = {}) {
   const initialSortOrder = searchParams.get("sort_order") || "desc";
   const initialSpecial = searchParams.get("isSpecial") === "true";
   const initialBestSeller = searchParams.get("isBestSeller") === "true";
-  const initialMinPrice = searchParams.get("minPrice") ? Number(searchParams.get("minPrice")) : undefined;
-  const initialMaxPrice = searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined;
+  const initialMinPrice = parsePriceInput(searchParams.get("minPrice"));
+  const initialMaxPrice = parsePriceInput(searchParams.get("maxPrice"));
   const initialPage = searchParams.get("page") ? Math.max(1, Number(searchParams.get("page"))) : 1;
 
   // Local state
@@ -73,8 +115,8 @@ export default function ProductsView({ initialData }: ProductsViewProps = {}) {
   const [isBestSeller, setIsBestSeller] = useState<boolean>(initialBestSeller);
   const [minPrice, setMinPrice] = useState<number | undefined>(initialMinPrice);
   const [maxPrice, setMaxPrice] = useState<number | undefined>(initialMaxPrice);
-  const [minPriceInput, setMinPriceInput] = useState<string>(initialMinPrice ? String(initialMinPrice) : "");
-  const [maxPriceInput, setMaxPriceInput] = useState<string>(initialMaxPrice ? String(initialMaxPrice) : "");
+  const [minPriceInput, setMinPriceInput] = useState<string>(initialMinPrice !== undefined ? formatPriceInput(initialMinPrice) : "");
+  const [maxPriceInput, setMaxPriceInput] = useState<string>(initialMaxPrice !== undefined ? formatPriceInput(initialMaxPrice) : "");
   const [currentPage, setCurrentPage] = useState<number>(initialPage);
 
   // Mobile filter drawer state
@@ -89,8 +131,8 @@ export default function ProductsView({ initialData }: ProductsViewProps = {}) {
     const so = searchParams.get("sort_order") || "desc";
     const sp = searchParams.get("isSpecial") === "true";
     const bs = searchParams.get("isBestSeller") === "true";
-    const mn = searchParams.get("minPrice") ? Number(searchParams.get("minPrice")) : undefined;
-    const mx = searchParams.get("maxPrice") ? Number(searchParams.get("maxPrice")) : undefined;
+    const mn = parsePriceInput(searchParams.get("minPrice"));
+    const mx = parsePriceInput(searchParams.get("maxPrice"));
     const p = searchParams.get("page") ? Math.max(1, Number(searchParams.get("page"))) : 1;
 
     setSelectedCategory(cat);
@@ -102,8 +144,8 @@ export default function ProductsView({ initialData }: ProductsViewProps = {}) {
     setIsBestSeller(bs);
     setMinPrice(mn);
     setMaxPrice(mx);
-    setMinPriceInput(mn ? String(mn) : "");
-    setMaxPriceInput(mx ? String(mx) : "");
+    setMinPriceInput(mn !== undefined ? formatPriceInput(mn) : "");
+    setMaxPriceInput(mx !== undefined ? formatPriceInput(mx) : "");
     setCurrentPage(p);
   }, [searchParams]);
 
@@ -164,16 +206,26 @@ export default function ProductsView({ initialData }: ProductsViewProps = {}) {
     });
   };
 
-  const handleApplyPriceFilter = (e: React.FormEvent) => {
-    e.preventDefault();
-    const min = minPriceInput ? Math.max(0, Number(minPriceInput)) : undefined;
-    const max = maxPriceInput ? Math.max(0, Number(maxPriceInput)) : undefined;
+  const handleApplyPriceFilter = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    let min = parsePriceInput(minPriceInput);
+    let max = parsePriceInput(maxPriceInput);
+
+    // Swap min and max if entered inversely
+    if (min !== undefined && max !== undefined && min > max) {
+      const temp = min;
+      min = max;
+      max = temp;
+    }
+
     setMinPrice(min);
     setMaxPrice(max);
+    setMinPriceInput(min !== undefined ? formatPriceInput(min) : "");
+    setMaxPriceInput(max !== undefined ? formatPriceInput(max) : "");
     setCurrentPage(1);
     updateUrlParams({
-      minPrice: min ? String(min) : null,
-      maxPrice: max ? String(max) : null,
+      minPrice: min !== undefined ? String(min) : null,
+      maxPrice: max !== undefined ? String(max) : null,
       page: "1",
     });
   };
@@ -187,6 +239,19 @@ export default function ProductsView({ initialData }: ProductsViewProps = {}) {
     updateUrlParams({
       minPrice: null,
       maxPrice: null,
+      page: "1",
+    });
+  };
+
+  const handlePresetClick = (presetMin?: number, presetMax?: number) => {
+    setMinPrice(presetMin);
+    setMaxPrice(presetMax);
+    setMinPriceInput(presetMin !== undefined ? formatPriceInput(presetMin) : "");
+    setMaxPriceInput(presetMax !== undefined ? formatPriceInput(presetMax) : "");
+    setCurrentPage(1);
+    updateUrlParams({
+      minPrice: presetMin !== undefined ? String(presetMin) : null,
+      maxPrice: presetMax !== undefined ? String(presetMax) : null,
       page: "1",
     });
   };
@@ -452,35 +517,82 @@ export default function ProductsView({ initialData }: ProductsViewProps = {}) {
               )}
             </div>
 
+            {/* Quick Price Presets */}
+            <div className="flex flex-wrap gap-1.5 mb-3">
+              {PRICE_PRESETS.map((p) => {
+                const isActive = minPrice === p.min && maxPrice === p.max;
+                return (
+                  <button
+                    key={p.label}
+                    type="button"
+                    onClick={() => handlePresetClick(p.min, p.max)}
+                    className={`text-[10px] font-medium px-2 py-1 rounded-lg border transition-colors cursor-pointer ${
+                      isActive
+                        ? "bg-primary text-primary-foreground border-primary font-bold shadow-xs"
+                        : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border-border/70"
+                    }`}
+                  >
+                    {p.label}
+                  </button>
+                );
+              })}
+            </div>
+
             <form onSubmit={handleApplyPriceFilter} className="space-y-2.5">
               <div>
                 <label className="text-[10px] text-muted-foreground mb-1 block font-medium">
-                  حداقل قیمت:
+                  از (حداقل):
                 </label>
-                <Input
-                  type="number"
-                  placeholder="مثلاً ۱،۰۰۰،۰۰۰"
-                  value={minPriceInput}
-                  onChange={(e) => setMinPriceInput(e.target.value)}
-                  className="h-9 text-xs rounded-xl"
-                  min={0}
-                  step={100000}
-                />
+                <div className="relative">
+                  <Input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="مثلاً ۱،۰۰۰،۰۰۰"
+                    value={minPriceInput}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const num = parsePriceInput(val);
+                      setMinPriceInput(num !== undefined ? formatPriceInput(num) : "");
+                    }}
+                    className="h-9 text-xs rounded-xl pl-12"
+                  />
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground pointer-events-none">
+                    تومان
+                  </span>
+                </div>
+                {parsePriceInput(minPriceInput) !== undefined && (
+                  <span className="text-[10px] text-primary/80 block mt-1 font-medium">
+                    {describePrice(parsePriceInput(minPriceInput))}
+                  </span>
+                )}
               </div>
 
               <div>
                 <label className="text-[10px] text-muted-foreground mb-1 block font-medium">
-                  حداکثر قیمت:
+                  تا (حداکثر):
                 </label>
-                <Input
-                  type="number"
-                  placeholder="مثلاً ۵،۰۰۰،۰۰۰"
-                  value={maxPriceInput}
-                  onChange={(e) => setMaxPriceInput(e.target.value)}
-                  className="h-9 text-xs rounded-xl"
-                  min={0}
-                  step={100000}
-                />
+                <div className="relative">
+                  <Input
+                    type="text"
+                    inputMode="numeric"
+                    placeholder="مثلاً ۵،۰۰۰،۰۰۰"
+                    value={maxPriceInput}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      const num = parsePriceInput(val);
+                      setMaxPriceInput(num !== undefined ? formatPriceInput(num) : "");
+                    }}
+                    className="h-9 text-xs rounded-xl pl-12"
+                  />
+                  <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-muted-foreground pointer-events-none">
+                    تومان
+                  </span>
+                </div>
+                {parsePriceInput(maxPriceInput) !== undefined && (
+                  <span className="text-[10px] text-primary/80 block mt-1 font-medium">
+                    {describePrice(parsePriceInput(maxPriceInput))}
+                  </span>
+                )}
               </div>
 
               <Button
@@ -906,35 +1018,82 @@ export default function ProductsView({ initialData }: ProductsViewProps = {}) {
                 )}
               </div>
 
+              {/* Quick Price Presets in Mobile Drawer */}
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                {PRICE_PRESETS.map((p) => {
+                  const isActive = minPrice === p.min && maxPrice === p.max;
+                  return (
+                    <button
+                      key={p.label}
+                      type="button"
+                      onClick={() => handlePresetClick(p.min, p.max)}
+                      className={`text-[10px] font-medium px-2 py-1 rounded-lg border transition-colors cursor-pointer ${
+                        isActive
+                          ? "bg-primary text-primary-foreground border-primary font-bold shadow-xs"
+                          : "bg-muted/50 hover:bg-muted text-muted-foreground hover:text-foreground border-border/70"
+                      }`}
+                    >
+                      {p.label}
+                    </button>
+                  );
+                })}
+              </div>
+
               <form onSubmit={handleApplyPriceFilter} className="space-y-2.5">
                 <div className="grid grid-cols-2 gap-2.5">
                   <div>
                     <label className="text-[10px] text-muted-foreground mb-1 block font-medium">
-                      حداقل قیمت:
+                      از (حداقل):
                     </label>
-                    <Input
-                      type="number"
-                      placeholder="حداقل"
-                      value={minPriceInput}
-                      onChange={(e) => setMinPriceInput(e.target.value)}
-                      className="h-9 text-xs rounded-xl"
-                      min={0}
-                      step={100000}
-                    />
+                    <div className="relative">
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="مثلاً ۱،۰۰۰،۰۰۰"
+                        value={minPriceInput}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const num = parsePriceInput(val);
+                          setMinPriceInput(num !== undefined ? formatPriceInput(num) : "");
+                        }}
+                        className="h-9 text-xs rounded-xl pl-9"
+                      />
+                      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground pointer-events-none">
+                        تومان
+                      </span>
+                    </div>
+                    {parsePriceInput(minPriceInput) !== undefined && (
+                      <span className="text-[9px] text-primary/80 block mt-1 font-medium">
+                        {describePrice(parsePriceInput(minPriceInput))}
+                      </span>
+                    )}
                   </div>
                   <div>
                     <label className="text-[10px] text-muted-foreground mb-1 block font-medium">
-                      حداکثر قیمت:
+                      تا (حداکثر):
                     </label>
-                    <Input
-                      type="number"
-                      placeholder="حداکثر"
-                      value={maxPriceInput}
-                      onChange={(e) => setMaxPriceInput(e.target.value)}
-                      className="h-9 text-xs rounded-xl"
-                      min={0}
-                      step={100000}
-                    />
+                    <div className="relative">
+                      <Input
+                        type="text"
+                        inputMode="numeric"
+                        placeholder="مثلاً ۵،۰۰۰،۰۰۰"
+                        value={maxPriceInput}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          const num = parsePriceInput(val);
+                          setMaxPriceInput(num !== undefined ? formatPriceInput(num) : "");
+                        }}
+                        className="h-9 text-xs rounded-xl pl-9"
+                      />
+                      <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground pointer-events-none">
+                        تومان
+                      </span>
+                    </div>
+                    {parsePriceInput(maxPriceInput) !== undefined && (
+                      <span className="text-[9px] text-primary/80 block mt-1 font-medium">
+                        {describePrice(parsePriceInput(maxPriceInput))}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <Button
