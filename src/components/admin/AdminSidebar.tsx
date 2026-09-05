@@ -20,6 +20,7 @@ import {
   BookOpen,
   HelpCircle,
   Image as ImageIcon,
+  Mail,
 } from 'lucide-react';
 
 interface AdminSidebarProps {
@@ -93,6 +94,12 @@ export default function AdminSidebar({
       title: 'نظرات و دیدگاه‌ها',
       href: '/admin/comments',
       icon: MessageSquare,
+      superAdminOnly: false,
+    },
+    {
+      title: 'پیام‌های تماس',
+      href: '/admin/contact-messages',
+      icon: Mail,
       superAdminOnly: false,
     },
     {
