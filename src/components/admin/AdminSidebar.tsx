@@ -19,6 +19,7 @@ import {
   X,
   BookOpen,
   HelpCircle,
+  Image as ImageIcon,
 } from 'lucide-react';
 
 interface AdminSidebarProps {
@@ -56,6 +57,12 @@ export default function AdminSidebar({
       title: 'پیشنهادات ویژه و تخفیف‌ها',
       href: '/admin/special-offers',
       icon: Sparkles,
+      superAdminOnly: false,
+    },
+    {
+      title: 'مدیریت بنرها',
+      href: '/admin/banners',
+      icon: ImageIcon,
       superAdminOnly: false,
     },
     {
