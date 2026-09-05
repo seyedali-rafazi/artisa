@@ -2,9 +2,13 @@
 
 import React, { Suspense } from "react"
 import { usePathname } from "next/navigation"
+import dynamic from "next/dynamic"
 import Header from "./Header"
 import Footer from "./Footer"
-import LoginDialog from "../dialogs/LoginDialog"
+
+const LoginDialog = dynamic(() => import("../dialogs/LoginDialog"), {
+  ssr: false,
+})
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()

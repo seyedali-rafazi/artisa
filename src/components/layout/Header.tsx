@@ -21,7 +21,8 @@ import {
   LogOut,
   LayoutDashboard,
 } from "lucide-react";
-import SearchModal from "./SearchModal";
+import dynamic from "next/dynamic";
+const SearchModal = dynamic(() => import("./SearchModal"), { ssr: false });
 import HeaderSearchBar from "./HeaderSearchBar";
 import { useScrollLock } from "@/hooks/useScrollLock";
 

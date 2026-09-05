@@ -63,11 +63,12 @@ export interface BannerReorderItem {
 /**
  * Fetch active hero banners sorted by display order for the storefront.
  */
-export function useBanners() {
+export function useBanners(options?: { initialData?: BannerItem[] }) {
   return useQuery({
     queryKey: ['banners'],
     queryFn: () => api.get<BannerItem[]>('/api/v1/banners'),
     staleTime: 1000 * 60 * 5, // 5 minutes cache
+    initialData: options?.initialData,
   });
 }
 

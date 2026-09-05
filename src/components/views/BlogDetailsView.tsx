@@ -144,8 +144,8 @@ export default function BlogDetailsView({ article }: BlogDetailsViewProps) {
             alt={article.title}
             fill
             priority
+            sizes="(max-width: 768px) 100vw, 1200px"
             className="object-cover"
-            unoptimized
           />
         </div>
       )}
@@ -226,8 +226,8 @@ export default function BlogDetailsView({ article }: BlogDetailsViewProps) {
                       src={other.image}
                       alt={other.title}
                       fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       className="object-cover group-hover:scale-105 transition-transform duration-500"
-                      unoptimized
                     />
                   </div>
                   <div className="p-4 flex flex-col flex-1">

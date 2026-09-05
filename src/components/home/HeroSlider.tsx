@@ -2,10 +2,11 @@
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useLanguage } from "../LanguageContext";
 import { Button } from "../ui/button";
 import { ChevronLeft, ChevronRight, Palette } from "lucide-react";
-import { useBanners, BannerTextElement } from "@/hooks/useBanners";
+import { useBanners, BannerItem, BannerTextElement } from "@/hooks/useBanners";
 
 interface SlideItem {
   id?: string;
@@ -19,9 +20,15 @@ interface SlideItem {
   linkOpenInNewTab?: boolean;
 }
 
-export default function HeroSlider() {
+interface HeroSliderProps {
+  initialBanners?: BannerItem[];
+}
+
+export default function HeroSlider({ initialBanners }: HeroSliderProps = {}) {
   const { t } = useLanguage();
-  const { data: banners, isLoading } = useBanners();
+  const { data: banners, isLoading } = useBanners(
+    initialBanners ? { initialData: initialBanners } : undefined
+  );
   const [currentSlide, setCurrentSlide] = useState(0);
 
   // Touch gesture coordinates
@@ -213,19 +220,33 @@ export default function HeroSlider() {
             <div
               key={idx}
               onClick={slide.link ? handleSlideClick : undefined}
-              className={`absolute inset-0 w-full h-full transition-all duration-1000 ease-in-out ${
+              className={`absolute inset-0 w-full h-full transition-all duration-1000 ease-in-out overflow-hidden ${
                 isCurrent
                   ? "opacity-100 scale-100 z-10"
                   : "opacity-0 scale-105 z-0 pointer-events-none"
               } ${slide.link ? "cursor-pointer" : ""}`}
-              style={{
-                backgroundImage: hasCustomTexts
-                  ? `url(${slide.image})`
-                  : `linear-gradient(to left, rgba(15, 10, 30, 0.92) 20%, rgba(15, 10, 30, 0.5) 60%, rgba(15, 10, 30, 0.15)), url(${slide.image})`,
-                backgroundSize: "cover",
-                backgroundPosition: "center",
-              }}
             >
+              {/* Native Next.js Image for LCP & high-performance edge delivery */}
+              <Image
+                src={slide.image}
+                alt={slide.title || t("brandName")}
+                fill
+                priority={idx === 0}
+                loading={idx === 0 ? "eager" : "lazy"}
+                sizes="(max-width: 768px) 100vw, 1280px"
+                quality={85}
+                className="object-cover"
+              />
+
+              {!hasCustomTexts && (
+                <div
+                  className="absolute inset-0 pointer-events-none"
+                  style={{
+                    background:
+                      "linear-gradient(to left, rgba(15, 10, 30, 0.92) 20%, rgba(15, 10, 30, 0.5) 60%, rgba(15, 10, 30, 0.15))",
+                  }}
+                />
+              )}
               {/* If banner has configured text elements, render overlays */}
               {hasCustomTexts ? (
                 <>

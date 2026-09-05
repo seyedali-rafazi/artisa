@@ -5,12 +5,19 @@ import Link from "next/link"
 import Image from "next/image"
 import { useLanguage } from "../LanguageContext"
 import { Calendar, User, ArrowLeft } from "lucide-react"
-import { useBlogPosts } from "@/hooks/useBlog"
+import { useBlogPosts, ArticleItem } from "@/hooks/useBlog"
 import { formatShamsiDate } from "@/lib/utils"
 
-export default function BlogSection() {
+interface BlogSectionProps {
+  initialArticles?: ArticleItem[];
+}
+
+export default function BlogSection({ initialArticles }: BlogSectionProps = {}) {
   const { t } = useLanguage()
-  const { data: apiArticles, isLoading } = useBlogPosts()
+  const { data: apiArticles, isLoading } = useBlogPosts(
+    undefined,
+    initialArticles ? { initialData: initialArticles } : undefined
+  )
 
   const articles = (apiArticles || []).slice(0, 3)
 
@@ -56,8 +63,8 @@ export default function BlogSection() {
                     src={art.image}
                     alt={art.title}
                     fill
+                    sizes="(max-width: 768px) 100vw, 33vw"
                     className="object-cover transition-transform duration-500 group-hover:scale-105"
-                    unoptimized
                   />
                 </div>
 

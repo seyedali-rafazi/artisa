@@ -158,8 +158,8 @@ export default function BlogView() {
                     src={featuredArticle.image}
                     alt={featuredArticle.title}
                     fill
+                    sizes="(max-width: 1024px) 100vw, 50vw"
                     className="object-cover group-hover:scale-105 transition-transform duration-700 ease-out"
-                    unoptimized
                   />
                   <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-[11px] font-black flex items-center gap-1.5">
                     <Clock className="size-3 text-amber-400" />
@@ -231,8 +231,8 @@ export default function BlogView() {
                         src={art.image}
                         alt={art.title}
                         fill
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                         className="object-cover group-hover:scale-105 transition-transform duration-500 ease-out"
-                        unoptimized
                       />
                       <div className="absolute top-3 right-3 px-2.5 py-0.5 rounded-full bg-black/60 backdrop-blur-md text-white text-[10px] font-bold flex items-center gap-1">
                         <Clock className="size-3 text-amber-400" />

@@ -14,7 +14,10 @@ export interface ArticleItem {
   updated_at?: string;
 }
 
-export function useBlogPosts(params?: { search?: string; page?: number; limit?: number }) {
+export function useBlogPosts(
+  params?: { search?: string; page?: number; limit?: number },
+  options?: { initialData?: ArticleItem[] }
+) {
   return useQuery({
     queryKey: ['blog-articles', params],
     queryFn: async () => {
@@ -30,6 +33,7 @@ export function useBlogPosts(params?: { search?: string; page?: number; limit?: 
       }
       return [] as ArticleItem[];
     },
+    initialData: options?.initialData,
   });
 }
 

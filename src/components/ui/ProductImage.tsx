@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Image, { ImageProps } from 'next/image';
 
 export function getFullImageUrl(url?: string | null): string {
@@ -36,26 +36,33 @@ export default function ProductImage({
   className,
   ...props
 }: ProductImageProps) {
-  const initialUrl = getFullImageUrl(src);
-  const [imgSrc, setImgSrc] = useState<string>(initialUrl);
   const [hasError, setHasError] = useState(false);
+  const [prevSrc, setPrevSrc] = useState(src);
 
-  useEffect(() => {
-    setImgSrc(getFullImageUrl(src));
+  if (prevSrc !== src) {
+    setPrevSrc(src);
     setHasError(false);
-  }, [src]);
+  }
+
+  const isDataUri = typeof src === 'string' && src.startsWith('data:');
+  const defaultSizes = props.fill
+    ? (props.sizes || '(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 300px')
+    : props.sizes;
+
+  const resolvedUrl = hasError ? fallbackSrc : getFullImageUrl(src);
 
   return (
     <Image
+      sizes={defaultSizes}
+      quality={props.quality ?? 80}
       {...props}
-      src={hasError ? fallbackSrc : imgSrc}
+      src={resolvedUrl}
       alt={alt || 'محصول آرتیسا'}
       className={className}
-      unoptimized
+      unoptimized={props.unoptimized || isDataUri}
       onError={() => {
         if (!hasError) {
           setHasError(true);
-          setImgSrc(fallbackSrc);
         }
       }}
     />

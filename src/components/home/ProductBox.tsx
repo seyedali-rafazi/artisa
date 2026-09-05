@@ -62,6 +62,7 @@ export default function ProductBox({ product }: ProductBoxProps) {
           src={product.image}
           alt={product.name}
           fill
+          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 280px"
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
 

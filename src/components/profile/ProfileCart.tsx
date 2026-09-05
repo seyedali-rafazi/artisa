@@ -5,6 +5,7 @@ import Link from "next/link"
 import { useLanguage } from "../LanguageContext"
 import { useApp } from "../AppContext"
 import { Button } from "../ui/button"
+import ProductImage from "../ui/ProductImage"
 import { ShoppingBag, Trash2, Plus, Minus } from "lucide-react"
 
 export default function ProfileCart() {
@@ -45,8 +46,8 @@ export default function ProfileCart() {
           key={item.id}
           className="flex items-center gap-4 p-3 border border-border/40 rounded-2xl bg-background"
         >
-          <div className="size-14 rounded-xl overflow-hidden bg-muted shrink-0">
-            <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+          <div className="relative size-14 rounded-xl overflow-hidden bg-muted shrink-0">
+            <ProductImage src={item.image} alt={item.name} fill sizes="56px" className="w-full h-full object-cover" />
           </div>
 
           <div className="flex-1 min-w-0">

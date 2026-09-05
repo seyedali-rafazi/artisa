@@ -23,10 +23,14 @@ export interface ProductsPaginatedResponse {
   total_pages: number;
 }
 
-export function useProducts(params: ProductsQueryParams = {}) {
+export function useProducts(
+  params: ProductsQueryParams = {},
+  options?: { initialData?: ProductsPaginatedResponse }
+) {
   return useQuery({
     queryKey: ['products', params],
     queryFn: () => api.get<ProductsPaginatedResponse>('/api/v1/products', params),
+    initialData: options?.initialData,
   });
 }
 

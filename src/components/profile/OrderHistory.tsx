@@ -6,6 +6,7 @@ import { Package, ChevronDown, ChevronUp, AlertTriangle, Upload, CheckCircle2, C
 import { useUserOrders, useSubmitPaymentReceipt } from "@/hooks/useOrders"
 import { useApp } from "../AppContext"
 import { Button } from "../ui/button"
+import ProductImage from "../ui/ProductImage"
 import { formatShamsiDate } from "@/lib/utils"
 
 const STATUS_STYLES: Record<string, string> = {
@@ -285,8 +286,8 @@ export default function OrderHistory() {
 
                 {order.items.map((item) => (
                   <div key={item.id} className="flex items-center gap-3">
-                    <div className="size-10 rounded-xl overflow-hidden bg-muted shrink-0">
-                      <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                    <div className="relative size-10 rounded-xl overflow-hidden bg-muted shrink-0">
+                      <ProductImage src={item.image} alt={item.name} fill sizes="40px" className="w-full h-full object-cover" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-semibold text-foreground truncate">{item.name}</p>

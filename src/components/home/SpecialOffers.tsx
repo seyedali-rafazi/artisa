@@ -2,12 +2,11 @@
 
 import React, { useState, useEffect, useRef, useMemo } from "react"
 import Link from "next/link"
-import { useLanguage } from "../LanguageContext"
-import { useApp } from "../AppContext"
+import { useApp, Product } from "../AppContext"
 import ProductImage from "../ui/ProductImage"
 import { ChevronLeft, ChevronRight } from "lucide-react"
-import { useActiveSpecialOffers } from "@/hooks/useSpecialOffers"
-import { useProducts } from "@/hooks/useProducts"
+import { useActiveSpecialOffers, SpecialOffer, SpecialOfferProduct } from "@/hooks/useSpecialOffers"
+import { useProducts, ProductsPaginatedResponse } from "@/hooks/useProducts"
 import { toPersianDigits } from "@/lib/utils"
 
 // Digikala-Style Smiley Percentage Icon
@@ -45,14 +44,23 @@ function DigikalaPercentSmileIcon({ className = "size-16" }: { className?: strin
   )
 }
 
-export default function SpecialOffers() {
-  const { t } = useLanguage()
+interface SpecialOffersProps {
+  initialOffers?: SpecialOffer[];
+  initialProducts?: ProductsPaginatedResponse;
+}
+
+export default function SpecialOffers({ initialOffers, initialProducts }: SpecialOffersProps = {}) {
   const { setSelectedProduct } = useApp()
-  const { data: activeOffers, isLoading: isOffersLoading, refetch } = useActiveSpecialOffers()
-  const { data: specialProductsApi, isLoading: isProductsLoading } = useProducts({
-    isSpecial: true,
-    limit: 24,
-  })
+  const { data: activeOffers, isLoading: isOffersLoading, refetch } = useActiveSpecialOffers(
+    initialOffers ? { initialData: initialOffers } : undefined
+  )
+  const { data: specialProductsApi, isLoading: isProductsLoading } = useProducts(
+    {
+      isSpecial: true,
+      limit: 24,
+    },
+    initialProducts ? { initialData: initialProducts } : undefined
+  )
 
   // Get active offer and associated products
   const primaryOffer = activeOffers && activeOffers.length > 0 ? activeOffers[0] : null
@@ -62,7 +70,7 @@ export default function SpecialOffers() {
     const offerProducts = primaryOffer?.products || []
     const generalProducts = specialProductsApi?.items || []
 
-    const map = new Map<string, any>()
+    const map = new Map<string, Product | SpecialOfferProduct>()
     offerProducts.forEach((p) => map.set(String(p.id), p))
     generalProducts.forEach((p) => {
       if (!map.has(String(p.id))) {
@@ -298,7 +306,7 @@ export default function SpecialOffers() {
                   <Link
                     key={product.id || index}
                     href={`/product/${product.id}`}
-                    onClick={() => setSelectedProduct(product)}
+                    onClick={() => setSelectedProduct(product as Product)}
                     className="w-[145px] sm:w-[165px] md:w-[185px] shrink-0 bg-card text-card-foreground rounded-2xl border border-border/50 p-2.5 sm:p-3 flex flex-col justify-between shadow-xs hover:shadow-md hover:border-primary/50 transition-all group cursor-pointer"
                   >
                     {/* Top: Product Image */}
@@ -307,6 +315,7 @@ export default function SpecialOffers() {
                         src={product.image}
                         alt={product.name}
                         fill
+                        sizes="(max-width: 640px) 145px, (max-width: 768px) 165px, 185px"
                         className="object-contain p-1 transition-transform duration-300 group-hover:scale-105"
                       />
                     </div>

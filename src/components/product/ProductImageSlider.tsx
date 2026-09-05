@@ -1,6 +1,7 @@
 "use client"
 
 import React, { useState, useEffect, useMemo, useRef, useCallback } from "react"
+import Image from "next/image"
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -181,15 +182,20 @@ export default function ProductImageSlider({
               key={`${imgSrc}-${idx}`}
               className="w-full h-full flex items-center justify-center p-3 sm:p-4 select-none"
             >
-              <img
-                src={imgSrc}
-                alt={`${productName} - تصویر ${idx + 1}`}
-                onClick={() => setIsLightboxOpen(true)}
-                draggable={false}
-                className="w-full h-full object-contain rounded-2xl cursor-zoom-in transition-transform duration-300 hover:scale-[1.02]"
-                loading={idx === 0 ? "eager" : "lazy"}
-                fetchPriority={idx === 0 ? "high" : "auto"}
-              />
+              <div className="relative w-full h-full flex items-center justify-center">
+                <Image
+                  src={imgSrc}
+                  alt={`${productName} - تصویر ${idx + 1}`}
+                  fill
+                  priority={idx === 0}
+                  loading={idx === 0 ? "eager" : "lazy"}
+                  sizes="(max-width: 768px) 100vw, 600px"
+                  quality={85}
+                  onClick={() => setIsLightboxOpen(true)}
+                  draggable={false}
+                  className="w-full h-full object-contain rounded-2xl cursor-zoom-in transition-transform duration-300 hover:scale-[1.02]"
+                />
+              </div>
             </SwiperSlide>
           ))}
         </Swiper>
@@ -308,9 +314,11 @@ export default function ProductImageSlider({
                     : "border-border/50 hover:border-primary/50 opacity-60 hover:opacity-100 hover:scale-[1.02]"
                 }`}
               >
-                <img
+                <Image
                   src={imgSrc}
                   alt={`پیش‌نمایش بندانگشتی تصویر ${idx + 1} از ${productName}`}
+                  fill
+                  sizes="80px"
                   draggable={false}
                   className="w-full h-full object-cover"
                   loading="lazy"
@@ -469,9 +477,11 @@ export default function ProductImageSlider({
                         : "border-white/20 opacity-50 hover:opacity-100 hover:border-white/60"
                     }`}
                   >
-                    <img
+                    <Image
                       src={imgSrc}
                       alt={`تصویر ${idx + 1}`}
+                      fill
+                      sizes="64px"
                       draggable={false}
                       className="w-full h-full object-cover"
                     />

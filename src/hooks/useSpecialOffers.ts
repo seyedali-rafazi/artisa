@@ -55,12 +55,13 @@ export interface SpecialOfferPayload {
 /**
  * Fetch all currently active special offers for customer storefront.
  */
-export function useActiveSpecialOffers() {
+export function useActiveSpecialOffers(options?: { initialData?: SpecialOffer[] }) {
   return useQuery({
     queryKey: ['special-offers-active'],
     queryFn: () => api.get<SpecialOffer[]>('/api/v1/special-offers/active'),
     staleTime: 1000 * 60, // 1 minute
     refetchInterval: 1000 * 60, // Poll every minute to stay synced with lifecycle
+    initialData: options?.initialData,
   });
 }
 

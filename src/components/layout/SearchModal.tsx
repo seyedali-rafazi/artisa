@@ -378,6 +378,7 @@ export default function SearchModal({
                           src={prod.image || "/placeholder.jpg"}
                           alt={prod.name}
                           fill
+                          sizes="56px"
                           className="object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                       </div>

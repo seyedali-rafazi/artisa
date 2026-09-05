@@ -10,9 +10,24 @@ import SpecialOffers from "@/components/home/SpecialOffers";
 import BlogSection from "@/components/home/BlogSection";
 import ProductBox from "@/components/home/ProductBox";
 import { X, Search } from "lucide-react";
-import { useProducts } from "@/hooks/useProducts";
+import { useProducts, ProductsPaginatedResponse } from "@/hooks/useProducts";
+import type { BannerItem } from "@/hooks/useBanners";
+import type { SpecialOffer } from "@/hooks/useSpecialOffers";
+import type { ArticleItem } from "@/hooks/useBlog";
 
-export default function HomeView() {
+export interface HomeInitialData {
+  banners?: BannerItem[];
+  bestSellers?: ProductsPaginatedResponse;
+  activeOffers?: SpecialOffer[];
+  specialProducts?: ProductsPaginatedResponse;
+  blogArticles?: ArticleItem[];
+}
+
+interface HomeViewProps {
+  initialData?: HomeInitialData;
+}
+
+export default function HomeView({ initialData }: HomeViewProps = {}) {
   const { searchQuery, setSearchQuery } = useApp();
   const { t } = useLanguage();
   const searchParams = useSearchParams();
@@ -47,10 +62,13 @@ export default function HomeView() {
       : {}
   );
 
-  const { data: bestSellersApiData, isLoading: isBestSellersLoading } = useProducts({
-    isBestSeller: true,
-    limit: 8,
-  });
+  const { data: bestSellersApiData, isLoading: isBestSellersLoading } = useProducts(
+    {
+      isBestSeller: true,
+      limit: 8,
+    },
+    initialData?.bestSellers ? { initialData: initialData.bestSellers } : undefined
+  );
 
   // Dynamic products strictly from backend
   const filteredProducts = searchApiData?.items || [];
@@ -109,9 +127,12 @@ export default function HomeView() {
         </div>
       ) : (
         <>
-          <HeroSlider />
+          <HeroSlider initialBanners={initialData?.banners} />
           <CategoriesGrid />
-          <SpecialOffers />
+          <SpecialOffers
+            initialOffers={initialData?.activeOffers}
+            initialProducts={initialData?.specialProducts}
+          />
 
           <section className="w-full">
             <div className="flex flex-col gap-1 mb-8">
@@ -144,7 +165,7 @@ export default function HomeView() {
             )}
           </section>
 
-          <BlogSection />
+          <BlogSection initialArticles={initialData?.blogArticles} />
         </>
       )}
     </div>
