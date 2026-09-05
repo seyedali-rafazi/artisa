@@ -12,7 +12,7 @@ interface ConfirmModalProps {
   description: React.ReactNode;
   confirmText?: string;
   cancelText?: string;
-  variant?: 'danger' | 'warning' | 'info';
+  variant?: 'danger' | 'warning' | 'info' | 'destructive';
   isLoading?: boolean;
 }
 
@@ -24,9 +24,10 @@ export default function ConfirmModal({
   description,
   confirmText = 'تأیید',
   cancelText = 'انصراف',
-  variant = 'danger',
+  variant: rawVariant = 'danger',
   isLoading = false,
 }: ConfirmModalProps) {
+  const variant = rawVariant === 'destructive' ? 'danger' : rawVariant;
   if (!isOpen) return null;
 
   return (

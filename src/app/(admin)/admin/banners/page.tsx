@@ -481,7 +481,7 @@ export default function AdminBannersPage() {
         onConfirm={handleConfirmDelete}
         onClose={() => setDeleteModal({ isOpen: false, bannerId: '', bannerTitle: '' })}
         isLoading={deleteMutation.isPending}
-        variant="destructive"
+        variant="danger"
       />
     </div>
   );
