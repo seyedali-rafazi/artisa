@@ -433,7 +433,7 @@ export default function RichTextEditor({
             />
             <input
               type="url"
-              placeholder="آدرس اینترنتی لینک (مثال: https://artisa.ir)..."
+              placeholder="آدرس اینترنتی لینک (مثال: https://artisagallery.ir)..."
               value={linkUrl}
               onChange={(e) => setLinkUrl(e.target.value)}
               onKeyDown={(e) => e.key === "Enter" && applyLink()}

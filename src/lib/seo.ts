@@ -7,7 +7,7 @@ import { Product } from '@/components/AppContext';
 import { ArticleItem } from '@/hooks/useBlog';
 import { FAQItem } from '@/hooks/useFaqs';
 
-export const DEFAULT_SITE_URL = 'https://artisa.ir';
+export const DEFAULT_SITE_URL = 'https://artisagallery.ir';
 
 export const SITE_CONFIG = {
   name: 'آرتیسا',
