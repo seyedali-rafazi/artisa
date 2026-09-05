@@ -9,12 +9,20 @@ import { ShoppingBag, Trash2, Plus, Minus } from "lucide-react"
 
 export default function ProfileCart() {
   const { t } = useLanguage()
-  const { cart, updateCartQty, removeFromCart } = useApp()
+  const { cart, isCartLoaded, updateCartQty, removeFromCart } = useApp()
 
   const formatPrice = (amount: number) =>
     `${amount.toLocaleString("fa-IR")} تومان`
 
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0)
+
+  if (!isCartLoaded) {
+    return (
+      <div className="flex justify-center items-center py-12">
+        <div className="size-6 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+      </div>
+    )
+  }
 
   if (cart.length === 0) {
     return (

@@ -64,6 +64,11 @@ export default function Header() {
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
   const [searchInput, setSearchInput] = useState("");
   const [mobileCategoriesOpen, setMobileCategoriesOpen] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const profileMenuRef = useRef<HTMLDivElement>(null);
   const activeProfileTab = pathname.startsWith("/profile")
@@ -202,7 +207,7 @@ export default function Header() {
               title={t("cart")}
             >
               <ShoppingCart className="size-5" />
-              {cartItemsCount > 0 && (
+              {mounted && cartItemsCount > 0 && (
                 <span className="absolute -top-1 -right-1 flex size-5 items-center justify-center rounded-full bg-primary text-[10px] font-bold text-primary-foreground animate-bounce">
                   {cartItemsCount}
                 </span>

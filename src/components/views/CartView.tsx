@@ -11,7 +11,7 @@ import { Trash2, Plus, Minus, ShoppingBag } from "lucide-react"
 export default function CartView() {
   const router = useRouter()
   const { t } = useLanguage()
-  const { cart, updateCartQty, removeFromCart, user, showToast } = useApp()
+  const { cart, isCartLoaded, updateCartQty, removeFromCart, user, showToast } = useApp()
 
   const formatPrice = (amount: number) => {
     return `${amount.toLocaleString("fa-IR")} تومان`
@@ -28,6 +28,15 @@ export default function CartView() {
   }
 
   const subtotal = cart.reduce((acc, item) => acc + item.price * item.quantity, 0)
+
+  if (!isCartLoaded) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 py-24 flex flex-col items-center justify-center text-center">
+        <div className="size-8 animate-spin rounded-full border-2 border-primary border-t-transparent mb-3" />
+        <p className="text-xs text-muted-foreground">در حال دریافت اطلاعات سبد خرید...</p>
+      </div>
+    )
+  }
 
   if (cart.length === 0) {
     return (

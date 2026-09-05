@@ -78,6 +78,7 @@ type View = "home" | "product-details" | "cart" | "checkout" | "checkout-success
 interface AppContextType {
   currentView: View
   setCurrentView: (view: View) => void
+  isCartLoaded: boolean
   cart: CartItem[]
   addToCart: (product: Product) => void
   removeFromCart: (productId: string) => void
@@ -111,21 +112,25 @@ interface AppContextType {
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [currentView, setCurrentView] = useState<View>("home")
   const [isAuthLoading, setIsAuthLoading] = useState(true)
-  const [cart, setCart] = useState<CartItem[]>(() => {
-    if (typeof window !== "undefined") {
-      try {
-        const saved = localStorage.getItem("artisa_cart")
-        return saved ? JSON.parse(saved) : []
-      } catch {
-        return []
-      }
-    }
-    return []
-  })
+  const [cart, setCart] = useState<CartItem[]>([])
+  const [isCartLoaded, setIsCartLoaded] = useState(false)
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
   const [showLogin, setShowLogin] = useState(false)
   const [addresses, setAddresses] = useState<Address[]>([])
+
+  // Load Cart from LocalStorage on mount to prevent SSR hydration mismatch
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("artisa_cart")
+      if (saved) {
+        setCart(JSON.parse(saved))
+      }
+    } catch {
+      // ignore
+    }
+    setIsCartLoaded(true)
+  }, [])
 
   const queryClient = useQueryClient()
 
@@ -178,12 +183,12 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // Save Cart to LocalStorage
+  // Save Cart to LocalStorage (only after initial load has finished)
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    if (isCartLoaded && typeof window !== "undefined") {
       localStorage.setItem("artisa_cart", JSON.stringify(cart))
     }
-  }, [cart])
+  }, [cart, isCartLoaded])
 
   const addToCart = (product: Product) => {
     setCart((prev) => {
@@ -305,6 +310,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         currentView,
         setCurrentView,
         cart,
+        isCartLoaded,
         addToCart,
         removeFromCart,
         updateCartQty,
