@@ -188,6 +188,7 @@ export default function ProductImageSlider({
                 draggable={false}
                 className="w-full h-full object-contain rounded-2xl cursor-zoom-in transition-transform duration-300 hover:scale-[1.02]"
                 loading={idx === 0 ? "eager" : "lazy"}
+                fetchPriority={idx === 0 ? "high" : "auto"}
               />
             </SwiperSlide>
           ))}
@@ -309,7 +310,7 @@ export default function ProductImageSlider({
               >
                 <img
                   src={imgSrc}
-                  alt={`پیش‌نمایش ${idx + 1}`}
+                  alt={`پیش‌نمایش بندانگشتی تصویر ${idx + 1} از ${productName}`}
                   draggable={false}
                   className="w-full h-full object-cover"
                   loading="lazy"

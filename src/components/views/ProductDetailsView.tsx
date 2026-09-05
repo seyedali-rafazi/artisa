@@ -24,6 +24,7 @@ import { useProducts } from "@/hooks/useProducts"
 import ProductCommentsSection from "@/components/comments/ProductCommentsSection"
 import ProductImageSlider from "@/components/product/ProductImageSlider"
 import ProductDescription from "@/components/product/ProductDescription"
+import ProductImage from "../ui/ProductImage"
 import { Product } from "../AppContext"
 
 interface ProductDetailsViewProps {
@@ -88,13 +89,16 @@ export default function ProductDetailsView({ product: propProduct }: ProductDeta
     <div className="max-w-7xl mx-auto px-4 py-8">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 text-xs text-muted-foreground mb-8 font-semibold">
-        <Link href="/" className="hover:text-primary cursor-pointer">
+        <Link href="/" className="hover:text-primary cursor-pointer transition-colors">
           {t("home")}
         </Link>
         <ChevronLeft className="size-3" />
-        <span className="hover:text-primary cursor-pointer">
+        <Link
+          href={`/products?category=${encodeURIComponent(selectedProduct.category)}`}
+          className="hover:text-primary cursor-pointer transition-colors"
+        >
           {selectedProduct.category}
-        </span>
+        </Link>
         <ChevronLeft className="size-3" />
         <span className="text-foreground font-bold truncate max-w-[200px]">
           {selectedProduct.name}
@@ -275,13 +279,20 @@ export default function ProductDetailsView({ product: propProduct }: ProductDeta
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {similarProducts.map((p) => (
-              <div
+              <Link
                 key={p.id}
+                href={`/product/${p.id}`}
                 onClick={() => { setSelectedProduct(p); window.scrollTo(0, 0); }}
                 className="flex items-center gap-3 border border-border/40 rounded-2xl p-3 hover:border-primary/25 cursor-pointer bg-background hover:shadow-md transition-all group"
               >
                 <div className="size-16 rounded-xl overflow-hidden bg-muted shrink-0">
-                  <img src={p.image} alt={p.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                  <ProductImage
+                    src={p.image}
+                    alt={p.name}
+                    width={64}
+                    height={64}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                  />
                 </div>
                 <div className="flex flex-col gap-1 overflow-hidden">
                   <h4 className="text-xs font-extrabold text-foreground truncate group-hover:text-primary">
@@ -289,7 +300,7 @@ export default function ProductDetailsView({ product: propProduct }: ProductDeta
                   </h4>
                   <span className="text-xs font-black text-primary">{formatPrice(p.price)}</span>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>

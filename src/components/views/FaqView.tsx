@@ -21,29 +21,8 @@ export default function FaqView() {
     }));
   };
 
-  // Structured Data (JSON-LD) for Search Engine Rich Snippets
-  const faqSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: faqs.map((faq) => ({
-      '@type': 'Question',
-      name: faq.question || faq.q || '',
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: faq.answer || faq.a || '',
-      },
-    })),
-  };
-
   return (
     <div className="max-w-3xl mx-auto px-4 py-12" dir="rtl">
-      {/* Schema.org JSON-LD injection */}
-      {faqs.length > 0 && (
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
-        />
-      )}
 
       {/* ─── Hero Header ─── */}
       <div className="text-center mb-10 md:mb-12">

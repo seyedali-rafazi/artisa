@@ -2,6 +2,7 @@
 
 import React from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { useLanguage } from "../LanguageContext"
 import { Calendar, User, ArrowLeft } from "lucide-react"
 import { useBlogPosts } from "@/hooks/useBlog"
@@ -41,21 +42,24 @@ export default function BlogSection() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          {articles.map((art) => (
-            <Link 
-              key={art.id} 
-              href="/blog"
-              className="flex flex-col overflow-hidden rounded-2xl border border-border/40 bg-background shadow-sm hover:shadow-md hover:border-primary/10 transition-all duration-300 cursor-pointer group"
-            >
-              {/* Image */}
-              <div className="relative h-48 w-full overflow-hidden bg-muted/20">
-                <img
-                  src={art.image}
-                  alt={art.title}
-                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-                  loading="lazy"
-                />
-              </div>
+          {articles.map((art) => {
+            const articleId = art.id || art.articleId;
+            return (
+              <Link 
+                key={articleId} 
+                href={`/blog/${articleId}`}
+                className="flex flex-col overflow-hidden rounded-2xl border border-border/40 bg-background shadow-sm hover:shadow-md hover:border-primary/10 transition-all duration-300 cursor-pointer group"
+              >
+                {/* Image */}
+                <div className="relative h-48 w-full overflow-hidden bg-muted/20">
+                  <Image
+                    src={art.image}
+                    alt={art.title}
+                    fill
+                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                    unoptimized
+                  />
+                </div>
 
               {/* Content */}
               <div className="flex flex-col flex-1 p-5">
@@ -88,7 +92,8 @@ export default function BlogSection() {
                 </span>
               </div>
             </Link>
-          ))}
+          );
+        })}
         </div>
       )}
     </section>

@@ -280,9 +280,9 @@ export default function HeroSlider() {
                     <Palette className="size-3.5 shrink-0" />
                     <span>{slide.badge || t("brandName")}</span>
                   </div>
-                  <h1 className="text-3xl md:text-5xl text-white/80 leading-tight drop-shadow-md">
+                  <h2 className="text-3xl md:text-5xl text-white/80 leading-tight drop-shadow-md">
                     {slide.title}
-                  </h1>
+                  </h2>
                   <p className="text-sm md:text-lg text-white/80 font-medium drop-shadow-sm">
                     {slide.subtitle}
                   </p>

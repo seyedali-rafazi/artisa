@@ -1,46 +1,122 @@
-"use client";
-
-import React from "react";
-import { useParams } from "next/navigation";
-import { useBlogPost } from "@/hooks/useBlog";
+import { Metadata } from "next";
+import { notFound } from "next/navigation";
 import BlogDetailsView from "@/components/views/BlogDetailsView";
-import { Loader2, AlertCircle } from "lucide-react";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { ArticleItem } from "@/hooks/useBlog";
+import {
+  getSiteUrl,
+  generateArticleSchema,
+  generateBreadcrumbSchema,
+  getAbsoluteImageUrl,
+} from "@/lib/seo";
 
-export default function BlogDetailPage() {
-  const params = useParams<{ id: string }>();
-  const id = params?.id || "";
+interface BlogDetailPageProps {
+  params: Promise<{ id: string }>;
+}
 
-  const { data: article, isLoading, isError } = useBlogPost(id);
+async function getArticle(id: string): Promise<ArticleItem | null> {
+  const backendUrl = process.env.NEXT_PUBLIC_API_URL || "https://artisa-backend.vercel.app";
+  try {
+    const res = await fetch(`${backendUrl}/api/v1/blog/articles/${encodeURIComponent(id)}`, {
+      next: { revalidate: 300 }, // ISR: Cache for 5 minutes
+    });
 
-  if (isLoading) {
-    return (
-      <div className="max-w-4xl mx-auto px-4 py-24 flex flex-col items-center justify-center gap-3" dir="rtl">
-        <Loader2 className="size-8 text-primary animate-spin" />
-        <p className="text-xs text-muted-foreground font-bold">در حال دریافت مقاله از سرور...</p>
-      </div>
-    );
+    if (!res.ok) {
+      return null;
+    }
+
+    const json = await res.json();
+    const article = json?.data || json;
+    return article && (article.id || article.articleId) ? (article as ArticleItem) : null;
+  } catch (error) {
+    console.error(`Error fetching article ${id}:`, error);
+    return null;
+  }
+}
+
+export async function generateMetadata({ params }: BlogDetailPageProps): Promise<Metadata> {
+  const { id } = await params;
+  const article = await getArticle(id);
+
+  if (!article) {
+    return {
+      title: "مقاله مورد نظر یافت نشد | آرتیسا",
+      description: "متاسفانه مقاله مورد نظر یافت نشد یا ممکن است حذف شده باشد.",
+      robots: {
+        index: false,
+        follow: false,
+      },
+    };
   }
 
-  if (isError || !article) {
-    return (
-      <div className="max-w-md mx-auto px-4 py-24 flex flex-col items-center justify-center text-center gap-4" dir="rtl">
-        <div className="size-16 rounded-3xl bg-destructive/10 text-destructive flex items-center justify-center">
-          <AlertCircle className="size-8" />
-        </div>
-        <h1 className="text-lg font-black text-foreground">مقاله مورد نظر یافت نشد</h1>
-        <p className="text-xs text-muted-foreground font-semibold">
-          ممکن است این مقاله حذف شده باشد یا آدرس وارد شده نادرست باشد.
-        </p>
-        <Link href="/blog">
-          <Button variant="outline" className="rounded-2xl text-xs font-bold">
-            بازگشت به صفحه مقالات
-          </Button>
-        </Link>
-      </div>
-    );
+  const siteUrl = getSiteUrl();
+  const targetId = article.id || article.articleId || id;
+  const canonicalUrl = `${siteUrl}/blog/${targetId}`;
+  const title = `${article.title} | مجله هنر آرتیسا`;
+  const cleanDescription =
+    article.desc?.replace(/<[^>]+>/g, " ").trim().slice(0, 160) ||
+    article.title;
+
+  const coverImage = getAbsoluteImageUrl(article.image);
+
+  return {
+    title,
+    description: cleanDescription,
+    alternates: {
+      canonical: canonicalUrl,
+    },
+    openGraph: {
+      title,
+      description: cleanDescription,
+      url: canonicalUrl,
+      type: "article",
+      publishedTime: article.created_at,
+      modifiedTime: article.updated_at || article.created_at,
+      authors: [article.author || "تیم تحریریه آرتیسا"],
+      images: [
+        {
+          url: coverImage,
+          width: 1200,
+          height: 630,
+          alt: article.title,
+        },
+      ],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: cleanDescription,
+      images: [coverImage],
+    },
+  };
+}
+
+export default async function BlogDetailPage({ params }: BlogDetailPageProps) {
+  const { id } = await params;
+  const article = await getArticle(id);
+
+  if (!article) {
+    notFound();
   }
 
-  return <BlogDetailsView article={article} />;
+  const targetId = article.id || article.articleId || id;
+  const articleSchema = generateArticleSchema(article);
+  const breadcrumbSchema = generateBreadcrumbSchema([
+    { name: "خانه", url: "/" },
+    { name: "مجله هنر", url: "/blog" },
+    { name: article.title, url: `/blog/${targetId}` },
+  ]);
+
+  return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(articleSchema) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbSchema) }}
+      />
+      <BlogDetailsView article={article} />
+    </>
+  );
 }
