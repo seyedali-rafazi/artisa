@@ -103,7 +103,7 @@ function ProductBoxComponent({ product }: ProductBoxProps) {
         </span>
 
         {/* Title */}
-        <h3 className="text-xs md:text-sm font-extrabold text-foreground line-clamp-2 hover:text-primary transition-colors flex-1 mb-2 leading-5">
+        <h3 className="text-xs md:text-sm font-extrabold text-foreground line-clamp-2 hover:text-primary transition-colors mb-2 leading-5">
           {product.name}
         </h3>
 
@@ -121,7 +121,7 @@ function ProductBoxComponent({ product }: ProductBoxProps) {
         </div>
 
         {/* Price Row */}
-        <div className="flex flex-col gap-1 mb-4">
+        <div className="mt-auto flex flex-col gap-1 mb-4">
           {hasDiscount && (
             <span className="text-[10px] text-muted-foreground line-through decoration-primary/45">
               {formatPrice(product.oldPrice!)}
