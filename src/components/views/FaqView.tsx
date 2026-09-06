@@ -88,7 +88,7 @@ export default function FaqView({ initialData }: FaqViewProps) {
             return (
               <article
                 key={faq.id || idx}
-                className={`border rounded-2xl transition-all duration-200 overflow-hidden bg-background/95 backdrop-blur-sm shadow-xs ${
+                className={`border rounded-2xl transition-all duration-300 overflow-hidden bg-background/95 backdrop-blur-sm shadow-xs ${
                   isOpen
                     ? 'border-primary/40 shadow-md ring-1 ring-primary/20'
                     : 'border-border/60 hover:border-border hover:shadow-sm'
@@ -101,16 +101,16 @@ export default function FaqView({ initialData }: FaqViewProps) {
                     aria-expanded={isOpen}
                     aria-controls={panelId}
                     onClick={() => toggleAccordion(idx)}
-                    className="w-full p-5 flex items-center justify-between text-start gap-4 font-extrabold text-xs sm:text-sm text-foreground hover:bg-muted/10 transition-colors cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset"
+                    className="w-full p-5 flex items-center justify-between text-start gap-4 font-extrabold text-xs sm:text-sm text-foreground hover:bg-muted/10 transition-colors duration-200 cursor-pointer select-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-inset"
                   >
                     <span className="flex-1 leading-snug">{questionText}</span>
                     <div
-                      className={`size-7 rounded-xl flex items-center justify-center shrink-0 transition-colors ${
+                      className={`size-7 rounded-xl flex items-center justify-center shrink-0 transition-colors duration-300 ${
                         isOpen ? 'bg-primary/10 text-primary' : 'bg-muted/40 text-muted-foreground'
                       }`}
                     >
                       <ChevronDown
-                        className={`size-4 transition-transform duration-300 ${
+                        className={`size-4 transition-transform duration-300 ease-in-out ${
                           isOpen ? 'rotate-180 text-primary' : ''
                         }`}
                       />
@@ -118,16 +118,25 @@ export default function FaqView({ initialData }: FaqViewProps) {
                   </button>
                 </h3>
 
-                {isOpen && (
-                  <div
-                    id={panelId}
-                    role="region"
-                    aria-labelledby={headerId}
-                    className="px-5 pb-5 pt-3 text-xs sm:text-sm text-muted-foreground leading-relaxed border-t border-border/20 bg-muted/5 animate-in fade-in slide-in-from-top-1 duration-200 whitespace-pre-line font-medium"
-                  >
-                    {answerText}
+                <div
+                  id={panelId}
+                  role="region"
+                  aria-labelledby={headerId}
+                  data-state={isOpen ? 'open' : 'closed'}
+                  className={`faq-accordion-grid grid transition-[grid-template-rows] duration-300 ease-in-out ${
+                    isOpen ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+                  }`}
+                >
+                  <div className="overflow-hidden min-h-0">
+                    <div
+                      className={`px-5 pb-5 pt-3 text-xs sm:text-sm text-muted-foreground leading-relaxed border-t border-border/20 bg-muted/5 whitespace-pre-line font-medium transition-all duration-300 ease-in-out ${
+                        isOpen ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-1'
+                      }`}
+                    >
+                      {answerText}
+                    </div>
                   </div>
-                )}
+                </div>
               </article>
             );
           })}

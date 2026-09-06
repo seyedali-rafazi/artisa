@@ -24,6 +24,7 @@ const translations: Record<string, string> = {
   blog: "مجله هنر",
   contactUs: "تماس با ما",
   aboutUs: "درباره ما",
+  termsAndConditions: "شرایط و قوانین",
 
   // Banner / Slider
   sliderTitle1: "هنر را به دیوارت بیاور",

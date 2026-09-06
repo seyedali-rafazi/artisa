@@ -16,6 +16,7 @@ export default function robots(): MetadataRoute.Robots {
           '/about-us',
           '/contact-us',
           '/faq',
+          '/terms',
         ],
         disallow: [
           '/admin/',

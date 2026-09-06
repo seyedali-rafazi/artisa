@@ -160,14 +160,9 @@ export default function Footer() {
               </Link>
             </li>
             <li>
-              <a href="#" className="hover:text-primary transition-colors text-start">
+              <Link href="/terms" className="hover:text-primary cursor-pointer transition-colors text-start">
                 شرایط و قوانین
-              </a>
-            </li>
-            <li>
-              <a href="#" className="hover:text-primary transition-colors text-start">
-                حریم خصوصی
-              </a>
+              </Link>
             </li>
           </ul>
         </div>
