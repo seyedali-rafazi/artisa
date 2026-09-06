@@ -21,7 +21,7 @@ async function getHomeInitialData(): Promise<HomeInitialData> {
       fetch(`${backendUrl}/api/v1/products?isBestSeller=true&limit=8`, isrOptions).then((r) =>
         r.ok ? r.json() : null
       ),
-      fetch(`${backendUrl}/api/v1/special-offers/active`, isrOptions).then((r) =>
+      fetch(`${backendUrl}/api/v1/special-offers/active`, { next: { revalidate: 10 } }).then((r) =>
         r.ok ? r.json() : null
       ),
       fetch(`${backendUrl}/api/v1/products?isSpecial=true&limit=24`, isrOptions).then((r) =>

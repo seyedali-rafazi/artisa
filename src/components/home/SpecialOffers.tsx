@@ -54,10 +54,14 @@ function CountdownTimer({
   onExpire?: () => void;
   size?: "sm" | "md";
 }) {
-  const [timeLeft, setTimeLeft] = useState({
-    hrs: 10,
-    mins: 43,
-    secs: 53,
+  const [timeLeft, setTimeLeft] = useState(() => {
+    if (!endAt) return { hrs: 0, mins: 0, secs: 0 };
+    const diffInSeconds = Math.max(0, Math.floor((new Date(endAt).getTime() - Date.now()) / 1000));
+    return {
+      hrs: Math.floor((diffInSeconds % 86400) / 3600),
+      mins: Math.floor((diffInSeconds % 3600) / 60),
+      secs: diffInSeconds % 60,
+    };
   });
 
   useEffect(() => {
@@ -90,18 +94,27 @@ function CountdownTimer({
   const colonSize = size === "md" ? "text-xs sm:text-sm" : "text-xs";
 
   return (
-    <div className="flex items-center gap-1" dir="ltr">
-      <div className={`${boxSize} rounded-md bg-card text-card-foreground font-black flex items-center justify-center shadow-xs`}>
+    <div className="flex items-center gap-1" dir="ltr" suppressHydrationWarning>
+      <div
+        suppressHydrationWarning
+        className={`${boxSize} rounded-md bg-card text-card-foreground font-black flex items-center justify-center shadow-xs`}
+      >
         {toPersianDigits(timeLeft.hrs.toString().padStart(2, "0"))}
       </div>
       <span className={`text-primary-foreground font-black ${colonSize} animate-pulse`}>:</span>
 
-      <div className={`${boxSize} rounded-md bg-card text-card-foreground font-black flex items-center justify-center shadow-xs`}>
+      <div
+        suppressHydrationWarning
+        className={`${boxSize} rounded-md bg-card text-card-foreground font-black flex items-center justify-center shadow-xs`}
+      >
         {toPersianDigits(timeLeft.mins.toString().padStart(2, "0"))}
       </div>
       <span className={`text-primary-foreground font-black ${colonSize} animate-pulse`}>:</span>
 
-      <div className={`${boxSize} rounded-md bg-card text-card-foreground font-black flex items-center justify-center shadow-xs`}>
+      <div
+        suppressHydrationWarning
+        className={`${boxSize} rounded-md bg-card text-card-foreground font-black flex items-center justify-center shadow-xs`}
+      >
         {toPersianDigits(timeLeft.secs.toString().padStart(2, "0"))}
       </div>
     </div>
@@ -129,20 +142,12 @@ export default function SpecialOffers({ initialOffers, initialProducts }: Specia
   // Get active offer and associated products
   const primaryOffer = activeOffers && activeOffers.length > 0 ? activeOffers[0] : null
 
-  // Combine products from active campaign and products marked isSpecial
+  // Use active offer's connected products if available; otherwise fall back to general isSpecial products
   const specialProducts = useMemo(() => {
-    const offerProducts = primaryOffer?.products || []
-    const generalProducts = specialProductsApi?.items || []
-
-    const map = new Map<string, Product | SpecialOfferProduct>()
-    offerProducts.forEach((p) => map.set(String(p.id), p))
-    generalProducts.forEach((p) => {
-      if (!map.has(String(p.id))) {
-        map.set(String(p.id), p)
-      }
-    })
-
-    return Array.from(map.values())
+    if (primaryOffer?.products && primaryOffer.products.length > 0) {
+      return primaryOffer.products;
+    }
+    return specialProductsApi?.items || [];
   }, [primaryOffer, specialProductsApi])
 
   // Limit carousel items to 16 for optimal mobile DOM size and performance
@@ -323,7 +328,7 @@ export default function SpecialOffers({ initialOffers, initialProducts }: Specia
                         <span className="bg-destructive text-destructive-foreground text-[10px] sm:text-[11px] font-black px-1.5 py-0.5 rounded-full leading-none shadow-xs">
                           {toPersianDigits(discountPercent)}٪
                         </span>
-                        {product.oldPrice ? (
+                        {product.oldPrice && product.oldPrice > product.price ? (
                           <span className="text-[10px] sm:text-[11px] text-muted-foreground line-through font-medium">
                             {toPersianDigits(Math.round(product.oldPrice).toLocaleString("fa-IR"))}
                           </span>

@@ -59,9 +59,10 @@ export function useActiveSpecialOffers(options?: { initialData?: SpecialOffer[] 
   return useQuery({
     queryKey: ['special-offers-active'],
     queryFn: () => api.get<SpecialOffer[]>('/api/v1/special-offers/active'),
-    staleTime: 1000 * 60, // 1 minute
-    refetchInterval: 1000 * 60, // Poll every minute to stay synced with lifecycle
+    staleTime: 0, // Always revalidate on mount to ensure immediate synchronization with admin changes
+    refetchInterval: 1000 * 30, // Poll every 30s to stay synced with lifecycle
     initialData: options?.initialData,
+    initialDataUpdatedAt: 0, // Treat initialData as stale so React Query re-fetches in background on mount
   });
 }
 
@@ -137,6 +138,7 @@ export function useToggleSpecialOfferActive() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-special-offers'] });
       queryClient.invalidateQueries({ queryKey: ['special-offers-active'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
     },
   });
 }
@@ -152,6 +154,7 @@ export function useDeleteSpecialOffer() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-special-offers'] });
       queryClient.invalidateQueries({ queryKey: ['special-offers-active'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
     },
   });
 }

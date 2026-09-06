@@ -44,6 +44,9 @@ export function useProducts(
     queryKey: ['products', params],
     queryFn: () => api.get<ProductsPaginatedResponse>('/api/v1/products', params),
     initialData: hasActiveFilters ? undefined : options?.initialData,
+    initialDataUpdatedAt: options?.initialData ? 0 : undefined,
+    staleTime: 0, // Always revalidate on mount so navigation reflects price changes immediately
+    refetchOnMount: true,
   });
 }
 
@@ -52,5 +55,7 @@ export function useProduct(id: string) {
     queryKey: ['product', id],
     queryFn: () => api.get<Product>(`/api/v1/products/${id}`),
     enabled: Boolean(id),
+    staleTime: 0,
+    refetchOnMount: true,
   });
 }

@@ -27,8 +27,9 @@ function ProductBoxComponent({ product }: ProductBoxProps) {
   const isInCart = !!cart.find((item) => item.id === product.id)
   const favorited = isFavorited(product.id)
 
-  const discountPercent = product.oldPrice
-    ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
+  const hasDiscount = Boolean(product.oldPrice && product.oldPrice > product.price)
+  const discountPercent = hasDiscount
+    ? Math.round(((product.oldPrice! - product.price) / product.oldPrice!) * 100)
     : 0
 
   const formatPrice = (amount: number) => {
@@ -67,7 +68,7 @@ function ProductBoxComponent({ product }: ProductBoxProps) {
         />
 
         {/* Discount Badge */}
-        {discountPercent > 0 && (
+        {hasDiscount && discountPercent > 0 && (
           <div className="absolute top-3 right-3 z-10 px-2 py-1 text-[10px] font-black text-white bg-primary rounded-lg shadow-md">
             {`${discountPercent}٪ تخفیف`}
           </div>
@@ -121,9 +122,9 @@ function ProductBoxComponent({ product }: ProductBoxProps) {
 
         {/* Price Row */}
         <div className="flex flex-col gap-1 mb-4">
-          {product.oldPrice && (
+          {hasDiscount && (
             <span className="text-[10px] text-muted-foreground line-through decoration-primary/45">
-              {formatPrice(product.oldPrice)}
+              {formatPrice(product.oldPrice!)}
             </span>
           )}
           <span className="text-xs md:text-sm font-black text-primary">

@@ -21,12 +21,14 @@ import {
 interface ProductSelectorProps {
   selectedIds: string[];
   onChange: (selectedIds: string[]) => void;
+  existingProducts?: (AdminProduct | { id: string; name: string; image: string; price: number; oldPrice?: number | null; category?: string })[];
   error?: string;
 }
 
 export default function ProductSelector({
   selectedIds,
   onChange,
+  existingProducts,
   error,
 }: ProductSelectorProps) {
   const [search, setSearch] = useState('');
@@ -45,15 +47,17 @@ export default function ProductSelector({
 
   // Toggle selection
   const handleToggleProduct = (productId: string) => {
-    if (selectedIds.includes(productId)) {
-      onChange(selectedIds.filter((id) => id !== productId));
+    const idStr = String(productId);
+    if (selectedIds.some((id) => String(id) === idStr)) {
+      onChange(selectedIds.filter((id) => String(id) !== idStr));
     } else {
-      onChange([...selectedIds, productId]);
+      onChange([...selectedIds, idStr]);
     }
   };
 
   const handleRemoveProduct = (productId: string) => {
-    onChange(selectedIds.filter((id) => id !== productId));
+    const idStr = String(productId);
+    onChange(selectedIds.filter((id) => String(id) !== idStr));
   };
 
   const handleClearAll = () => {
@@ -61,10 +65,17 @@ export default function ProductSelector({
   };
 
   // Selected products details lookup
-  const selectedProductsMap = new Map<string, AdminProduct>();
+  const selectedProductsMap = new Map<string, { id: string; name?: string; image?: string; price?: number; oldPrice?: number | null; category?: string }>();
+  if (existingProducts) {
+    existingProducts.forEach((p) => {
+      if (selectedIds.some((id) => String(id) === String(p.id))) {
+        selectedProductsMap.set(String(p.id), p);
+      }
+    });
+  }
   availableProducts.forEach((p) => {
-    if (selectedIds.includes(p.id)) {
-      selectedProductsMap.set(p.id, p);
+    if (selectedIds.some((id) => String(id) === String(p.id))) {
+      selectedProductsMap.set(String(p.id), p);
     }
   });
 
@@ -107,7 +118,7 @@ export default function ProductSelector({
           </span>
           <div className="flex flex-wrap gap-2 max-h-40 overflow-y-auto p-1 min-w-0">
             {selectedIds.map((id) => {
-              const product = selectedProductsMap.get(id);
+              const product = selectedProductsMap.get(String(id));
               return (
                 <div
                   key={id}
@@ -127,7 +138,7 @@ export default function ProductSelector({
                     <Package className="size-4 text-primary shrink-0" />
                   )}
                   <span className="truncate max-w-[140px] sm:max-w-[220px]">
-                    {product?.name || `شناسه: ${id.slice(-6)}`}
+                    {product?.name || `شناسه: ${String(id).slice(-6)}`}
                   </span>
                   <button
                     type="button"
@@ -195,7 +206,7 @@ export default function ProductSelector({
             </div>
           ) : (
             availableProducts.map((product) => {
-              const isSelected = selectedIds.includes(product.id);
+              const isSelected = selectedIds.some((id) => String(id) === String(product.id));
               return (
                 <div
                   key={product.id}
@@ -237,9 +248,9 @@ export default function ProductSelector({
                         <span className="text-primary font-bold">
                           {formatPersianPrice(product.price)}
                         </span>
-                        {product.oldPrice && (
+                        {Boolean(product.oldPrice && product.oldPrice > product.price) && (
                           <span className="line-through text-muted-foreground/70">
-                            {formatPersianPrice(product.oldPrice)}
+                            {formatPersianPrice(product.oldPrice!)}
                           </span>
                         )}
                       </div>

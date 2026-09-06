@@ -6,6 +6,9 @@ interface ProductsPageProps {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
 
+export const dynamic = "force-dynamic";
+export const revalidate = 0;
+
 const backendUrl = process.env.NEXT_PUBLIC_API_URL || "https://artisa-backend.vercel.app";
 
 async function getInitialProducts(
@@ -38,7 +41,7 @@ async function getInitialProducts(
 
   try {
     const res = await fetch(`${backendUrl}/api/v1/products?${query.toString()}`, {
-      next: { revalidate: 120 }, // 2-minute ISR cache
+      cache: "no-store",
     });
     if (!res.ok) return undefined;
     const json = await res.json();

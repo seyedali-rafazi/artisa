@@ -20,7 +20,7 @@ import {
   AlertCircle
 } from "lucide-react"
 import { useProductComments } from "@/hooks/useComments"
-import { useProducts } from "@/hooks/useProducts"
+import { useProducts, useProduct } from "@/hooks/useProducts"
 import ProductCommentsSection from "@/components/comments/ProductCommentsSection"
 import ProductImageSlider from "@/components/product/ProductImageSlider"
 import ProductDescription from "@/components/product/ProductDescription"
@@ -45,7 +45,10 @@ export default function ProductDetailsView({ product: propProduct }: ProductDeta
     toggleFavorite
   } = useApp()
 
-  const selectedProduct = propProduct || contextProduct
+  const targetId = propProduct?.id || contextProduct?.id || ""
+  const { data: liveProduct } = useProduct(targetId)
+  const selectedProduct = liveProduct || propProduct || contextProduct
+  const hasDiscount = Boolean(selectedProduct?.oldPrice && selectedProduct.oldPrice > selectedProduct.price)
 
   const productId = selectedProduct?.id || ""
   const { data: commentsResponse } = useProductComments(productId, { limit: 1 })
@@ -147,9 +150,9 @@ export default function ProductDetailsView({ product: propProduct }: ProductDeta
 
           {/* Price */}
           <div className="flex items-baseline gap-4 mb-6">
-            {selectedProduct.oldPrice && (
+            {hasDiscount && (
               <span className="text-sm text-muted-foreground line-through">
-                {formatPrice(selectedProduct.oldPrice)}
+                {formatPrice(selectedProduct.oldPrice!)}
               </span>
             )}
             <span className="text-2xl font-black text-primary">

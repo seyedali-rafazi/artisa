@@ -58,12 +58,16 @@ export default function NewProductPage() {
       }
     });
 
+    const parsedOldPrice = oldPrice ? parseFloat(oldPrice) : undefined;
+    const finalOldPrice =
+      parsedOldPrice !== undefined && !isNaN(parsedOldPrice) && parsedOldPrice > 0 ? parsedOldPrice : undefined;
+
     createMutation.mutate(
       {
         name,
         nameEn,
         price: parseFloat(price),
-        oldPrice: oldPrice ? parseFloat(oldPrice) : undefined,
+        oldPrice: finalOldPrice,
         image,
         gallery,
         category,
@@ -78,6 +82,7 @@ export default function NewProductPage() {
       {
         onSuccess: () => {
           router.push('/admin/products');
+          router.refresh();
         },
       }
     );

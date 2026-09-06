@@ -38,7 +38,7 @@ export interface AdminProduct {
   name: string;
   nameEn?: string;
   price: number;
-  oldPrice?: number;
+  oldPrice?: number | null;
   image: string;
   gallery?: string[];
   category: string;
@@ -148,6 +148,9 @@ export function useCreateProduct() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
       queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['product'] });
+      queryClient.invalidateQueries({ queryKey: ['special-offers-active'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-special-offers'] });
     },
   });
 }
@@ -157,9 +160,15 @@ export function useUpdateProduct() {
   return useMutation({
     mutationFn: ({ id, ...data }: Partial<AdminProduct> & { id: string }) =>
       api.put<AdminProduct>(`/api/v1/admin/products/${id}`, data),
-    onSuccess: () => {
+    onSuccess: (_data, variables) => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
       queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['product'] });
+      if (variables?.id) {
+        queryClient.invalidateQueries({ queryKey: ['product', variables.id] });
+      }
+      queryClient.invalidateQueries({ queryKey: ['special-offers-active'] });
+      queryClient.invalidateQueries({ queryKey: ['admin-special-offers'] });
     },
   });
 }
@@ -171,6 +180,8 @@ export function useArchiveProduct() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
       queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['product'] });
+      queryClient.invalidateQueries({ queryKey: ['special-offers-active'] });
     },
   });
 }
@@ -182,6 +193,8 @@ export function useDeleteProduct() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
       queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['product'] });
+      queryClient.invalidateQueries({ queryKey: ['special-offers-active'] });
     },
   });
 }
@@ -192,6 +205,9 @@ export function useRestoreProduct() {
     mutationFn: (id: string) => api.post(`/api/v1/admin/products/${id}/restore`),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['admin-products'] });
+      queryClient.invalidateQueries({ queryKey: ['products'] });
+      queryClient.invalidateQueries({ queryKey: ['product'] });
+      queryClient.invalidateQueries({ queryKey: ['special-offers-active'] });
     },
   });
 }

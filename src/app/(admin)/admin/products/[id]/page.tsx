@@ -39,7 +39,7 @@ export default function EditProductPage() {
       setName(product.name || '');
       setNameEn(product.nameEn || '');
       setPrice(product.price ? product.price.toString() : '');
-      setOldPrice(product.oldPrice ? product.oldPrice.toString() : '');
+      setOldPrice(product.oldPrice && product.oldPrice > 0 ? product.oldPrice.toString() : '');
       setCategory(product.category || '');
       setStockQuantity(product.stock_quantity ? product.stock_quantity.toString() : '0');
       setStatus(product.status || 'published');
@@ -80,13 +80,17 @@ export default function EditProductPage() {
       }
     });
 
+    const parsedOldPrice = oldPrice ? parseFloat(oldPrice) : null;
+    const finalOldPrice =
+      parsedOldPrice !== null && !isNaN(parsedOldPrice) && parsedOldPrice > 0 ? parsedOldPrice : null;
+
     updateMutation.mutate(
       {
         id: productId,
         name,
         nameEn,
         price: parseFloat(price),
-        oldPrice: oldPrice ? parseFloat(oldPrice) : undefined,
+        oldPrice: finalOldPrice,
         image,
         gallery,
         category,
@@ -100,6 +104,7 @@ export default function EditProductPage() {
       {
         onSuccess: () => {
           router.push('/admin/products');
+          router.refresh();
         },
       }
     );

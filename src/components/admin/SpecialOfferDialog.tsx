@@ -57,8 +57,11 @@ export default function SpecialOfferDialog({
         setTitle(offerToEdit.title || '');
         setDescription(offerToEdit.description || '');
         setStartAt(offerToEdit.start_at_tehran || offerToEdit.start_at || '');
-        setEndAt(offerToEdit.end_at_tehran || offerToEdit.end_at || '');
-        setSelectedProductIds(offerToEdit.product_ids || []);
+        const initialIds =
+          offerToEdit.product_ids && offerToEdit.product_ids.length > 0
+            ? offerToEdit.product_ids.map(String)
+            : (offerToEdit.products?.map((p) => String(p.id)) || []);
+        setSelectedProductIds(initialIds);
         setIsActive(offerToEdit.is_active !== undefined ? offerToEdit.is_active : true);
       } else {
         // Defaults for new offer: start now, end in 7 days
@@ -289,6 +292,7 @@ export default function SpecialOfferDialog({
             <ProductSelector
               selectedIds={selectedProductIds}
               onChange={setSelectedProductIds}
+              existingProducts={offerToEdit?.products}
             />
           </div>
 
