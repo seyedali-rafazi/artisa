@@ -31,6 +31,7 @@ import {
   ChevronRight,
   Filter,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 /**
  * Formats ISO timestamp to Shamsi date & clock time in Asia/Tehran timezone.
@@ -113,13 +114,25 @@ export default function AdminSpecialOffersPage() {
     if (!deleteModal.offerId) return;
     deleteMutation.mutate(deleteModal.offerId, {
       onSuccess: () => {
+        toast.success('پیشنهاد ویژه با موفقیت حذف شد');
         setDeleteModal({ isOpen: false, offerId: '', offerTitle: '' });
+      },
+      onError: (err: any) => {
+        toast.error(err?.message || 'خطا در حذف پیشنهاد ویژه');
       },
     });
   };
 
-  const handleToggleActive = (offerId: string) => {
-    toggleActiveMutation.mutate(offerId);
+  const handleToggleActive = (offer: SpecialOffer) => {
+    toggleActiveMutation.mutate(offer.id, {
+      onSuccess: () => {
+        const nextState = !offer.is_active;
+        toast.success(nextState ? 'پیشنهاد ویژه با موفقیت فعال شد' : 'پیشنهاد ویژه با موفقیت غیرفعال شد');
+      },
+      onError: (err: any) => {
+        toast.error(err?.message || 'خطا در تغییر وضعیت پیشنهاد ویژه');
+      },
+    });
   };
 
   // Status Badge Component
@@ -344,7 +357,7 @@ export default function AdminSpecialOffersPage() {
                       <td className="p-4 whitespace-nowrap">
                         <button
                           type="button"
-                          onClick={() => handleToggleActive(offer.id)}
+                          onClick={() => handleToggleActive(offer)}
                           disabled={toggleActiveMutation.isPending}
                           title={offer.is_active ? 'کلیک برای غیرفعال‌سازی' : 'کلیک برای فعال‌سازی'}
                           className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all border cursor-pointer ${

@@ -26,6 +26,7 @@ import {
   Info,
   X,
 } from 'lucide-react';
+import { toast } from 'sonner';
 
 interface SpecialOfferDialogProps {
   isOpen: boolean;
@@ -57,6 +58,7 @@ export default function SpecialOfferDialog({
         setTitle(offerToEdit.title || '');
         setDescription(offerToEdit.description || '');
         setStartAt(offerToEdit.start_at_tehran || offerToEdit.start_at || '');
+        setEndAt(offerToEdit.end_at_tehran || offerToEdit.end_at || '');
         const initialIds =
           offerToEdit.product_ids && offerToEdit.product_ids.length > 0
             ? offerToEdit.product_ids.map(String)
@@ -84,23 +86,33 @@ export default function SpecialOfferDialog({
 
     // Basic Validation
     if (!title.trim()) {
-      setFormError('لطفاً عنوان پیشنهاد ویژه را وارد کنید.');
+      const msg = 'لطفاً عنوان پیشنهاد ویژه را وارد کنید.';
+      setFormError(msg);
+      toast.error(msg);
       return;
     }
     if (!startAt) {
-      setFormError('لطفاً زمان شروع پیشنهاد را مشخص کنید.');
+      const msg = 'لطفاً زمان شروع پیشنهاد را مشخص کنید.';
+      setFormError(msg);
+      toast.error(msg);
       return;
     }
     if (!endAt) {
-      setFormError('لطفاً زمان پایان پیشنهاد را مشخص کنید.');
+      const msg = 'لطفاً زمان پایان پیشنهاد را مشخص کنید.';
+      setFormError(msg);
+      toast.error(msg);
       return;
     }
     if (new Date(endAt) <= new Date(startAt)) {
-      setFormError('زمان پایان پیشنهاد باید پس از زمان شروع باشد.');
+      const msg = 'زمان پایان پیشنهاد باید پس از زمان شروع باشد.';
+      setFormError(msg);
+      toast.error(msg);
       return;
     }
     if (selectedProductIds.length === 0) {
-      setFormError('لطفاً حداقل یک محصول را برای این پیشنهاد ویژه انتخاب کنید.');
+      const msg = 'لطفاً حداقل یک محصول را برای این پیشنهاد ویژه انتخاب کنید.';
+      setFormError(msg);
+      toast.error(msg);
       return;
     }
 
@@ -113,25 +125,33 @@ export default function SpecialOfferDialog({
       is_active: isActive,
     };
 
-    if (isEditing && offerToEdit?.id) {
+    const offerId = offerToEdit?.id || (offerToEdit as any)?._id;
+
+    if (isEditing && offerId) {
       updateMutation.mutate(
-        { id: offerToEdit.id, ...payload },
+        { id: String(offerId), ...payload },
         {
           onSuccess: () => {
+            toast.success('پیشنهاد ویژه با موفقیت بروزرسانی شد');
             onClose();
           },
           onError: (err: any) => {
-            setFormError(err.message || 'خطا در بروزرسانی پیشنهاد ویژه.');
+            const msg = err?.message || 'خطا در بروزرسانی پیشنهاد ویژه.';
+            setFormError(msg);
+            toast.error(msg);
           },
         }
       );
     } else {
       createMutation.mutate(payload, {
         onSuccess: () => {
+          toast.success('پیشنهاد ویژه جدید با موفقیت ایجاد شد');
           onClose();
         },
         onError: (err: any) => {
-          setFormError(err.message || 'خطا در ایجاد پیشنهاد ویژه.');
+          const msg = err?.message || 'خطا در ایجاد پیشنهاد ویژه.';
+          setFormError(msg);
+          toast.error(msg);
         },
       });
     }
