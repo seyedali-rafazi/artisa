@@ -376,12 +376,43 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   )
 }
 
-const AppContext = createContext<AppContextType | undefined>(undefined)
+const defaultAppContext: AppContextType = {
+  currentView: "home",
+  setCurrentView: () => {},
+  isCartLoaded: false,
+  cart: [],
+  addToCart: () => {},
+  removeFromCart: () => {},
+  updateCartQty: () => {},
+  clearCart: () => {},
+  selectedProduct: null,
+  setSelectedProduct: () => {},
+  searchQuery: "",
+  setSearchQuery: () => {},
+  showLogin: false,
+  setShowLogin: () => {},
+  user: null,
+  setUser: () => {},
+  isAuthLoading: false,
+  logout: () => {},
+  addresses: [],
+  addAddress: () => {},
+  updateAddress: () => {},
+  deleteAddress: () => {},
+  setDefaultAddress: () => {},
+  orders: [],
+  wishlist: [],
+  favoriteIds: [],
+  isFavorited: () => false,
+  toggleWishlist: () => {},
+  toggleFavorite: () => {},
+  isFavoriteLoading: false,
+  showToast: () => {},
+}
+
+const AppContext = createContext<AppContextType>(defaultAppContext)
 
 export function useApp() {
   const context = useContext(AppContext)
-  if (!context) {
-    throw new Error("useApp must be used within an AppProvider")
-  }
-  return context
+  return context ?? defaultAppContext
 }

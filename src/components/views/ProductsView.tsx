@@ -101,16 +101,24 @@ export default function ProductsView({
   const { t } = useLanguage();
   const { setSearchQuery } = useApp();
 
+  // Helper to read initial param from either server-prefetched initialSearchParams or client useSearchParams
+  const getParam = (key: string): string => {
+    const fromProps = initialSearchParams?.[key];
+    if (typeof fromProps === "string") return fromProps.trim();
+    if (Array.isArray(fromProps) && fromProps.length > 0 && typeof fromProps[0] === "string") return fromProps[0].trim();
+    return (searchParams.get(key) || "").trim();
+  };
+
   // Read URL query parameters
-  const initialCategory = searchParams.get("category") || "";
-  const initialSearch = searchParams.get("search") || "";
-  const initialSortBy = searchParams.get("sort_by") || "created_at";
-  const initialSortOrder = searchParams.get("sort_order") || "desc";
-  const initialSpecial = searchParams.get("isSpecial") === "true";
-  const initialBestSeller = searchParams.get("isBestSeller") === "true";
-  const initialMinPrice = parsePriceInput(searchParams.get("minPrice"));
-  const initialMaxPrice = parsePriceInput(searchParams.get("maxPrice"));
-  const initialPage = searchParams.get("page") ? Math.max(1, Number(searchParams.get("page"))) : 1;
+  const initialCategory = getParam("category");
+  const initialSearch = getParam("search");
+  const initialSortBy = getParam("sort_by") || "created_at";
+  const initialSortOrder = getParam("sort_order") || "desc";
+  const initialSpecial = getParam("isSpecial") === "true";
+  const initialBestSeller = getParam("isBestSeller") === "true";
+  const initialMinPrice = parsePriceInput(getParam("minPrice"));
+  const initialMaxPrice = parsePriceInput(getParam("maxPrice"));
+  const initialPage = getParam("page") ? Math.max(1, Number(getParam("page"))) : 1;
 
   // Local state
   const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory);
@@ -126,12 +134,20 @@ export default function ProductsView({
   const [maxPriceInput, setMaxPriceInput] = useState<string>(initialMaxPrice !== undefined ? formatPriceInput(initialMaxPrice) : "");
   const [currentPage, setCurrentPage] = useState<number>(initialPage);
 
+  // Flag to prevent internal typing / debounced state updates from being overwritten by searchParams sync effect
+  const isInternalChangeRef = React.useRef(false);
+
   // Mobile filter drawer state
   const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
   useScrollLock(mobileFilterOpen);
 
   // Sync state when URL search params change externally (e.g. browser back/forward or navbar link)
   useEffect(() => {
+    if (isInternalChangeRef.current) {
+      isInternalChangeRef.current = false;
+      return;
+    }
+
     const cat = searchParams.get("category") || "";
     const s = searchParams.get("search") || "";
     const sb = searchParams.get("sort_by") || "created_at";
@@ -142,19 +158,25 @@ export default function ProductsView({
     const mx = parsePriceInput(searchParams.get("maxPrice"));
     const p = searchParams.get("page") ? Math.max(1, Number(searchParams.get("page"))) : 1;
 
-    setSelectedCategory(cat);
-    setSearchTerm(s);
-    setSearchInputVal(s);
-    setSearchQuery(s);
-    setSortBy(sb);
-    setSortOrder(so);
-    setIsSpecial(sp);
-    setIsBestSeller(bs);
-    setMinPrice(mn);
-    setMaxPrice(mx);
-    setMinPriceInput(mn !== undefined ? formatPriceInput(mn) : "");
-    setMaxPriceInput(mx !== undefined ? formatPriceInput(mx) : "");
-    setCurrentPage(p);
+    if (cat !== selectedCategory) setSelectedCategory(cat);
+    if (s !== searchTerm) {
+      setSearchTerm(s);
+      setSearchInputVal(s);
+      setSearchQuery(s);
+    }
+    if (sb !== sortBy) setSortBy(sb);
+    if (so !== sortOrder) setSortOrder(so);
+    if (sp !== isSpecial) setIsSpecial(sp);
+    if (bs !== isBestSeller) setIsBestSeller(bs);
+    if (mn !== minPrice) {
+      setMinPrice(mn);
+      setMinPriceInput(mn !== undefined ? formatPriceInput(mn) : "");
+    }
+    if (mx !== maxPrice) {
+      setMaxPrice(mx);
+      setMaxPriceInput(mx !== undefined ? formatPriceInput(mx) : "");
+    }
+    if (p !== currentPage) setCurrentPage(p);
   }, [searchParams, setSearchQuery]);
 
   // Clean up global search query when unmounting ProductsView
@@ -170,6 +192,7 @@ export default function ProductsView({
     if (trimmed === searchTerm) return;
 
     const timer = setTimeout(() => {
+      isInternalChangeRef.current = true;
       setSearchTerm(trimmed);
       setSearchQuery(trimmed);
       setCurrentPage(1);
@@ -233,10 +256,13 @@ export default function ProductsView({
     if (typeof window !== "undefined") {
       window.history.replaceState(null, "", targetUrl);
     }
+    // Also notify Next.js router so useSearchParams() stays in sync
+    router.replace(targetUrl, { scroll: false });
   };
 
   // Handlers for user interactions
   const handleCategorySelect = (categoryVal: string) => {
+    isInternalChangeRef.current = true;
     setSelectedCategory(categoryVal);
     setCurrentPage(1);
     updateUrlParams({
@@ -246,6 +272,7 @@ export default function ProductsView({
   };
 
   const handleSortChange = (newSortBy: string, newSortOrder: string) => {
+    isInternalChangeRef.current = true;
     setSortBy(newSortBy);
     setSortOrder(newSortOrder);
     setCurrentPage(1);
@@ -257,6 +284,7 @@ export default function ProductsView({
   };
 
   const handleSpecialToggle = () => {
+    isInternalChangeRef.current = true;
     const nextVal = !isSpecial;
     setIsSpecial(nextVal);
     setCurrentPage(1);
@@ -267,6 +295,7 @@ export default function ProductsView({
   };
 
   const handleBestSellerToggle = () => {
+    isInternalChangeRef.current = true;
     const nextVal = !isBestSeller;
     setIsBestSeller(nextVal);
     setCurrentPage(1);
@@ -278,6 +307,7 @@ export default function ProductsView({
 
   const handleApplyPriceFilter = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
+    isInternalChangeRef.current = true;
     let min = parsePriceInput(minPriceInput);
     let max = parsePriceInput(maxPriceInput);
 
@@ -301,6 +331,7 @@ export default function ProductsView({
   };
 
   const handleClearPriceFilter = () => {
+    isInternalChangeRef.current = true;
     setMinPrice(undefined);
     setMaxPrice(undefined);
     setMinPriceInput("");
@@ -314,6 +345,7 @@ export default function ProductsView({
   };
 
   const handlePresetClick = (presetMin?: number, presetMax?: number) => {
+    isInternalChangeRef.current = true;
     setMinPrice(presetMin);
     setMaxPrice(presetMax);
     setMinPriceInput(presetMin !== undefined ? formatPriceInput(presetMin) : "");
@@ -328,6 +360,7 @@ export default function ProductsView({
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    isInternalChangeRef.current = true;
     const trimmed = searchInputVal.trim();
     setSearchTerm(trimmed);
     setSearchQuery(trimmed);
@@ -339,6 +372,7 @@ export default function ProductsView({
   };
 
   const handleClearSearch = () => {
+    isInternalChangeRef.current = true;
     setSearchTerm("");
     setSearchInputVal("");
     setSearchQuery("");
@@ -350,6 +384,7 @@ export default function ProductsView({
   };
 
   const handleResetAllFilters = () => {
+    isInternalChangeRef.current = true;
     setSelectedCategory("");
     setSearchTerm("");
     setSearchInputVal("");
@@ -366,9 +401,11 @@ export default function ProductsView({
     if (typeof window !== "undefined") {
       window.history.replaceState(null, "", "/products");
     }
+    router.replace("/products", { scroll: false });
   };
 
   const handlePageChange = (newPage: number) => {
+    isInternalChangeRef.current = true;
     setCurrentPage(newPage);
     updateUrlParams({ page: String(newPage) });
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -766,10 +803,16 @@ export default function ProductsView({
                   <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
                 )}
                 <Input
+                  id="products-search-input"
+                  name="search"
                   type="text"
                   placeholder="جستجو در بین آثار..."
                   value={searchInputVal}
-                  onChange={(e) => setSearchInputVal(e.target.value)}
+                  onChange={(e) => {
+                    isInternalChangeRef.current = true;
+                    setSearchInputVal(e.target.value);
+                  }}
+                  autoComplete="off"
                   className="pr-10 pl-9 h-11 text-xs rounded-2xl bg-card border-border/80 shadow-xs"
                 />
                 {searchInputVal && (

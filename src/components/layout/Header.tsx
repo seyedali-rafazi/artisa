@@ -5,7 +5,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useLanguage } from "../LanguageContext";
-import { useApp } from "../AppContext";
+import { useApp } from "@/components/AppContext";
 import { Input } from "../ui/input";
 import {
   Search,
@@ -189,6 +189,14 @@ export default function Header() {
           />
 
           {/* Mobile Search bar trigger in Navbar — directly opens SearchModal without opening sidebar */}
+          <button
+            type="button"
+            onClick={() => setIsMobileSearchOpen(true)}
+            className="md:hidden flex items-center justify-center size-10 rounded-full hover:bg-muted/80 text-foreground transition-all cursor-pointer"
+            aria-label="جستجو"
+          >
+            <Search className="size-5 text-muted-foreground" />
+          </button>
 
 
           {/* Action icons (Cart, Profile Popup) */}

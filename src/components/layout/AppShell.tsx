@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation"
 import dynamic from "next/dynamic"
 import Header from "./Header"
 import Footer from "./Footer"
-import { useApp } from "../AppContext"
+import { useApp } from "@/components/AppContext"
 
 const LoginDialog = dynamic(() => import("../dialogs/LoginDialog"), {
   ssr: false,

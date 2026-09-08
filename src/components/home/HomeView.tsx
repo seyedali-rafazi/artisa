@@ -26,15 +26,13 @@ interface HomeViewProps {
 }
 
 export default function HomeView({ initialData }: HomeViewProps = {}) {
-  const { searchQuery, setSearchQuery } = useApp();
+  const { setSearchQuery } = useApp();
   const { t } = useLanguage();
 
-  // Reset any leftover search query when viewing the home page
+  // Reset any leftover search query when mounting the home page
   useEffect(() => {
-    if (searchQuery) {
-      setSearchQuery("");
-    }
-  }, [searchQuery, setSearchQuery]);
+    setSearchQuery("");
+  }, [setSearchQuery]);
 
   const { data: bestSellersApiData, isLoading: isBestSellersLoading } = useProducts(
     {

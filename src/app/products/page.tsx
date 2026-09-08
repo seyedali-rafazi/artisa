@@ -56,6 +56,7 @@ async function getInitialProducts(
 export default async function ProductsPage({ searchParams }: ProductsPageProps) {
   const resolvedParams = await searchParams;
   const initialData = await getInitialProducts(resolvedParams);
+  const paramsKey = resolvedParams ? JSON.stringify(resolvedParams) : "default";
 
   return (
     <Suspense
@@ -71,7 +72,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         </div>
       }
     >
-      <ProductsView initialData={initialData} initialSearchParams={resolvedParams} />
+      <ProductsView key={paramsKey} initialData={initialData} initialSearchParams={resolvedParams} />
     </Suspense>
   );
 }
