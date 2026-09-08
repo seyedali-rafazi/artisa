@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useProducts, ProductsQueryParams, ProductsPaginatedResponse } from "@/hooks/useProducts";
 import ProductBox from "@/components/home/ProductBox";
 import { useLanguage } from "@/components/LanguageContext";
+import { useApp } from "@/components/AppContext";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import {
   SlidersHorizontal,
@@ -20,6 +21,7 @@ import {
   RotateCcw,
   Check,
   Package,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -87,12 +89,17 @@ const PAGE_SIZE = 12;
 
 interface ProductsViewProps {
   initialData?: ProductsPaginatedResponse;
+  initialSearchParams?: { [key: string]: string | string[] | undefined };
 }
 
-export default function ProductsView({ initialData }: ProductsViewProps = {}) {
+export default function ProductsView({
+  initialData,
+  initialSearchParams,
+}: ProductsViewProps = {}) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { t } = useLanguage();
+  const { setSearchQuery } = useApp();
 
   // Read URL query parameters
   const initialCategory = searchParams.get("category") || "";
@@ -138,6 +145,7 @@ export default function ProductsView({ initialData }: ProductsViewProps = {}) {
     setSelectedCategory(cat);
     setSearchTerm(s);
     setSearchInputVal(s);
+    setSearchQuery(s);
     setSortBy(sb);
     setSortOrder(so);
     setIsSpecial(sp);
@@ -147,11 +155,71 @@ export default function ProductsView({ initialData }: ProductsViewProps = {}) {
     setMinPriceInput(mn !== undefined ? formatPriceInput(mn) : "");
     setMaxPriceInput(mx !== undefined ? formatPriceInput(mx) : "");
     setCurrentPage(p);
-  }, [searchParams]);
+  }, [searchParams, setSearchQuery]);
 
-  // Update URL helper
+  // Clean up global search query when unmounting ProductsView
+  useEffect(() => {
+    return () => {
+      setSearchQuery("");
+    };
+  }, [setSearchQuery]);
+
+  // Debounce in-page search: automatically request to backend when user stops typing
+  useEffect(() => {
+    const trimmed = searchInputVal.trim();
+    if (trimmed === searchTerm) return;
+
+    const timer = setTimeout(() => {
+      setSearchTerm(trimmed);
+      setSearchQuery(trimmed);
+      setCurrentPage(1);
+      updateUrlParams({
+        search: trimmed || null,
+        page: "1",
+      });
+    }, 450);
+
+    return () => clearTimeout(timer);
+  }, [searchInputVal, searchTerm, setSearchQuery]);
+
+  // Listen to browser navigation (back/forward)
+  useEffect(() => {
+    const handlePopState = () => {
+      const sp = new URLSearchParams(window.location.search);
+      const cat = sp.get("category") || "";
+      const s = sp.get("search") || "";
+      const sb = sp.get("sort_by") || "created_at";
+      const so = sp.get("sort_order") || "desc";
+      const spSpecial = sp.get("isSpecial") === "true";
+      const spBest = sp.get("isBestSeller") === "true";
+      const mn = parsePriceInput(sp.get("minPrice"));
+      const mx = parsePriceInput(sp.get("maxPrice"));
+      const p = sp.get("page") ? Math.max(1, Number(sp.get("page"))) : 1;
+
+      setSelectedCategory(cat);
+      setSearchTerm(s);
+      setSearchInputVal(s);
+      setSearchQuery(s);
+      setSortBy(sb);
+      setSortOrder(so);
+      setIsSpecial(spSpecial);
+      setIsBestSeller(spBest);
+      setMinPrice(mn);
+      setMaxPrice(mx);
+      setMinPriceInput(mn !== undefined ? formatPriceInput(mn) : "");
+      setMaxPriceInput(mx !== undefined ? formatPriceInput(mx) : "");
+      setCurrentPage(p);
+    };
+
+    window.addEventListener("popstate", handlePopState);
+    return () => window.removeEventListener("popstate", handlePopState);
+  }, [setSearchQuery]);
+
+  // Update URL helper without triggering duplicate RSC server fetches
   const updateUrlParams = (newParams: Record<string, string | null | undefined>) => {
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams(
+      typeof window !== "undefined" ? window.location.search : searchParams.toString()
+    );
     Object.entries(newParams).forEach(([key, val]) => {
       if (val === null || val === undefined || val === "" || val === "false") {
         params.delete(key);
@@ -162,7 +230,9 @@ export default function ProductsView({ initialData }: ProductsViewProps = {}) {
 
     const newQuery = params.toString();
     const targetUrl = newQuery ? `/products?${newQuery}` : "/products";
-    router.push(targetUrl, { scroll: false });
+    if (typeof window !== "undefined") {
+      window.history.replaceState(null, "", targetUrl);
+    }
   };
 
   // Handlers for user interactions
@@ -258,10 +328,12 @@ export default function ProductsView({ initialData }: ProductsViewProps = {}) {
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    setSearchTerm(searchInputVal.trim());
+    const trimmed = searchInputVal.trim();
+    setSearchTerm(trimmed);
+    setSearchQuery(trimmed);
     setCurrentPage(1);
     updateUrlParams({
-      search: searchInputVal.trim() || null,
+      search: trimmed || null,
       page: "1",
     });
   };
@@ -269,6 +341,7 @@ export default function ProductsView({ initialData }: ProductsViewProps = {}) {
   const handleClearSearch = () => {
     setSearchTerm("");
     setSearchInputVal("");
+    setSearchQuery("");
     setCurrentPage(1);
     updateUrlParams({
       search: null,
@@ -280,6 +353,7 @@ export default function ProductsView({ initialData }: ProductsViewProps = {}) {
     setSelectedCategory("");
     setSearchTerm("");
     setSearchInputVal("");
+    setSearchQuery("");
     setIsSpecial(false);
     setIsBestSeller(false);
     setMinPrice(undefined);
@@ -289,7 +363,9 @@ export default function ProductsView({ initialData }: ProductsViewProps = {}) {
     setCurrentPage(1);
     setSortBy("created_at");
     setSortOrder("desc");
-    router.push("/products", { scroll: false });
+    if (typeof window !== "undefined") {
+      window.history.replaceState(null, "", "/products");
+    }
   };
 
   const handlePageChange = (newPage: number) => {
@@ -325,8 +401,67 @@ export default function ProductsView({ initialData }: ProductsViewProps = {}) {
     maxPrice,
   ]);
 
+  // Only use initialData if current queryParams match the exact params initialData was prefetched for
+  const isInitialDataValid = useMemo(() => {
+    if (!initialData) return false;
+
+    const rawSearch = initialSearchParams?.search;
+    const initSearch = typeof rawSearch === "string" ? rawSearch.trim() : (Array.isArray(rawSearch) ? rawSearch[0]?.trim() || "" : initialSearch);
+
+    const rawCategory = initialSearchParams?.category;
+    const initCategory = typeof rawCategory === "string" ? rawCategory : (Array.isArray(rawCategory) ? rawCategory[0] || "" : initialCategory);
+
+    const rawPage = initialSearchParams?.page;
+    const initPage = typeof rawPage === "string" ? Math.max(1, Number(rawPage)) : initialPage;
+
+    const rawSortBy = initialSearchParams?.sort_by;
+    const initSortBy = typeof rawSortBy === "string" ? rawSortBy : initialSortBy;
+
+    const rawSortOrder = initialSearchParams?.sort_order;
+    const initSortOrder = typeof rawSortOrder === "string" ? rawSortOrder : initialSortOrder;
+
+    const initSpecial = initialSearchParams?.isSpecial !== undefined ? initialSearchParams.isSpecial === "true" : initialSpecial;
+    const initBestSeller = initialSearchParams?.isBestSeller !== undefined ? initialSearchParams.isBestSeller === "true" : initialBestSeller;
+
+    const initMinPrice = initialSearchParams?.minPrice !== undefined
+      ? parsePriceInput(Array.isArray(initialSearchParams.minPrice) ? initialSearchParams.minPrice[0] : initialSearchParams.minPrice)
+      : initialMinPrice;
+
+    const initMaxPrice = initialSearchParams?.maxPrice !== undefined
+      ? parsePriceInput(Array.isArray(initialSearchParams.maxPrice) ? initialSearchParams.maxPrice[0] : initialSearchParams.maxPrice)
+      : initialMaxPrice;
+
+    return (
+      (queryParams.search || "") === (initSearch || "") &&
+      (queryParams.category || "") === (initCategory || "") &&
+      queryParams.page === initPage &&
+      queryParams.sort_by === initSortBy &&
+      queryParams.sort_order === initSortOrder &&
+      Boolean(queryParams.isSpecial) === Boolean(initSpecial) &&
+      Boolean(queryParams.isBestSeller) === Boolean(initBestSeller) &&
+      queryParams.minPrice === initMinPrice &&
+      queryParams.maxPrice === initMaxPrice
+    );
+  }, [
+    queryParams,
+    initialData,
+    initialSearchParams,
+    initialCategory,
+    initialSearch,
+    initialPage,
+    initialSortBy,
+    initialSortOrder,
+    initialSpecial,
+    initialBestSeller,
+    initialMinPrice,
+    initialMaxPrice,
+  ]);
+
   // Fetch products from backend
-  const { data, isLoading, isError, refetch } = useProducts(queryParams, initialData ? { initialData } : undefined);
+  const { data, isLoading, isError, refetch } = useProducts(
+    queryParams,
+    isInitialDataValid && initialData ? { initialData } : undefined
+  );
 
   const products = data?.items || [];
   const totalCount = data?.total || 0;
@@ -358,6 +493,8 @@ export default function ProductsView({ initialData }: ProductsViewProps = {}) {
           <li className="font-bold text-foreground">
             {isSpecial
               ? "پیشنهادات شگفت‌انگیز و ویژه"
+              : searchTerm
+              ? `نتایج جستجو برای: «${searchTerm}»`
               : selectedCategory
               ? `محصولات / ${selectedCategory}`
               : "همه محصولات"}
@@ -376,6 +513,11 @@ export default function ProductsView({ initialData }: ProductsViewProps = {}) {
                 </div>
                 <span>پیشنهادات شگفت‌انگیز و تخفیف‌های ویژه</span>
               </>
+            ) : searchTerm ? (
+              <>
+                <Search className="size-7 text-primary" />
+                <span>نتایج جستجو برای «{searchTerm}»</span>
+              </>
             ) : (
               <>
                 <Package className="size-7 text-primary" />
@@ -386,6 +528,8 @@ export default function ProductsView({ initialData }: ProductsViewProps = {}) {
           <p className="text-xs md:text-sm text-muted-foreground mt-1 font-medium">
             {isSpecial
               ? "مجموعه برگزیده آثار هنری و دکوراتیو با تخفیف‌های ویژه و شگفت‌انگیز آرتیسا"
+              : searchTerm
+              ? `نمایش آثاری که با عبارت «${searchTerm}» مطابقت دارند`
               : "مجموعه کامل آثار هنری، تابلوهای نقاشی و دکوراتیو آرتیسا"}
           </p>
         </div>
@@ -611,12 +755,16 @@ export default function ProductsView({ initialData }: ProductsViewProps = {}) {
           {/* Top Bar: In-page Search + Sort Tabs + Mobile Filter Trigger */}
           <div className="flex flex-col gap-4 mb-6">
             <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
-              {/* In-page Search Box */}
+              {/* In-page Search Box with Debounce */}
               <form
                 onSubmit={handleSearchSubmit}
                 className="relative flex-1 max-w-md"
               >
-                <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+                {isLoading && searchInputVal.trim() ? (
+                  <Loader2 className="absolute right-3.5 top-1/2 -translate-y-1/2 size-4 text-primary animate-spin pointer-events-none" />
+                ) : (
+                  <Search className="absolute right-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+                )}
                 <Input
                   type="text"
                   placeholder="جستجو در بین آثار..."

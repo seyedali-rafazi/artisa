@@ -62,7 +62,6 @@ export default function Header() {
   const [profileMenuOpen, setProfileMenuOpen] = useState(false);
   const [isDesktopSearchOpen, setIsDesktopSearchOpen] = useState(false);
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false);
-  const [searchInput, setSearchInput] = useState("");
   const [mobileCategoriesOpen, setMobileCategoriesOpen] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [activeProfileTab, setActiveProfileTab] = useState<string>("profile");
@@ -114,11 +113,6 @@ export default function Header() {
 
   useScrollLock(mobileMenuOpen);
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setSearchQuery(searchInput);
-  };
-
   const cartItemsCount = cart.reduce((acc, item) => acc + item.quantity, 0);
 
   const role = (user?.role || "").toLowerCase();
@@ -140,7 +134,6 @@ export default function Header() {
     { key: "categoryModernArt", filter: "هنر مدرن" },
     { key: "categoryGift", filter: "هدایای هنری" },
   ];
-  const isCategoryActive = categories.some((cat) => searchQuery === cat.filter);
 
   return (
     <>
@@ -165,7 +158,6 @@ export default function Header() {
               href="/"
               onClick={() => {
                 setSearchQuery("");
-                setSearchInput("");
               }}
               className="hidden md:flex cursor-pointer items-center gap-2.5 group"
             >
@@ -336,7 +328,7 @@ export default function Header() {
                 onClick={() => {
                   setSearchQuery("");
                 }}
-                className={`cursor-pointer transition-colors py-2 ${pathname === "/" && !searchQuery ? "text-primary font-bold" : "hover:text-primary"}`}
+                className={`cursor-pointer transition-colors py-2 ${pathname === "/" ? "text-primary font-bold" : "hover:text-primary"}`}
               >
                 {t("home")}
               </Link>
@@ -467,7 +459,7 @@ export default function Header() {
                 setMobileMenuOpen(false);
                 setSearchQuery("");
               }}
-              className={`flex items-center text-start rounded-xl px-3 py-2.5 transition-colors ${pathname === "/" && !searchQuery
+              className={`flex items-center text-start rounded-xl px-3 py-2.5 transition-colors ${pathname === "/"
                 ? "bg-primary/15 text-primary"
                 : "hover:bg-muted hover:text-primary"
                 }`}

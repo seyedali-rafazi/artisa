@@ -93,13 +93,6 @@ export default function HeaderSearchBar({
     setMounted(true);
   }, []);
 
-  // Sync searchQuery when it changes externally
-  useEffect(() => {
-    if (searchQuery && !isOpen) {
-      setQuery(searchQuery);
-    }
-  }, [searchQuery, isOpen]);
-
   // Position tracking for portal anchoring
   useEffect(() => {
     if (isOpen && triggerRef.current) {
@@ -204,7 +197,15 @@ export default function HeaderSearchBar({
 
     startTransition(() => {
       setSearchQuery(term);
-      router.push(`/?search=${encodeURIComponent(term)}`);
+      router.push(`/products?search=${encodeURIComponent(term)}`);
+    });
+  };
+
+  const handleCategoryClick = (categoryName: string) => {
+    onClose();
+    startTransition(() => {
+      setSearchQuery("");
+      router.push(`/products?category=${encodeURIComponent(categoryName)}`);
     });
   };
 
@@ -213,8 +214,15 @@ export default function HeaderSearchBar({
     router.push(`/product/${productId}`);
   };
 
-  // Live debounced fetch strictly from backend
+  // Live debounced fetch strictly from backend ONLY when search popup is open
   useEffect(() => {
+    if (!isOpen) {
+      setLiveProducts([]);
+      setTotalLiveCount(0);
+      setIsLoadingProducts(false);
+      return;
+    }
+
     const trimmed = query.trim();
     if (!trimmed) {
       setLiveProducts([]);
@@ -247,7 +255,7 @@ export default function HeaderSearchBar({
     }, 250);
 
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [query, isOpen]);
 
   // Filter category suggestions based on query
   const matchingSuggestions = query.trim()
@@ -543,7 +551,7 @@ export default function HeaderSearchBar({
                           ].map((cat, idx) => (
                             <button
                               key={idx}
-                              onClick={() => executeSearch(cat.name)}
+                              onClick={() => handleCategoryClick(cat.name)}
                               className="p-2 rounded-xl border border-border/60 bg-muted/20 hover:border-primary hover:bg-primary/5 text-xs font-extrabold text-foreground text-center transition-all cursor-pointer"
                             >
                               {cat.name}

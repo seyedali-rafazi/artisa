@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import HomeView, { HomeInitialData } from "@/components/home/HomeView";
 
 export const metadata: Metadata = {
@@ -77,8 +78,9 @@ interface RootPageProps {
 
 export default async function RootPage({ searchParams }: RootPageProps) {
   const resolvedSearchParams = searchParams ? await searchParams : undefined;
-  const initialSearch =
-    typeof resolvedSearchParams?.search === "string" ? resolvedSearchParams.search : undefined;
+  if (typeof resolvedSearchParams?.search === "string" && resolvedSearchParams.search.trim()) {
+    redirect(`/products?search=${encodeURIComponent(resolvedSearchParams.search.trim())}`);
+  }
 
   const initialData = await getHomeInitialData();
 
@@ -88,7 +90,7 @@ export default async function RootPage({ searchParams }: RootPageProps) {
       <h1 className="sr-only">
         گالری آنلاین آثار هنری، تابلو نقاشی اورجینال و هنر دیواری آرتیسا
       </h1>
-      <HomeView initialData={initialData} initialSearch={initialSearch} />
+      <HomeView initialData={initialData} />
     </>
   );
 }

@@ -27,26 +27,11 @@ export function useProducts(
   params: ProductsQueryParams = {},
   options?: { initialData?: ProductsPaginatedResponse }
 ) {
-  // Only use initialData if we are on the default first page with no filters applied
-  const hasActiveFilters = Boolean(
-    params.category ||
-    params.search ||
-    params.isSpecial ||
-    params.isBestSeller ||
-    params.minPrice !== undefined ||
-    params.maxPrice !== undefined ||
-    (params.page && params.page > 1) ||
-    (params.sort_by && params.sort_by !== 'created_at') ||
-    (params.sort_order && params.sort_order !== 'desc')
-  );
-
   return useQuery({
     queryKey: ['products', params],
     queryFn: () => api.get<ProductsPaginatedResponse>('/api/v1/products', params),
-    initialData: hasActiveFilters ? undefined : options?.initialData,
-    initialDataUpdatedAt: options?.initialData ? 0 : undefined,
-    staleTime: 0, // Always revalidate on mount so navigation reflects price changes immediately
-    refetchOnMount: true,
+    initialData: options?.initialData,
+    staleTime: 30 * 1000, // 30s fresh so initial server data is not immediately refetched on mount
   });
 }
 

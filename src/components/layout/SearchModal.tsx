@@ -172,7 +172,19 @@ export default function SearchModal({
 
     startTransition(() => {
       setSearchQuery(term);
-      router.push(`/?search=${encodeURIComponent(term)}`);
+      router.push(`/products?search=${encodeURIComponent(term)}`);
+    });
+  };
+
+  const handleCategoryClick = (categoryName: string) => {
+    onClose();
+    startTransition(() => {
+      setSearchQuery("");
+      if (categoryName === "پیشنهادات شگفت‌انگیز") {
+        router.push("/products?isSpecial=true");
+      } else {
+        router.push(`/products?category=${encodeURIComponent(categoryName)}`);
+      }
     });
   };
 
@@ -181,8 +193,15 @@ export default function SearchModal({
     router.push(`/product/${productId}`);
   };
 
-  // Live debounced fetch strictly from backend
+  // Live debounced fetch strictly from backend ONLY when modal is open
   useEffect(() => {
+    if (!isOpen) {
+      setLiveProducts([]);
+      setTotalLiveCount(0);
+      setIsLoadingProducts(false);
+      return;
+    }
+
     const trimmed = query.trim();
     if (!trimmed) {
       setLiveProducts([]);
@@ -215,7 +234,7 @@ export default function SearchModal({
     }, 200);
 
     return () => clearTimeout(timer);
-  }, [query]);
+  }, [query, isOpen]);
 
   // Filter category suggestions based on query
   const matchingSuggestions = query.trim()
@@ -487,7 +506,7 @@ export default function SearchModal({
                 ].map((cat, idx) => (
                   <button
                     key={idx}
-                    onClick={() => executeSearch(cat.name)}
+                    onClick={() => handleCategoryClick(cat.name)}
                     className="p-3 rounded-2xl border border-gray-200 bg-gray-50 hover:border-amber-600/40 hover:bg-amber-50/40 active:bg-gray-100 text-xs font-extrabold text-gray-800 text-center transition-all cursor-pointer shadow-2xs"
                   >
                     {cat.name}

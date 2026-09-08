@@ -71,7 +71,7 @@ export default async function ProductsPage({ searchParams }: ProductsPageProps) 
         </div>
       }
     >
-      <ProductsView initialData={initialData} />
+      <ProductsView initialData={initialData} initialSearchParams={resolvedParams} />
     </Suspense>
   );
 }
