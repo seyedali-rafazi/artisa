@@ -275,16 +275,14 @@ export default function SpecialOfferDialog({
                 <button
                   type="button"
                   onClick={() => setIsActive(true)}
-                  className={`flex items-center justify-center gap-1.5 py-2 px-4 rounded-xl text-xs font-extrabold transition-all border cursor-pointer ${
-                    isActive
-                      ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 shadow-xs'
-                      : 'bg-background text-muted-foreground border-border/60 hover:bg-muted/40'
-                  }`}
+                  className={`flex items-center justify-center gap-1.5 py-2 px-4 rounded-xl text-xs font-extrabold transition-all border cursor-pointer ${isActive
+                    ? 'bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 border-emerald-500/30 shadow-xs'
+                    : 'bg-background text-muted-foreground border-border/60 hover:bg-muted/40'
+                    }`}
                 >
                   <span
-                    className={`size-2 rounded-full ${
-                      isActive ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground/30'
-                    }`}
+                    className={`size-2 rounded-full ${isActive ? 'bg-emerald-500 animate-pulse' : 'bg-muted-foreground/30'
+                      }`}
                   />
                   <span>فعال</span>
                 </button>
@@ -292,21 +290,21 @@ export default function SpecialOfferDialog({
                 <button
                   type="button"
                   onClick={() => setIsActive(false)}
-                  className={`flex items-center justify-center gap-1.5 py-2 px-4 rounded-xl text-xs font-extrabold transition-all border cursor-pointer ${
-                    !isActive
-                      ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 shadow-xs'
-                      : 'bg-background text-muted-foreground border-border/60 hover:bg-muted/40'
-                  }`}
+                  className={`flex items-center justify-center gap-1.5 py-2 px-4 rounded-xl text-xs font-extrabold transition-all border cursor-pointer ${!isActive
+                    ? 'bg-amber-500/15 text-amber-600 dark:text-amber-400 border-amber-500/30 shadow-xs'
+                    : 'bg-background text-muted-foreground border-border/60 hover:bg-muted/40'
+                    }`}
                 >
                   <span
-                    className={`size-2 rounded-full ${
-                      !isActive ? 'bg-amber-500' : 'bg-muted-foreground/30'
-                    }`}
+                    className={`size-2 rounded-full ${!isActive ? 'bg-amber-500' : 'bg-muted-foreground/30'
+                      }`}
                   />
                   <span>غیرفعال</span>
                 </button>
               </div>
             </div>
+
+
 
             {/* Product Selector */}
             <ProductSelector

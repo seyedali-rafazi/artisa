@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useCreateProduct } from '@/hooks/useAdmin';
 import ImageUploader from '@/components/admin/ImageUploader';
 import ProductDescriptionInput from '@/components/admin/ProductDescriptionInput';
+import OfferPriceCalculator from '@/components/admin/OfferPriceCalculator';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ArrowRight, Save, Loader2, Plus, Trash2 } from 'lucide-react';
@@ -143,45 +144,16 @@ export default function NewProductPage() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-bold text-muted-foreground">قیمت (تومان) *</label>
-              <Input
-                type="number"
-                placeholder="3200000"
-                value={price}
-                onChange={(e) => setPrice(e.target.value)}
-                required
-                className="rounded-xl text-xs"
-                dir="ltr"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-bold text-muted-foreground">قیمت قبلی / تخفیف (تومان)</label>
-              <Input
-                type="number"
-                placeholder="4500000"
-                value={oldPrice}
-                onChange={(e) => setOldPrice(e.target.value)}
-                className="rounded-xl text-xs"
-                dir="ltr"
-              />
-            </div>
-
-            <div className="flex flex-col gap-1.5">
-              <label className="text-xs font-bold text-muted-foreground">موجودی (عدد) *</label>
-              <Input
-                type="number"
-                placeholder="100"
-                value={stockQuantity}
-                onChange={(e) => setStockQuantity(e.target.value)}
-                required
-                className="rounded-xl text-xs"
-                dir="ltr"
-              />
-            </div>
-          </div>
+          {/* Price & Offer Calculator */}
+          <OfferPriceCalculator
+            price={price}
+            oldPrice={oldPrice}
+            onChangePrice={setPrice}
+            onChangeOldPrice={setOldPrice}
+            stockQuantity={stockQuantity}
+            onChangeStockQuantity={setStockQuantity}
+            showStock={true}
+          />
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="flex flex-col gap-1.5">

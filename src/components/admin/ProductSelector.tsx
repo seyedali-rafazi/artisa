@@ -137,9 +137,19 @@ export default function ProductSelector({
                   ) : (
                     <Package className="size-4 text-primary shrink-0" />
                   )}
-                  <span className="truncate max-w-[140px] sm:max-w-[220px]">
+                  <span className="truncate max-w-[120px] sm:max-w-[180px]">
                     {product?.name || `شناسه: ${String(id).slice(-6)}`}
                   </span>
+                  {product?.price !== undefined && (
+                    <span className="text-[10px] font-extrabold text-primary bg-primary/10 px-1.5 py-0.5 rounded-lg shrink-0">
+                      {formatPersianPrice(product.price)}
+                    </span>
+                  )}
+                  {Boolean(product?.oldPrice && product.oldPrice > (product?.price || 0)) && (
+                    <span className="text-[9px] font-black text-destructive bg-destructive/10 px-1.5 py-0.5 rounded-md shrink-0">
+                      {toPersianDigits(Math.round(((product!.oldPrice! - product!.price!) / product!.oldPrice!) * 100))}٪
+                    </span>
+                  )}
                   <button
                     type="button"
                     onClick={() => handleRemoveProduct(id)}
