@@ -22,14 +22,17 @@ import {
   Trash2,
   Loader2,
   Package,
+  SlidersHorizontal,
 } from 'lucide-react';
 
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import ProductSpecificationModal from '@/components/admin/ProductSpecificationModal';
 
 export default function AdminProductsPage() {
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [isSpecsModalOpen, setIsSpecsModalOpen] = useState(false);
 
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
@@ -89,12 +92,24 @@ export default function AdminProductsPage() {
           </p>
         </div>
 
-        <Link href="/admin/products/new">
-          <Button className="rounded-2xl font-extrabold text-xs gap-2 cursor-pointer shadow-lg shadow-primary/25">
-            <Plus className="size-4" />
-            <span>افزودن محصول جدید</span>
+        <div className="flex items-center gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => setIsSpecsModalOpen(true)}
+            className="rounded-2xl font-bold text-xs gap-2 cursor-pointer border-border/80 hover:bg-muted/50"
+          >
+            <SlidersHorizontal className="size-4 text-primary" />
+            <span>تنظیمات مشخصات فنی</span>
           </Button>
-        </Link>
+
+          <Link href="/admin/products/new">
+            <Button className="rounded-2xl font-extrabold text-xs gap-2 cursor-pointer shadow-lg shadow-primary/25">
+              <Plus className="size-4" />
+              <span>افزودن محصول جدید</span>
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Filter Bar */}
@@ -262,6 +277,12 @@ export default function AdminProductsPage() {
             </span>
           )
         }
+      />
+      {/* Product Specification Settings Modal */}
+      <ProductSpecificationModal
+        isOpen={isSpecsModalOpen}
+        onClose={() => setIsSpecsModalOpen(false)}
+        defaultTab="manage"
       />
     </div>
   );

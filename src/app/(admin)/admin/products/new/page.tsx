@@ -7,9 +7,13 @@ import { useCreateProduct } from '@/hooks/useAdmin';
 import ImageUploader from '@/components/admin/ImageUploader';
 import ProductDescriptionInput from '@/components/admin/ProductDescriptionInput';
 import OfferPriceCalculator from '@/components/admin/OfferPriceCalculator';
+import ProductSpecificationModal from '@/components/admin/ProductSpecificationModal';
+import { useCreateSpecificationSetting } from '@/hooks/useSpecificationSettings';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ArrowRight, Save, Loader2, Plus, Trash2 } from 'lucide-react';
+import { ArrowRight, Save, Loader2, Plus, Trash2, SlidersHorizontal, BookmarkPlus } from 'lucide-react';
+import { toast } from 'sonner';
+
 
 export default function NewProductPage() {
   const router = useRouter();
@@ -30,10 +34,10 @@ export default function NewProductPage() {
   const [isBestSeller, setIsBestSeller] = useState(false);
 
   // Specifications key-value builder
-  const [specs, setSpecs] = useState<{ key: string; value: string }[]>([
-    { key: 'تکنیک', value: 'رنگ‌روغن روی بوم' },
-    { key: 'ابعاد', value: '۸۰ × ۶۰ سانتی‌متر' },
-  ]);
+  const [specs, setSpecs] = useState<{ key: string; value: string }[]>([]);
+  const [isSpecsModalOpen, setIsSpecsModalOpen] = useState(false);
+
+  const createSpecSettingMutation = useCreateSpecificationSetting();
 
   const handleAddSpec = () => {
     setSpecs([...specs, { key: '', value: '' }]);
@@ -44,6 +48,43 @@ export default function NewProductPage() {
     updated.splice(idx, 1);
     setSpecs(updated);
   };
+
+  const handleAddSpecsFromModal = (newItems: { key: string; value: string }[]) => {
+    setSpecs((prev) => {
+      const existingKeys = new Set(
+        prev.map((s) => s.key.trim().toLowerCase()).filter((k) => k.length > 0)
+      );
+      const toAdd = newItems.filter(
+        (item) => !existingKeys.has(item.key.trim().toLowerCase())
+      );
+      // Remove placeholder empty rows if any
+      const cleaned = prev.filter((s) => s.key.trim() || s.value.trim());
+      return [...cleaned, ...toAdd];
+    });
+  };
+
+  const handleSaveRowToSettings = (key: string, value: string) => {
+    if (!key.trim()) {
+      toast.error('لطفاً عنوان ویژگی را وارد نمایید.');
+      return;
+    }
+    createSpecSettingMutation.mutate(
+      {
+        title: key.trim(),
+        default_value: value.trim(),
+        category: category || undefined,
+      },
+      {
+        onSuccess: () => {
+          toast.success(`ویژگی «${key.trim()}» با موفقیت در لیست تنظیمات ذخیره شد.`);
+        },
+        onError: () => {
+          toast.error('خطا در ذخیره ویژگی در تنظیمات.');
+        },
+      }
+    );
+  };
+
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -221,49 +262,96 @@ export default function NewProductPage() {
 
         {/* Specifications Builder */}
         <div className="rounded-3xl border border-border/60 bg-background/95 backdrop-blur-xl p-6 shadow-sm flex flex-col gap-4">
-          <div className="flex items-center justify-between border-b border-border/40 pb-3">
-            <h2 className="text-sm font-black text-foreground">مشخصات فنی محصول</h2>
-            <Button type="button" variant="outline" size="sm" onClick={handleAddSpec} className="rounded-xl text-xs gap-1">
-              <Plus className="size-3.5" />
-              <span>افزودن ردیف</span>
-            </Button>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b border-border/40 pb-3">
+            <div>
+              <h2 className="text-sm font-black text-foreground">مشخصات فنی محصول</h2>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                ویژگی‌های ساختاری اثر (امکان انتخاب از مشخصات ذخیره‌شده پیش‌فرض یا افزودن ردیف دستی)
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsSpecsModalOpen(true)}
+                className="rounded-xl text-xs gap-1.5 border-primary/30 text-primary hover:bg-primary/10 transition-colors cursor-pointer"
+              >
+                <SlidersHorizontal className="size-3.5" />
+                <span>انتخاب از مشخصات ذخیره شده</span>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAddSpec}
+                className="rounded-xl text-xs gap-1 cursor-pointer"
+              >
+                <Plus className="size-3.5" />
+                <span>افزودن ردیف دستی</span>
+              </Button>
+            </div>
           </div>
 
-          <div className="flex flex-col gap-2">
-            {specs.map((item, idx) => (
-              <div key={idx} className="flex items-center gap-3">
-                <Input
-                  placeholder="ویژگی (مثال: ابعاد)"
-                  value={item.key}
-                  onChange={(e) => {
-                    const copy = [...specs];
-                    copy[idx].key = e.target.value;
-                    setSpecs(copy);
-                  }}
-                  className="rounded-xl text-xs flex-1"
-                />
-                <Input
-                  placeholder="مقدار (مثال: ۸۰ × ۶۰)"
-                  value={item.value}
-                  onChange={(e) => {
-                    const copy = [...specs];
-                    copy[idx].value = e.target.value;
-                    setSpecs(copy);
-                  }}
-                  className="rounded-xl text-xs flex-1"
-                />
-                <button
-                  type="button"
-                  onClick={() => handleRemoveSpec(idx)}
-                  className="p-2 text-destructive hover:bg-destructive/10 rounded-xl transition-colors cursor-pointer"
-                >
-                  <Trash2 className="size-4" />
-                </button>
+          <div className="flex flex-col gap-2.5">
+            {specs.length === 0 ? (
+              <div className="py-6 text-center text-xs text-muted-foreground border border-dashed border-border/60 rounded-2xl">
+                هیچ مشخصه فنی ثبت نشده است. از دکمه «انتخاب از مشخصات ذخیره شده» یا «افزودن ردیف دستی» استفاده کنید.
               </div>
-            ))}
+            ) : (
+              specs.map((item, idx) => (
+                <div key={idx} className="flex items-center gap-2 sm:gap-3">
+                  <Input
+                    placeholder="ویژگی (مثال: ابعاد)"
+                    value={item.key}
+                    onChange={(e) => {
+                      const copy = [...specs];
+                      copy[idx].key = e.target.value;
+                      setSpecs(copy);
+                    }}
+                    className="rounded-xl text-xs flex-1"
+                  />
+                  <Input
+                    placeholder="مقدار (مثال: ۸۰ × ۶۰)"
+                    value={item.value}
+                    onChange={(e) => {
+                      const copy = [...specs];
+                      copy[idx].value = e.target.value;
+                      setSpecs(copy);
+                    }}
+                    className="rounded-xl text-xs flex-1"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => handleSaveRowToSettings(item.key, item.value)}
+                    className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl transition-colors cursor-pointer shrink-0"
+                    title="ذخیره این ویژگی در لیست تنظیمات مشخصات"
+                  >
+                    <BookmarkPlus className="size-4" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveSpec(idx)}
+                    className="p-2 text-destructive hover:bg-destructive/10 rounded-xl transition-colors cursor-pointer shrink-0"
+                    title="حذف ردیف"
+                  >
+                    <Trash2 className="size-4" />
+                  </button>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </form>
+
+      {/* Specifications Selection & Management Modal */}
+      <ProductSpecificationModal
+        isOpen={isSpecsModalOpen}
+        onClose={() => setIsSpecsModalOpen(false)}
+        onSelectSpecs={handleAddSpecsFromModal}
+        currentSpecs={specs}
+      />
     </div>
   );
 }
+
