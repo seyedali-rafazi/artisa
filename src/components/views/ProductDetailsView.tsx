@@ -120,6 +120,7 @@ export default function ProductDetailsView({ product: propProduct }: ProductDeta
             isSpecial={selectedProduct.isSpecial}
             oldPrice={selectedProduct.oldPrice}
             price={selectedProduct.price}
+            category={selectedProduct.category}
           />
         </div>
 
