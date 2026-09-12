@@ -188,15 +188,6 @@ export default function Header() {
             onClose={() => setIsDesktopSearchOpen(false)}
           />
 
-          {/* Mobile Search bar trigger in Navbar — directly opens SearchModal without opening sidebar */}
-          <button
-            type="button"
-            onClick={() => setIsMobileSearchOpen(true)}
-            className="md:hidden flex items-center justify-center size-10 rounded-full hover:bg-muted/80 text-foreground transition-all cursor-pointer"
-            aria-label="جستجو"
-          >
-            <Search className="size-5 text-muted-foreground" />
-          </button>
 
 
           {/* Action icons (Cart, Profile Popup) */}
@@ -344,9 +335,8 @@ export default function Header() {
               <div className="group relative flex h-12 items-center">
                 <Link
                   href="/products"
-                  className={`flex items-center gap-1.5 py-2 cursor-pointer transition-colors ${
-                    pathname === "/products" ? "text-primary font-bold" : "text-foreground hover:text-primary"
-                  }`}
+                  className={`flex items-center gap-1.5 py-2 cursor-pointer transition-colors ${pathname === "/products" ? "text-primary font-bold" : "text-foreground hover:text-primary"
+                    }`}
                 >
                   <span>{t("products")}</span>
                   <ChevronDown className="size-4 text-muted-foreground transition-transform duration-200 group-hover:rotate-180 group-hover:text-primary" />
@@ -477,16 +467,14 @@ export default function Header() {
             {/* Products link & Collapsible Categories in Mobile Sidebar */}
             <div className="flex flex-col">
               <div
-                className={`flex items-center justify-between rounded-xl transition-colors ${
-                  pathname === "/products" ? "bg-primary/15 text-primary" : "hover:bg-muted"
-                }`}
+                className={`flex items-center justify-between rounded-xl transition-colors ${pathname === "/products" ? "bg-primary/15 text-primary" : "hover:bg-muted"
+                  }`}
               >
                 <Link
                   href="/products"
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex-1 flex items-center text-start px-3 py-2.5 ${
-                    pathname === "/products" ? "text-primary font-bold" : "text-foreground hover:text-primary"
-                  }`}
+                  className={`flex-1 flex items-center text-start px-3 py-2.5 ${pathname === "/products" ? "text-primary font-bold" : "text-foreground hover:text-primary"
+                    }`}
                 >
                   <span>{t("products")}</span>
                 </Link>
@@ -497,9 +485,8 @@ export default function Header() {
                   aria-label="نمایش دسته‌بندی‌ها"
                 >
                   <ChevronDown
-                    className={`size-4 transition-transform duration-200 ${
-                      mobileCategoriesOpen ? "rotate-180 text-primary" : ""
-                    }`}
+                    className={`size-4 transition-transform duration-200 ${mobileCategoriesOpen ? "rotate-180 text-primary" : ""
+                      }`}
                   />
                 </button>
               </div>
