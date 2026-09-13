@@ -49,10 +49,17 @@ function VerifyEmailContent() {
     verifyMutation.mutate(
       { email: email.trim(), code },
       {
-        onSuccess: (data) => {
+        onSuccess: (data: any) => {
           setSuccessMessage('ایمیل شما با موفقیت تایید شد! در حال انتقال...');
           setTimeout(() => {
-            router.push('/profile');
+            const user = data?.user;
+            const role = (user?.role || '').toLowerCase();
+            const isSuperUser = Boolean(user?.is_superuser);
+            if (role === 'admin' || role === 'superadmin' || role === 'super_admin' || isSuperUser) {
+              router.push('/admin/dashboard');
+            } else {
+              router.push('/');
+            }
           }, 1000);
         },
         onError: (err: any) => {

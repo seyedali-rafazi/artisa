@@ -71,7 +71,7 @@ export default function LoginPage() {
     if (role === 'admin' || role === 'superadmin' || role === 'super_admin' || isSuperUser) {
       router.push('/admin/dashboard');
     } else {
-      router.push('/profile');
+      router.push('/');
     }
   };
 
@@ -116,12 +116,22 @@ export default function LoginPage() {
         },
         onError: (err: any) => {
           const detail = err?.data?.detail;
-          if (detail?.requires_verification || err?.data?.requires_verification) {
-            const unverifiedEmail = detail?.email || err?.data?.email || loginIdentifier.trim();
+          const isRequiresVerification = Boolean(
+            detail?.requires_verification ||
+            err?.data?.requires_verification ||
+            (Array.isArray(err?.errors) && err.errors.some((item: any) => item?.requires_verification))
+          );
+
+          if (isRequiresVerification) {
+            const unverifiedEmail =
+              detail?.email ||
+              err?.data?.email ||
+              (Array.isArray(err?.errors) && err.errors.find((item: any) => item?.email)?.email) ||
+              loginIdentifier.trim();
             setSignupEmail(unverifiedEmail);
-            setIsSignup(true);
             setIsOtpStep(true);
-            setErrorMsg("حساب شما هنوز تایید نشده است. لطفاً کد تایید ۴ رقمی را وارد نمایید.");
+            setSuccessMsg(err?.message || "حساب کاربری شما هنوز فعال نشده است. کد تایید جدید به ایمیل شما ارسال شد.");
+            setErrorMsg("");
           } else {
             setErrorMsg(err?.message || "ایمیل یا رمز عبور اشتباه است");
           }

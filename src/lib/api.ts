@@ -40,13 +40,15 @@ export interface ApiResponse<T = any> {
 
 export class ApiError extends Error {
   status: number;
-  errors?: string[];
+  errors?: any[];
+  data?: any;
 
-  constructor(message: string, status: number, errors?: string[]) {
+  constructor(message: string, status: number, errors?: any[], data?: any) {
     super(message);
     this.name = 'ApiError';
     this.status = status;
     this.errors = errors;
+    this.data = data;
   }
 }
 
@@ -178,9 +180,13 @@ export async function fetchApi<T = any>(
   }
 
   if (!response.ok) {
-    const errorMessage = data?.message || data?.detail || `HTTP Error ${response.status}`;
-    const errors = data?.errors || [];
-    throw new ApiError(errorMessage, response.status, errors);
+    const errorMessage =
+      (typeof data?.message === 'string' && data.message) ||
+      (typeof data?.detail === 'string' && data.detail) ||
+      (typeof data?.detail?.message === 'string' && data.detail.message) ||
+      `HTTP Error ${response.status}`;
+    const errors = data?.errors || (Array.isArray(data?.detail) ? data.detail : []);
+    throw new ApiError(errorMessage, response.status, errors, data);
   }
 
   // Handle envelope { success: true, message: "...", data: ... }

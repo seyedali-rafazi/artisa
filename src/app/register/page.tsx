@@ -102,10 +102,17 @@ export default function RegisterPage() {
     verifyMutation.mutate(
       { email: registeredEmail.trim(), code: otpCode },
       {
-        onSuccess: () => {
-          setSuccessMessage('ایمیل شما با موفقیت تایید شد! در حال انتقال به پروفایل...');
+        onSuccess: (data: any) => {
+          setSuccessMessage('ایمیل شما با موفقیت تایید شد! در حال انتقال...');
           setTimeout(() => {
-            router.push('/profile');
+            const user = data?.user;
+            const role = (user?.role || '').toLowerCase();
+            const isSuperUser = Boolean(user?.is_superuser);
+            if (role === 'admin' || role === 'superadmin' || role === 'super_admin' || isSuperUser) {
+              router.push('/admin/dashboard');
+            } else {
+              router.push('/');
+            }
           }, 800);
         },
         onError: (err: any) => {

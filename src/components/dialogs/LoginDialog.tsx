@@ -79,12 +79,23 @@ export default function LoginDialog() {
           },
           onError: (err: any) => {
             const detail = err?.data?.detail;
-            if (detail?.requires_verification || err?.data?.requires_verification) {
-              const unverifiedEmail = detail?.email || err?.data?.email || email;
+            const isRequiresVerification = Boolean(
+              detail?.requires_verification ||
+              err?.data?.requires_verification ||
+              (Array.isArray(err?.errors) && err.errors.some((item: any) => item?.requires_verification))
+            );
+
+            if (isRequiresVerification) {
+              const unverifiedEmail =
+                detail?.email ||
+                err?.data?.email ||
+                (Array.isArray(err?.errors) && err.errors.find((item: any) => item?.email)?.email) ||
+                email;
               setEmail(unverifiedEmail);
               setIsRegister(true);
               setIsOtpStep(true);
-              setErrorMessage("حساب شما تایید نشده است. لطفاً کد ۴ رقمی را وارد کنید.");
+              setSuccessMessage(err?.message || "حساب کاربری شما هنوز فعال نشده است. کد تایید جدید به ایمیل شما ارسال شد.");
+              setErrorMessage(null);
             } else {
               setErrorMessage(err?.message || "ایمیل یا رمز عبور اشتباه است");
             }
