@@ -52,6 +52,8 @@ export interface AdminProduct {
   stock_quantity: number;
   sku?: string;
   status: string; // published, draft, archived
+  created_at?: string;
+  updated_at?: string;
 }
 
 export interface AdminOrder {
@@ -134,7 +136,15 @@ export function useUpdateUserRole() {
 
 // ─── PRODUCTS ──────────────────────────────────────────────────────────────
 
-export function useAdminProducts(params: { page?: number; limit?: number; search?: string; category?: string; status?: string }) {
+export function useAdminProducts(params: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  category?: string;
+  status?: string;
+  sort_by?: string;
+  sort_order?: 'asc' | 'desc';
+}) {
   return useQuery({
     queryKey: ['admin-products', params],
     queryFn: () => api.get<PaginatedResult<AdminProduct>>('/api/v1/admin/products', params),

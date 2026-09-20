@@ -2,7 +2,6 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import ProductImage from '@/components/ui/ProductImage';
 import {
   useAdminProducts,
   useArchiveProduct,
@@ -11,28 +10,22 @@ import {
   useDuplicateProduct,
 } from '@/hooks/useAdmin';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import {
-  Plus,
-  Search,
-  Edit,
-  Copy,
-  Archive,
-  RotateCcw,
-  Trash2,
-  Loader2,
-  Package,
-  SlidersHorizontal,
-} from 'lucide-react';
-
+import { useDebounce } from '@/hooks/useDebounce';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import ProductSpecificationModal from '@/components/admin/ProductSpecificationModal';
+import ProductsTable from '@/components/admin/products/ProductsTable';
+import { Plus, SlidersHorizontal } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function AdminProductsPage() {
   const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
   const [isSpecsModalOpen, setIsSpecsModalOpen] = useState(false);
+
+  const debouncedSearch = useDebounce(search, 350);
 
   const [confirmModal, setConfirmModal] = useState<{
     isOpen: boolean;
@@ -46,7 +39,14 @@ export default function AdminProductsPage() {
     productName: '',
   });
 
-  const { data, isLoading } = useAdminProducts({ page, limit: 10, search, status: statusFilter });
+  const { data, isLoading } = useAdminProducts({
+    page,
+    limit: pageSize,
+    search: debouncedSearch,
+    status: statusFilter || undefined,
+    category: categoryFilter || undefined,
+  });
+
   const archiveMutation = useArchiveProduct();
   const deleteMutation = useDeleteProduct();
   const restoreMutation = useRestoreProduct();
@@ -64,22 +64,75 @@ export default function AdminProductsPage() {
     if (!confirmModal.productId) return;
     if (confirmModal.type === 'archive') {
       archiveMutation.mutate(confirmModal.productId, {
-        onSuccess: () => setConfirmModal({ isOpen: false, type: null, productId: '', productName: '' }),
+        onSuccess: () => {
+          toast.success(`محصول «${confirmModal.productName}» به آرشیو منتقل شد.`);
+          setConfirmModal({ isOpen: false, type: null, productId: '', productName: '' });
+        },
+        onError: (err: unknown) => {
+          const message =
+            err && typeof err === 'object' && 'response' in err
+              ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+              : undefined;
+          toast.error(message || 'خطا در آرشیو کردن محصول');
+        },
       });
     } else if (confirmModal.type === 'delete') {
       deleteMutation.mutate(confirmModal.productId, {
-        onSuccess: () => setConfirmModal({ isOpen: false, type: null, productId: '', productName: '' }),
+        onSuccess: () => {
+          toast.success(`محصول «${confirmModal.productName}» برای همیشه حذف شد.`);
+          setConfirmModal({ isOpen: false, type: null, productId: '', productName: '' });
+        },
+        onError: (err: unknown) => {
+          const message =
+            err && typeof err === 'object' && 'response' in err
+              ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+              : undefined;
+          toast.error(message || 'خطا در حذف دائمی محصول');
+        },
       });
     }
   };
 
   const handleRestore = (id: string) => {
-    restoreMutation.mutate(id);
+    restoreMutation.mutate(id, {
+      onSuccess: () => {
+        toast.success('محصول با موفقیت از آرشیو بازیابی گردید.');
+      },
+      onError: (err: unknown) => {
+        const message =
+          err && typeof err === 'object' && 'response' in err
+            ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+            : undefined;
+        toast.error(message || 'خطا در بازیابی محصول');
+      },
+    });
   };
 
   const handleDuplicate = (id: string) => {
-    duplicateMutation.mutate(id);
+    duplicateMutation.mutate(id, {
+      onSuccess: () => {
+        toast.success('رونوشت جدید از محصول با موفقیت ایجاد گردید.');
+      },
+      onError: (err: unknown) => {
+        const message =
+          err && typeof err === 'object' && 'response' in err
+            ? (err as { response?: { data?: { message?: string } } }).response?.data?.message
+            : undefined;
+        toast.error(message || 'خطا در ایجاد رونوشت محصول');
+      },
+    });
   };
+
+  const handleResetFilters = () => {
+    setSearch('');
+    setStatusFilter('');
+    setCategoryFilter('');
+    setPage(1);
+  };
+
+  const productsList = data?.items || [];
+  const totalCount = data?.total || 0;
+  const totalPages = data?.total_pages || Math.ceil(totalCount / pageSize) || 1;
 
   return (
     <div className="flex flex-col gap-6 min-w-0 w-full" dir="rtl">
@@ -88,7 +141,7 @@ export default function AdminProductsPage() {
         <div>
           <h1 className="text-xl font-black text-foreground">مدیریت محصولات</h1>
           <p className="text-xs text-muted-foreground font-semibold mt-1">
-            مشاهده، افزودن، ویرایش و مدیریت موجودی کالاها
+            مشاهده لیست محصولات، وضعیت انتشار، موجودی انبار و مدیریت کالاها بر پایه TanStack Table
           </p>
         </div>
 
@@ -112,150 +165,40 @@ export default function AdminProductsPage() {
         </div>
       </div>
 
-      {/* Filter Bar */}
-      <div className="flex flex-col sm:flex-row items-center gap-3 bg-background/95 border border-border/60 p-4 rounded-3xl backdrop-blur-xl">
-        <div className="relative flex-1 w-full">
-          <Input
-            type="text"
-            placeholder="جستجوی نام یا کد SKU محصول..."
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setPage(1);
-            }}
-            className="rounded-xl pr-9 text-xs"
-          />
-          <Search className="absolute right-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-        </div>
-
-        <select
-          value={statusFilter}
-          onChange={(e) => {
-            setStatusFilter(e.target.value);
-            setPage(1);
-          }}
-          className="rounded-xl border border-border bg-background px-3 py-2 text-xs font-bold text-foreground focus:outline-none focus:ring-2 focus:ring-primary w-full sm:w-48 cursor-pointer"
-        >
-          <option value="">همه وضعیت‌ها</option>
-          <option value="published">منتشر شده</option>
-          <option value="draft">پیش‌نویس</option>
-          <option value="archived">آرشیو شده</option>
-        </select>
-      </div>
-
-      {/* Products Table */}
-      <div className="rounded-2xl sm:rounded-3xl border border-border/60 bg-background/95 backdrop-blur-xl shadow-sm min-w-0 overflow-hidden">
-        {isLoading ? (
-          <div className="h-64 flex items-center justify-center">
-            <Loader2 className="size-6 text-primary animate-spin" />
-          </div>
-        ) : !data || data.items.length === 0 ? (
-          <div className="p-12 text-center flex flex-col items-center gap-2">
-            <Package className="size-10 text-muted-foreground/40" />
-            <span className="text-xs font-bold text-muted-foreground">هیچ محصولی یافت نشد.</span>
-          </div>
-        ) : (
-          <div className="overflow-x-auto overscroll-x-contain">
-            <table className="w-full min-w-[720px] text-right text-xs">
-              <thead className="bg-muted/40 border-b border-border/40 font-extrabold text-muted-foreground">
-                <tr>
-                  <th className="p-3 sm:p-4 whitespace-nowrap">تصویر</th>
-                  <th className="p-3 sm:p-4 whitespace-nowrap">نام محصول</th>
-                  <th className="p-3 sm:p-4 whitespace-nowrap">دسته‌بندی</th>
-                  <th className="p-3 sm:p-4 whitespace-nowrap">قیمت</th>
-                  <th className="p-3 sm:p-4 whitespace-nowrap">موجودی</th>
-                  <th className="p-3 sm:p-4 whitespace-nowrap">وضعیت</th>
-                  <th className="p-3 sm:p-4 text-left whitespace-nowrap">عملیات</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/40 font-semibold">
-                {data.items.map((product) => (
-                  <tr key={product.id} className="hover:bg-muted/20 transition-colors">
-                    <td className="p-3 whitespace-nowrap">
-                      <div className="relative size-12 rounded-xl overflow-hidden border border-border shrink-0">
-                        <ProductImage src={product.image} alt={product.name} fill className="object-cover" />
-                      </div>
-                    </td>
-                    <td className="p-3">
-                      <div className="flex flex-col min-w-[140px] max-w-[220px]">
-                        <span className="font-extrabold text-foreground truncate">{product.name}</span>
-                        {product.nameEn && <span className="text-[10px] text-muted-foreground dir-ltr text-right truncate">{product.nameEn}</span>}
-                      </div>
-                    </td>
-                    <td className="p-3 text-muted-foreground whitespace-nowrap">{product.category}</td>
-                    <td className="p-3 font-extrabold text-primary whitespace-nowrap">
-                      {product.price.toLocaleString('fa-IR')} تومان
-                    </td>
-                    <td className="p-3 whitespace-nowrap">
-                      <span className={`font-bold ${product.stock_quantity <= 5 ? 'text-rose-500' : 'text-foreground'}`}>
-                        {product.stock_quantity.toLocaleString('fa-IR')} عدد
-                      </span>
-                    </td>
-                    <td className="p-3 whitespace-nowrap">
-                      {product.status === 'archived' ? (
-                        <span className="px-2.5 py-1 rounded-full bg-rose-500/10 text-rose-500 font-bold text-[10px]">
-                          آرشیو شده
-                        </span>
-                      ) : product.status === 'draft' ? (
-                        <span className="px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-500 font-bold text-[10px]">
-                          پیش‌نویس
-                        </span>
-                      ) : (
-                        <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-500 font-bold text-[10px]">
-                          منتشر شده
-                        </span>
-                      )}
-                    </td>
-                    <td className="p-3 text-left whitespace-nowrap">
-                      <div className="flex items-center justify-end gap-1.5">
-                        <Link href={`/admin/products/${product.id}`}>
-                          <button
-                            title="ویرایش محصول"
-                            className="p-1.5 rounded-xl hover:bg-muted text-muted-foreground hover:text-primary transition-colors cursor-pointer"
-                          >
-                            <Edit className="size-4" />
-                          </button>
-                        </Link>
-                        <button
-                          title="رونوشت (ایجاد کپی)"
-                          onClick={() => handleDuplicate(product.id)}
-                          className="p-1.5 rounded-xl hover:bg-muted text-muted-foreground hover:text-indigo-500 transition-colors cursor-pointer"
-                        >
-                          <Copy className="size-4" />
-                        </button>
-                        {product.status === 'archived' ? (
-                          <button
-                            title="بازیابی محصول"
-                            onClick={() => handleRestore(product.id)}
-                            className="p-1.5 rounded-xl hover:bg-muted text-muted-foreground hover:text-emerald-500 transition-colors cursor-pointer"
-                          >
-                            <RotateCcw className="size-4" />
-                          </button>
-                        ) : (
-                          <button
-                            title="آرشیو محصول"
-                            onClick={() => handleArchive(product.id, product.name)}
-                            className="p-1.5 rounded-xl hover:bg-muted text-muted-foreground hover:text-amber-500 transition-colors cursor-pointer"
-                          >
-                            <Archive className="size-4" />
-                          </button>
-                        )}
-                        <button
-                          title="حذف دائمی محصول"
-                          onClick={() => handleDelete(product.id, product.name)}
-                          className="p-1.5 rounded-xl hover:bg-rose-500/10 text-muted-foreground hover:text-rose-600 transition-colors cursor-pointer"
-                        >
-                          <Trash2 className="size-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
-      </div>
+      {/* TanStack Products Table */}
+      <ProductsTable
+        data={productsList}
+        isLoading={isLoading}
+        totalCount={totalCount}
+        totalPages={totalPages}
+        currentPage={page}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={(newSize) => {
+          setPageSize(newSize);
+          setPage(1);
+        }}
+        searchQuery={search}
+        onSearchChange={(query) => {
+          setSearch(query);
+          setPage(1);
+        }}
+        statusFilter={statusFilter}
+        onStatusFilterChange={(status) => {
+          setStatusFilter(status);
+          setPage(1);
+        }}
+        categoryFilter={categoryFilter}
+        onCategoryFilterChange={(category) => {
+          setCategoryFilter(category);
+          setPage(1);
+        }}
+        onResetFilters={handleResetFilters}
+        onArchive={handleArchive}
+        onDelete={handleDelete}
+        onRestore={handleRestore}
+        onDuplicate={handleDuplicate}
+      />
 
       {/* Confirmation Modal */}
       <ConfirmModal
@@ -278,6 +221,7 @@ export default function AdminProductsPage() {
           )
         }
       />
+
       {/* Product Specification Settings Modal */}
       <ProductSpecificationModal
         isOpen={isSpecsModalOpen}
