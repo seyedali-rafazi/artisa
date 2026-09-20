@@ -77,7 +77,12 @@ export function useBanners(options?: { initialData?: BannerItem[] }) {
 /**
  * Fetch all banners for admin management with optional search & status filter.
  */
-export function useAdminBanners(params?: { search?: string; status?: string }) {
+export function useAdminBanners(params?: {
+  search?: string;
+  status?: string;
+  sort_by?: string;
+  sort_order?: string;
+}) {
   return useQuery({
     queryKey: ['admin-banners', params],
     queryFn: () => api.get<BannerItem[]>('/api/v1/admin/banners', params),

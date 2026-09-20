@@ -33,6 +33,8 @@ export interface ContactMessagesFilterParams {
   limit?: number;
   search?: string;
   status?: string;
+  sort_by?: string;
+  sort_order?: string;
 }
 
 // ─── PUBLIC HOOK ─────────────────────────────────────────────────────────────
@@ -62,6 +64,12 @@ export function useAdminContactMessages(params?: ContactMessagesFilterParams) {
   }
   if (params?.status && params.status !== 'all') {
     cleanParams.status = params.status;
+  }
+  if (params?.sort_by) {
+    cleanParams.sort_by = params.sort_by;
+  }
+  if (params?.sort_order) {
+    cleanParams.sort_order = params.sort_order;
   }
 
   return useQuery({

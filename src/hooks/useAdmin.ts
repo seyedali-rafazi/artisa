@@ -234,7 +234,15 @@ export function useDuplicateProduct() {
 
 // ─── ORDERS ────────────────────────────────────────────────────────────────
 
-export function useAdminOrders(params: { page?: number; limit?: number; search?: string; status?: string }) {
+export function useAdminOrders(params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  status?: string;
+  paymentStatus?: string;
+  sort_by?: string;
+  sort_order?: string;
+}) {
   return useQuery({
     queryKey: ['admin-orders', params],
     queryFn: () => api.get<PaginatedResult<AdminOrder>>('/api/v1/admin/orders', params),
@@ -276,10 +284,15 @@ export function useRejectOrderPayment() {
 
 // ─── ADMIN MANAGEMENT ──────────────────────────────────────────────────────
 
-export function useAdminList() {
+export function useAdminList(params?: {
+  search?: string;
+  role?: string;
+  sort_by?: string;
+  sort_order?: string;
+}) {
   return useQuery({
-    queryKey: ['admin-list'],
-    queryFn: () => api.get<AdminUser[]>('/api/v1/admin/admins'),
+    queryKey: ['admin-list', params],
+    queryFn: () => api.get<AdminUser[]>('/api/v1/admin/admins', params),
   });
 }
 
@@ -306,7 +319,14 @@ export function useDeleteAdmin() {
 
 // ─── AUDIT LOGS ────────────────────────────────────────────────────────────
 
-export function useAuditLogs(params: { page?: number; limit?: number; search?: string }) {
+export function useAuditLogs(params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  action?: string;
+  sort_by?: string;
+  sort_order?: string;
+}) {
   return useQuery({
     queryKey: ['audit-logs', params],
     queryFn: () => api.get<PaginatedResult<AuditLog>>('/api/v1/admin/audit-logs', params),
@@ -334,13 +354,15 @@ export interface AdminComment {
   moderated_at?: string;
 }
 
-export function useAdminComments(params: {
+export function useAdminComments(params?: {
   page?: number;
   limit?: number;
   search?: string;
   status?: string;
   type?: string;
   product_id?: string;
+  sort_by?: string;
+  sort_order?: string;
 }) {
   return useQuery({
     queryKey: ['admin-comments', params],
@@ -353,7 +375,13 @@ export function useAdminComments(params: {
         }
       } catch (err) {}
 
-      const localResult = CommentsStore.getAllAdminComments(params);
+      const localResult = CommentsStore.getAllAdminComments({
+        page: params?.page,
+        limit: params?.limit,
+        search: params?.search,
+        status: params?.status,
+        type: params?.type,
+      });
       const map = new Map<string, AdminComment>();
       const textKey = (item: AdminComment) =>
         `${item.productId}_${(item.userName || '').trim()}_${(item.text || '').trim().toLowerCase()}`;
@@ -386,9 +414,9 @@ export function useAdminComments(params: {
       return {
         items: mergedList,
         total: totalCount,
-        page: params.page || 1,
-        limit: params.limit || 10,
-        total_pages: Math.ceil(mergedList.length / (params.limit || 10)) || 1,
+        page: params?.page || 1,
+        limit: params?.limit || 10,
+        total_pages: Math.ceil(mergedList.length / (params?.limit || 10)) || 1,
       };
     },
   });
@@ -462,7 +490,13 @@ export interface AdminArticlePayload {
   date?: string;
 }
 
-export function useAdminBlogPosts(params: { page?: number; limit?: number; search?: string }) {
+export function useAdminBlogPosts(params?: {
+  page?: number;
+  limit?: number;
+  search?: string;
+  sort_by?: string;
+  sort_order?: string;
+}) {
   return useQuery({
     queryKey: ['admin-blog-articles', params],
     queryFn: () => api.get<PaginatedResult<AdminArticle>>('/api/v1/admin/blog/articles', params),

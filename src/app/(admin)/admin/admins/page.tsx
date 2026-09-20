@@ -1,49 +1,87 @@
 'use client';
 
-import React, { useState } from 'react';
-import { useAdminList, useCreateAdmin, useDeleteAdmin } from '@/hooks/useAdmin';
+import React, { useState, useMemo } from 'react';
+import { useAdminList, useCreateAdmin, useDeleteAdmin, AdminUser } from '@/hooks/useAdmin';
 import { useUserProfile } from '@/hooks/useAuth';
+import { useDebounce } from '@/hooks/useDebounce';
+import AdminsTable from '@/components/admin/admins/AdminsTable';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { toPersianDigits } from '@/lib/utils';
 import {
   ShieldCheck,
+  Shield,
   Plus,
-  Trash2,
   Loader2,
   CheckCircle2,
   AlertCircle,
   ShieldAlert,
+  Users,
 } from 'lucide-react';
-
-import ConfirmModal from '@/components/ui/ConfirmModal';
+import { toast } from 'sonner';
 
 export default function AdminsManagementPage() {
   const { data: currentUser } = useUserProfile();
   
-  const isSuperAdmin = currentUser?.role === 'super_admin' || currentUser?.role === 'superadmin' || (currentUser as any)?.is_superuser;
+  const isSuperAdmin =
+    currentUser?.role === 'super_admin' ||
+    currentUser?.role === 'superadmin' ||
+    (currentUser as any)?.is_superuser;
 
-  const { data: admins, isLoading } = useAdminList();
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [search, setSearch] = useState('');
+  const debouncedSearch = useDebounce(search, 350);
+  const [roleFilter, setRoleFilter] = useState('all');
+  const [sortBy, setSortBy] = useState<string>('');
+  const [sortOrder, setSortOrder] = useState<string>('');
+
+  const { data: allAdmins = [], isLoading } = useAdminList({
+    search: debouncedSearch.trim() || undefined,
+    role: roleFilter !== 'all' ? roleFilter : undefined,
+    sort_by: sortBy || undefined,
+    sort_order: sortOrder || undefined,
+  });
+
   const createAdminMutation = useCreateAdmin();
   const deleteAdminMutation = useDeleteAdmin();
 
+  // Create admin modal state
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [role, setRole] = useState('admin');
-
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [deleteErrorMessage, setDeleteErrorMessage] = useState<string | null>(null);
 
+  // Delete modal state
   const [deleteModal, setDeleteModal] = useState<{
     isOpen: boolean;
-    adminId: string;
-    adminName: string;
+    admin: AdminUser | null;
   }>({
     isOpen: false,
-    adminId: '',
-    adminName: '',
+    admin: null,
   });
+  const [deleteErrorMessage, setDeleteErrorMessage] = useState<string | null>(null);
+
+  // Stats
+  const totalCount = allAdmins.length;
+  const superAdminCount = useMemo(
+    () =>
+      allAdmins.filter(
+        (a) => a.role === 'super_admin' || a.role === 'superadmin'
+      ).length,
+    [allAdmins]
+  );
+  const standardAdminCount = Math.max(0, totalCount - superAdminCount);
+
+  // Client-side pagination for the returned admins
+  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
+  const paginatedAdmins = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return allAdmins.slice(start, start + pageSize);
+  }, [allAdmins, page, pageSize]);
 
   const handleCreateSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,6 +93,7 @@ export default function AdminsManagementPage() {
       { name, email, password, role },
       {
         onSuccess: () => {
+          toast.success('حساب مدیر با موفقیت ایجاد شد');
           setShowCreateModal(false);
           setName('');
           setEmail('');
@@ -67,22 +106,38 @@ export default function AdminsManagementPage() {
     );
   };
 
-  const handleDeleteAdminClick = (adminId: string, adminName: string) => {
+  const handleDeleteAdminClick = (admin: AdminUser) => {
     setDeleteErrorMessage(null);
-    setDeleteModal({ isOpen: true, adminId, adminName });
+    setDeleteModal({ isOpen: true, admin });
   };
 
   const handleConfirmDeleteAdmin = () => {
-    if (!deleteModal.adminId) return;
+    if (!deleteModal.admin) return;
     setDeleteErrorMessage(null);
-    deleteAdminMutation.mutate(deleteModal.adminId, {
+
+    deleteAdminMutation.mutate(deleteModal.admin.id, {
       onSuccess: () => {
-        setDeleteModal({ isOpen: false, adminId: '', adminName: '' });
+        toast.success('حساب مدیر با موفقیت حذف شد');
+        setDeleteModal({ isOpen: false, admin: null });
       },
       onError: (err: any) => {
         setDeleteErrorMessage(err?.message || 'امکان حذف این مدیر وجود ندارد.');
       },
     });
+  };
+
+  const handleResetFilters = () => {
+    setSearch('');
+    setRoleFilter('all');
+    setSortBy('');
+    setSortOrder('');
+    setPage(1);
+  };
+
+  const handleSortChange = (newSortBy: string, newSortOrder: string) => {
+    setSortBy(newSortBy);
+    setSortOrder(newSortOrder);
+    setPage(1);
   };
 
   if (!isSuperAdmin) {
@@ -101,87 +156,101 @@ export default function AdminsManagementPage() {
 
   return (
     <div className="flex flex-col gap-6 min-w-0 w-full" dir="rtl">
-      {/* Header */}
+      {/* ─── Header & Actions ─── */}
       <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-black text-foreground">مدیریت مدیران سیستم</h1>
+          <h1 className="text-xl font-black text-foreground flex items-center gap-2.5">
+            <div className="size-9 rounded-2xl bg-primary/10 text-primary flex items-center justify-center">
+              <ShieldCheck className="size-5" />
+            </div>
+            <span>مدیریت مدیران سیستم</span>
+          </h1>
           <p className="text-xs text-muted-foreground font-semibold mt-1">
-            تعریف مدیر جدید، تعیین سطوح دسترسی و مدیریت تیم مدیریت
+            تعریف مدیر جدید، مرتب‌سازی، مدیریت ستون‌ها، تعیین سطوح دسترسی و تیم مدیریت
           </p>
         </div>
 
         <Button
           onClick={() => setShowCreateModal(true)}
-          className="rounded-2xl font-extrabold text-xs gap-2 cursor-pointer shadow-lg shadow-primary/25"
+          className="rounded-2xl font-extrabold text-xs gap-2 cursor-pointer shadow-lg shadow-primary/25 h-10"
         >
           <Plus className="size-4" />
           <span>افزودن مدیر جدید</span>
         </Button>
       </div>
 
-      {/* Admins Table */}
-      <div className="rounded-2xl sm:rounded-3xl border border-border/60 bg-background/95 backdrop-blur-xl shadow-sm min-w-0 overflow-hidden">
-        {isLoading ? (
-          <div className="h-64 flex items-center justify-center">
-            <Loader2 className="size-6 text-primary animate-spin" />
+      {/* ─── Metric Stat Cards ─── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* Total Admins */}
+        <div className="rounded-3xl border border-border/60 bg-background/95 backdrop-blur-xl p-4 flex items-center gap-4 shadow-xs">
+          <div className="size-12 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+            <Users className="size-6" />
           </div>
-        ) : !admins || admins.length === 0 ? (
-          <div className="p-12 text-center flex flex-col items-center gap-2">
-            <ShieldCheck className="size-10 text-muted-foreground/40" />
-            <span className="text-xs font-bold text-muted-foreground">هیچ مدیری تعریف نشده است.</span>
+          <div className="flex flex-col">
+            <span className="text-xs text-muted-foreground font-bold">کل مدیران سیستم</span>
+            <span className="text-xl font-black text-foreground">
+              {toPersianDigits(totalCount)} نفر
+            </span>
           </div>
-        ) : (
-          <div className="overflow-x-auto overscroll-x-contain">
-            <table className="w-full min-w-[640px] text-right text-xs">
-              <thead className="bg-muted/40 border-b border-border/40 font-extrabold text-muted-foreground">
-                <tr>
-                  <th className="p-3 sm:p-4 whitespace-nowrap">نام مدیر</th>
-                  <th className="p-3 sm:p-4 whitespace-nowrap">ایمیل</th>
-                  <th className="p-3 sm:p-4 whitespace-nowrap">سطح دسترسی</th>
-                  <th className="p-3 sm:p-4 whitespace-nowrap">وضعیت</th>
-                  <th className="p-3 sm:p-4 text-left whitespace-nowrap">عملیات</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border/40 font-semibold">
-                {admins.map((admin) => (
-                  <tr key={admin.id} className="hover:bg-muted/20 transition-colors">
-                    <td className="p-3 font-extrabold text-foreground whitespace-nowrap">{admin.name}</td>
-                    <td className="p-3 dir-ltr text-right text-muted-foreground font-mono whitespace-nowrap">{admin.email}</td>
-                    <td className="p-3 whitespace-nowrap">
-                      {admin.role === 'superadmin' || admin.role === 'super_admin' ? (
-                        <span className="px-2.5 py-1 rounded-full bg-violet-500/10 text-violet-500 font-bold text-[10px]">
-                          مدیر ارشد (Super Admin)
-                        </span>
-                      ) : (
-                        <span className="px-2.5 py-1 rounded-full bg-indigo-500/10 text-indigo-500 font-bold text-[10px]">
-                          مدیر سیستم (Admin)
-                        </span>
-                      )}
-                    </td>
-                    <td className="p-3 whitespace-nowrap">
-                      <span className="px-2.5 py-1 rounded-full bg-emerald-500/10 text-emerald-500 font-bold text-[10px]">
-                        فعال
-                      </span>
-                    </td>
-                    <td className="p-3 text-left whitespace-nowrap">
-                      <button
-                        title="حذف مدیر"
-                        onClick={() => handleDeleteAdminClick(admin.id, admin.name)}
-                        disabled={deleteAdminMutation.isPending}
-                        className="p-1.5 rounded-xl hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors cursor-pointer"
-                      >
-                        <Trash2 className="size-4" />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        </div>
+
+        {/* Super Admins */}
+        <div className="rounded-3xl border border-border/60 bg-background/95 backdrop-blur-xl p-4 flex items-center gap-4 shadow-xs">
+          <div className="size-12 rounded-2xl bg-violet-500/10 text-violet-600 dark:text-violet-400 flex items-center justify-center shrink-0">
+            <Shield className="size-6" />
           </div>
-        )}
+          <div className="flex flex-col">
+            <span className="text-xs text-muted-foreground font-bold">مدیران ارشد (Super Admin)</span>
+            <span className="text-xl font-black text-violet-600 dark:text-violet-400">
+              {toPersianDigits(superAdminCount)} مدیر
+            </span>
+          </div>
+        </div>
+
+        {/* Standard Admins */}
+        <div className="rounded-3xl border border-border/60 bg-background/95 backdrop-blur-xl p-4 flex items-center gap-4 shadow-xs">
+          <div className="size-12 rounded-2xl bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 flex items-center justify-center shrink-0">
+            <ShieldCheck className="size-6" />
+          </div>
+          <div className="flex flex-col">
+            <span className="text-xs text-muted-foreground font-bold">مدیران سیستم (Admin)</span>
+            <span className="text-xl font-black text-foreground">
+              {toPersianDigits(standardAdminCount)} مدیر
+            </span>
+          </div>
+        </div>
       </div>
 
-      {/* Create Admin Modal */}
+      {/* ─── Admins Table Component ─── */}
+      <AdminsTable
+        data={paginatedAdmins}
+        isLoading={isLoading}
+        totalCount={totalCount}
+        totalPages={totalPages}
+        currentPage={page}
+        pageSize={pageSize}
+        onPageChange={setPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setPage(1);
+        }}
+        searchQuery={search}
+        onSearchChange={(q) => {
+          setSearch(q);
+          setPage(1);
+        }}
+        roleFilter={roleFilter}
+        onRoleFilterChange={(r) => {
+          setRoleFilter(r);
+          setPage(1);
+        }}
+        onResetFilters={handleResetFilters}
+        onSortChange={handleSortChange}
+        onDeleteAdmin={handleDeleteAdminClick}
+        currentUserId={currentUser?.id}
+      />
+
+      {/* ─── Create Admin Modal ─── */}
       {showCreateModal && (
         <div 
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in"
@@ -278,11 +347,11 @@ export default function AdminsManagementPage() {
         </div>
       )}
 
-      {/* Delete Admin Confirmation Modal */}
+      {/* ─── Delete Admin Confirmation Modal ─── */}
       <ConfirmModal
         isOpen={deleteModal.isOpen}
         onClose={() => {
-          setDeleteModal({ isOpen: false, adminId: '', adminName: '' });
+          setDeleteModal({ isOpen: false, admin: null });
           setDeleteErrorMessage(null);
         }}
         onConfirm={handleConfirmDeleteAdmin}
@@ -293,7 +362,7 @@ export default function AdminsManagementPage() {
         description={
           <div className="flex flex-col gap-2">
             <span>
-              آیا از حذف حساب مدیر <strong className="text-foreground font-black">«{deleteModal.adminName}»</strong> اطمینان دارید؟
+              آیا از حذف حساب مدیر <strong className="text-foreground font-black">«{deleteModal.admin?.name}»</strong> اطمینان دارید؟
             </span>
             {deleteErrorMessage && (
               <div className="p-2.5 rounded-xl bg-destructive/10 text-destructive text-xs font-bold flex items-center gap-2 mt-1">

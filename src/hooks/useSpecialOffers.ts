@@ -76,6 +76,8 @@ export function useAdminSpecialOffers(params: {
   limit?: number;
   search?: string;
   status?: string;
+  sort_by?: string;
+  sort_order?: string;
 }) {
   return useQuery({
     queryKey: ['admin-special-offers', params],

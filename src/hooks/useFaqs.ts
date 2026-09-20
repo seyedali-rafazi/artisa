@@ -46,7 +46,12 @@ export function useFAQs(initialData?: FAQItem[]) {
 /**
  * Fetch all FAQs for admin panel with optional text search.
  */
-export function useAdminFAQs(params?: { search?: string }) {
+export function useAdminFAQs(params?: {
+  search?: string;
+  status?: string;
+  sort_by?: string;
+  sort_order?: string;
+}) {
   return useQuery({
     queryKey: ['admin-faqs', params],
     queryFn: () => api.get<FAQItem[]>('/api/v1/admin/faqs', params),

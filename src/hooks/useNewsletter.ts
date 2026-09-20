@@ -25,6 +25,8 @@ export interface NewsletterFilterParams {
   limit?: number;
   search?: string;
   is_active?: boolean;
+  sort_by?: string;
+  sort_order?: string;
 }
 
 // ─── PUBLIC HOOK ─────────────────────────────────────────────────────────────
@@ -54,6 +56,12 @@ export function useAdminNewsletterSubscribers(params?: NewsletterFilterParams) {
   }
   if (params?.is_active !== undefined) {
     cleanParams.is_active = params.is_active;
+  }
+  if (params?.sort_by) {
+    cleanParams.sort_by = params.sort_by;
+  }
+  if (params?.sort_order) {
+    cleanParams.sort_order = params.sort_order;
   }
 
   return useQuery({
