@@ -7,7 +7,7 @@ import { Product } from '@/components/AppContext';
 import { ArticleItem } from '@/hooks/useBlog';
 import { FAQItem } from '@/hooks/useFaqs';
 
-export const DEFAULT_SITE_URL = 'https://artisagallery.ir';
+export const DEFAULT_SITE_URL = 'https://www.artisagallery.ir';
 
 export const SITE_CONFIG = {
   name: 'آرتیسا',
@@ -42,9 +42,12 @@ export function getSiteUrl(): string {
 /**
  * Generates an absolute canonical URL for a given path.
  */
-export function getCanonicalUrl(path = ''): string {
+export function getCanonicalUrl(path = '', preserveQuery = false): string {
   const base = getSiteUrl();
   const cleanPath = path.startsWith('/') ? path : `/${path}`;
+  if (preserveQuery) {
+    return `${base}${cleanPath}`;
+  }
   // Strip duplicate slashes and query strings for standard canonicals
   const [pathname] = cleanPath.split('?');
   return `${base}${pathname === '/' ? '' : pathname}`;

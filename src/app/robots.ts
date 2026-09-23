@@ -13,6 +13,7 @@ export default function robots(): MetadataRoute.Robots {
           '/products',
           '/product/',
           '/blog',
+          '/blog/',
           '/about-us',
           '/contact-us',
           '/faq',

@@ -9,8 +9,7 @@ import {
   getAbsoluteImageUrl,
 } from "@/lib/seo";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 300;
 
 interface ProductPageProps {
   params: Promise<{ slug: string }>;
@@ -20,7 +19,7 @@ async function getProduct(id: string): Promise<Product | null> {
   const backendUrl = process.env.NEXT_PUBLIC_API_URL || "https://artisa-backend.vercel.app";
   try {
     const res = await fetch(`${backendUrl}/api/v1/products/${encodeURIComponent(id)}`, {
-      cache: "no-store",
+      next: { revalidate: 300 },
     });
 
     if (!res.ok) {
