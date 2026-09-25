@@ -160,3 +160,28 @@
 .faq-accordion-grid[data-state="open"] {
   grid-template-rows: 1fr;
 }
+
+/* Swiper SSR & Pre-initialization safety to prevent full-width/full-height layout shift */
+.swiper:not(.swiper-initialized) .swiper-wrapper {
+  display: flex !important;
+  overflow: hidden !important;
+  gap: 12px !important;
+}
+
+.swiper:not(.swiper-initialized) .swiper-slide {
+  width: 170px !important;
+  max-width: 240px !important;
+  flex-shrink: 0 !important;
+}
+
+@media (min-width: 640px) {
+  .swiper:not(.swiper-initialized) .swiper-slide {
+    width: 200px !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .swiper:not(.swiper-initialized) .swiper-slide {
+    width: 220px !important;
+  }
+}

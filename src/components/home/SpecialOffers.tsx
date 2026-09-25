@@ -1,85 +1,110 @@
-"use client"
+"use client";
 
-import React, { useState, useEffect, useRef, useMemo } from "react"
-import Link from "next/link"
-import { useApp, Product } from "../AppContext"
-import ProductImage from "../ui/ProductImage"
-import { ChevronLeft, ChevronRight } from "lucide-react"
-import { useActiveSpecialOffers, SpecialOffer, SpecialOfferProduct } from "@/hooks/useSpecialOffers"
-import { useProducts, ProductsPaginatedResponse } from "@/hooks/useProducts"
-import { toPersianDigits } from "@/lib/utils"
+import React, { useState, useEffect, useRef, useMemo } from "react";
+import Link from "next/link";
+import { useApp, Product } from "../AppContext";
+import ProductImage from "../ui/ProductImage";
+import {
+  ChevronLeft,
+  ChevronRight,
+  Star,
+  ShoppingCart,
+  Check,
+} from "lucide-react";
+import {
+  useActiveSpecialOffers,
+  SpecialOffer,
+  SpecialOfferProduct,
+} from "@/hooks/useSpecialOffers";
+import { toPersianDigits } from "@/lib/utils";
 
-// Digikala-Style Smiley Percentage Icon
-function DigikalaPercentSmileIcon({ className = "size-16" }: { className?: string }) {
+// Swiper imports
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Pagination, A11y } from "swiper/modules";
+import type { Swiper as SwiperClass } from "swiper";
+import "swiper/css";
+import "swiper/css/pagination";
+
+export function DiscountTagIcon({
+  size = 64,
+  className,
+}: {
+  size?: number;
+  className?: string;
+}) {
   return (
     <svg
-      viewBox="0 0 80 80"
+      width={size}
+      height={size}
+      viewBox="0 0 64 64"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={className}
-      aria-hidden="true"
     >
-      {/* Percentage Slash */}
-      <line
-        x1="57"
-        y1="20"
-        x2="23"
-        y2="58"
-        stroke="currentColor"
-        strokeWidth="6"
+      <path
+        d="M9.5 30.2L30.2 9.5C31.2 8.5 32.6 8 34.1 8H48C52.4 8 56 11.6 56 16V29.9C56 31.4 55.5 32.8 54.5 33.8L33.8 54.5C31.9 56.4 28.8 56.4 26.9 54.5L9.5 37.1C7.6 35.2 7.6 32.1 9.5 30.2Z"
+        fill="currentColor"
+      />
+
+      <circle cx="44" cy="20" r="4" fill="white" />
+
+      <path
+        d="M24 39L39 24"
+        stroke="white"
+        strokeWidth="3"
         strokeLinecap="round"
       />
-      {/* Top Right Circle / Eye */}
-      <circle cx="55" cy="25" r="7" stroke="currentColor" strokeWidth="4.5" />
-      {/* Bottom Left Circle / Eye */}
-      <circle cx="27" cy="53" r="7" stroke="currentColor" strokeWidth="4.5" />
-      {/* Smile Arc Beneath */}
+
+      <circle cx="25" cy="25" r="3" fill="white" />
+      <circle cx="39" cy="39" r="3" fill="white" />
+
       <path
-        d="M20 62C28 75 52 75 60 62"
+        d="M12 18L5 14M9 25L2 25M14 11L11 4"
         stroke="currentColor"
-        strokeWidth="5.5"
+        strokeWidth="3"
         strokeLinecap="round"
       />
     </svg>
-  )
+  );
 }
 
-// Isolated Countdown Timer Component - only re-renders its own 3 digits every second
+// 4-Unit Countdown Timer Component with Hydration Safety (Day, Hour, Minute, Second)
 function CountdownTimer({
   endAt,
   onExpire,
-  size = "sm",
+  size = "md",
 }: {
   endAt?: string;
   onExpire?: () => void;
   size?: "sm" | "md";
 }) {
-  const [timeLeft, setTimeLeft] = useState(() => {
-    if (!endAt) return { hrs: 0, mins: 0, secs: 0 };
-    const diffInSeconds = Math.max(0, Math.floor((new Date(endAt).getTime() - Date.now()) / 1000));
-    return {
-      hrs: Math.floor((diffInSeconds % 86400) / 3600),
-      mins: Math.floor((diffInSeconds % 3600) / 60),
-      secs: diffInSeconds % 60,
-    };
+  const [isMounted, setIsMounted] = useState(false);
+  const [timeLeft, setTimeLeft] = useState({
+    days: 0,
+    hrs: 0,
+    mins: 0,
+    secs: 0,
   });
 
   useEffect(() => {
+    setIsMounted(true);
     if (!endAt) return;
+
     const targetTime = new Date(endAt).getTime();
 
     const updateTimer = () => {
       const now = Date.now();
       const diffInSeconds = Math.max(0, Math.floor((targetTime - now) / 1000));
       if (diffInSeconds <= 0) {
-        setTimeLeft({ hrs: 0, mins: 0, secs: 0 });
+        setTimeLeft({ days: 0, hrs: 0, mins: 0, secs: 0 });
         onExpire?.();
         return;
       }
+      const days = Math.floor(diffInSeconds / 86400);
       const hrs = Math.floor((diffInSeconds % 86400) / 3600);
       const mins = Math.floor((diffInSeconds % 3600) / 60);
       const secs = diffInSeconds % 60;
-      setTimeLeft({ hrs, mins, secs });
+      setTimeLeft({ days, hrs, mins, secs });
     };
 
     updateTimer();
@@ -87,35 +112,62 @@ function CountdownTimer({
     return () => clearInterval(interval);
   }, [endAt, onExpire]);
 
-  const boxSize =
-    size === "md"
-      ? "size-7 sm:size-8 text-xs sm:text-sm"
-      : "size-6 sm:size-7 text-[11px] sm:text-xs";
-  const colonSize = size === "md" ? "text-xs sm:text-sm" : "text-xs";
+  const isMd = size === "md";
+
+  const boxClass = isMd
+    ? "flex flex-col items-center justify-center min-w-[46px] sm:min-w-[52px] h-[50px] sm:h-[56px] px-1.5 sm:px-2 rounded-xl sm:rounded-2xl bg-primary text-primary-foreground shadow-xs hover:bg-primary-hover transition-colors"
+    : "flex flex-col items-center justify-center min-w-[40px] sm:min-w-[44px] h-[44px] sm:h-[48px] px-1.5 py-0.5 rounded-xl bg-primary text-primary-foreground shadow-xs";
+
+  const numClass = isMd
+    ? "text-sm sm:text-base font-black text-primary-foreground tabular-nums leading-none tracking-tight"
+    : "text-xs sm:text-[13px] font-black text-primary-foreground tabular-nums leading-none";
+
+  const labelClass = isMd
+    ? "text-[9.5px] sm:text-[10.5px] font-bold text-primary-foreground/90 leading-none mt-1"
+    : "text-[8px] sm:text-[9px] font-bold text-primary-foreground/90 leading-none mt-0.5";
+
+  const formatDigits = (val: number) => {
+    return toPersianDigits(
+      val < 10 ? val.toString().padStart(2, "0") : val.toString(),
+    );
+  };
 
   return (
-    <div className="flex items-center gap-1" dir="ltr" suppressHydrationWarning>
-      <div
-        suppressHydrationWarning
-        className={`${boxSize} rounded-md bg-card text-card-foreground font-black flex items-center justify-center shadow-xs`}
-      >
-        {toPersianDigits(timeLeft.hrs.toString().padStart(2, "0"))}
+    <div
+      className="flex items-center gap-1.5 sm:gap-2 select-none"
+      dir="ltr"
+      suppressHydrationWarning
+    >
+      {/* 1. Days */}
+      <div className={boxClass} suppressHydrationWarning>
+        <span className={numClass} suppressHydrationWarning>
+          {isMounted ? formatDigits(timeLeft.days) : toPersianDigits("00")}
+        </span>
+        <span className={labelClass}>روز</span>
       </div>
-      <span className={`text-primary-foreground font-black ${colonSize} animate-pulse`}>:</span>
 
-      <div
-        suppressHydrationWarning
-        className={`${boxSize} rounded-md bg-card text-card-foreground font-black flex items-center justify-center shadow-xs`}
-      >
-        {toPersianDigits(timeLeft.mins.toString().padStart(2, "0"))}
+      {/* 2. Hours */}
+      <div className={boxClass} suppressHydrationWarning>
+        <span className={numClass} suppressHydrationWarning>
+          {isMounted ? formatDigits(timeLeft.hrs) : toPersianDigits("00")}
+        </span>
+        <span className={labelClass}>ساعت</span>
       </div>
-      <span className={`text-primary-foreground font-black ${colonSize} animate-pulse`}>:</span>
 
-      <div
-        suppressHydrationWarning
-        className={`${boxSize} rounded-md bg-card text-card-foreground font-black flex items-center justify-center shadow-xs`}
-      >
-        {toPersianDigits(timeLeft.secs.toString().padStart(2, "0"))}
+      {/* 3. Minutes */}
+      <div className={boxClass} suppressHydrationWarning>
+        <span className={numClass} suppressHydrationWarning>
+          {isMounted ? formatDigits(timeLeft.mins) : toPersianDigits("00")}
+        </span>
+        <span className={labelClass}>دقیقه</span>
+      </div>
+
+      {/* 4. Seconds */}
+      <div className={boxClass} suppressHydrationWarning>
+        <span className={numClass} suppressHydrationWarning>
+          {isMounted ? formatDigits(timeLeft.secs) : toPersianDigits("00")}
+        </span>
+        <span className={labelClass}>ثانیه</span>
       </div>
     </div>
   );
@@ -123,239 +175,370 @@ function CountdownTimer({
 
 interface SpecialOffersProps {
   initialOffers?: SpecialOffer[];
-  initialProducts?: ProductsPaginatedResponse;
+  initialProducts?: unknown;
 }
 
-export default function SpecialOffers({ initialOffers, initialProducts }: SpecialOffersProps = {}) {
-  const { setSelectedProduct } = useApp()
-  const { data: activeOffers, isLoading: isOffersLoading, refetch } = useActiveSpecialOffers(
-    initialOffers ? { initialData: initialOffers } : undefined
-  )
-  const { data: specialProductsApi, isLoading: isProductsLoading } = useProducts(
-    {
-      isSpecial: true,
-      limit: 24,
-    },
-    initialProducts ? { initialData: initialProducts } : undefined
-  )
-
-  // Get active offer and associated products
-  const primaryOffer = activeOffers && activeOffers.length > 0 ? activeOffers[0] : null
-
-  // Use active offer's connected products if available; otherwise fall back to general isSpecial products
-  const specialProducts = useMemo(() => {
-    if (primaryOffer?.products && primaryOffer.products.length > 0) {
-      return primaryOffer.products;
-    }
-    return specialProductsApi?.items || [];
-  }, [primaryOffer, specialProductsApi])
-
-  // Limit carousel items to 16 for optimal mobile DOM size and performance
-  const displayProducts = useMemo(() => specialProducts.slice(0, 16), [specialProducts])
-
-  // Carousel ref and scroll handling
-  const carouselRef = useRef<HTMLDivElement>(null)
-  const [canScrollLeft, setCanScrollLeft] = useState(true)
-  const [canScrollRight, setCanScrollRight] = useState(false)
-
-  const checkScroll = () => {
-    if (!carouselRef.current) return
-    const { scrollLeft, scrollWidth, clientWidth } = carouselRef.current
-    const absScroll = Math.abs(scrollLeft)
-    setCanScrollRight(absScroll > 15)
-    setCanScrollLeft(absScroll < scrollWidth - clientWidth - 15)
-  }
+export default function SpecialOffers({
+  initialOffers,
+}: SpecialOffersProps = {}) {
+  const { setSelectedProduct, addToCart, cart } = useApp();
+  const [isExpired, setIsExpired] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
-    const el = carouselRef.current
-    if (!el) return
-    el.addEventListener("scroll", checkScroll, { passive: true })
-    checkScroll()
-    return () => el.removeEventListener("scroll", checkScroll)
-  }, [displayProducts.length])
+    setIsMounted(true);
+  }, []);
 
-  const scroll = (direction: "left" | "right") => {
-    if (!carouselRef.current) return
-    const el = carouselRef.current
-    const offset = direction === "left" ? -280 : 280
-    el.scrollBy({ left: offset, behavior: "smooth" })
-  }
+  // Swiper state
+  const swiperRef = useRef<SwiperClass | null>(null);
+  const [isBeginning, setIsBeginning] = useState(true);
+  const [isEnd, setIsEnd] = useState(false);
 
-  const isLoading = isOffersLoading || isProductsLoading
+  const {
+    data: activeOffers,
+    isLoading: isOffersLoading,
+    refetch,
+  } = useActiveSpecialOffers(
+    initialOffers ? { initialData: initialOffers } : undefined,
+  );
 
-  // If loading finished and no special products found, hide section
-  if (!isLoading && specialProducts.length === 0) {
-    return null
+  // Primary active offer
+  const primaryOffer =
+    activeOffers && activeOffers.length > 0 ? activeOffers[0] : null;
+
+  // Reset expired state when primary offer changes
+  useEffect(() => {
+    setIsExpired(false);
+  }, [primaryOffer?.id]);
+
+  // Check if primary offer is currently active and not expired
+  const isOfferActive = useMemo(() => {
+    if (!primaryOffer) return false;
+    if (primaryOffer.is_active === false) return false;
+    if (primaryOffer.status && primaryOffer.status !== "active") return false;
+    if (primaryOffer.end_at) {
+      const endMs = new Date(primaryOffer.end_at).getTime();
+      if (!isNaN(endMs) && endMs <= Date.now()) {
+        return false;
+      }
+    }
+    return true;
+  }, [primaryOffer]);
+
+  // Products belonging strictly to the active special offer
+  const specialProducts = useMemo(() => {
+    if (!isOfferActive || !primaryOffer?.products) {
+      return [];
+    }
+    return primaryOffer.products;
+  }, [isOfferActive, primaryOffer]);
+
+  // Display products from the active offer
+  const displayProducts = useMemo(
+    () => specialProducts.slice(0, 24),
+    [specialProducts],
+  );
+
+  const handleSlidePrev = () => {
+    swiperRef.current?.slidePrev();
+  };
+
+  const handleSlideNext = () => {
+    swiperRef.current?.slideNext();
+  };
+
+  const handleExpire = () => {
+    setIsExpired(true);
+    refetch();
+  };
+
+  // If loading without initial offers, or no active offer exists, or the offer is expired/has no products: DO NOT SHOW THIS SECTION.
+  if (
+    (isOffersLoading && !initialOffers) ||
+    !isOfferActive ||
+    !primaryOffer ||
+    isExpired ||
+    displayProducts.length === 0
+  ) {
+    return null;
   }
 
   return (
     <section
-      aria-label="پیشنهادات شگفت‌انگیز"
-      className="w-full mt-10 rounded-2xl md:rounded-3xl bg-gradient-to-l from-primary via-[#C19B53] to-primary-dark dark:from-primary dark:to-primary-dark p-3 sm:p-4 text-primary-foreground shadow-xl relative overflow-hidden select-none"
+      aria-label="تخفیف‌های شگفت‌انگیز"
+      className="w-full mt-8 sm:mt-12 rounded-3xl bg-gradient-to-l from-primary via-[#C19B53] to-primary-dark dark:from-primary/95 dark:via-[#A37E3A] dark:to-primary-dark p-4 sm:p-6 md:p-7 text-primary-foreground shadow-xl relative overflow-hidden select-none"
     >
-      {/* ─── Mobile Header (< md) ─── */}
-      <div className="md:hidden flex items-center justify-between gap-2 mb-3 px-1">
-        {/* Right: Icon + Title */}
-        <div className="flex items-center gap-1.5">
-          <DigikalaPercentSmileIcon className="size-6 sm:size-7 text-primary-foreground drop-shadow-xs" />
-          <span className="text-sm sm:text-base font-black text-primary-foreground">
-            شگفت‌انگیز
+      {/* Ambient luxury light effect */}
+      <div className="absolute -top-32 -right-32 size-80 bg-white/20 dark:bg-white/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-32 -left-32 size-80 bg-black/15 dark:bg-black/25 rounded-full blur-3xl pointer-events-none" />
+
+      {/* ─── Top Banner Bar (Elevated Card with Title, Description, and Countdown Timer) ─── */}
+      <div className="w-full rounded-2xl md:rounded-3xl bg-card/95 text-card-foreground backdrop-blur-md border border-white/30 dark:border-white/10 p-4 sm:p-5 md:p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm relative z-10 mb-4 sm:mb-6">
+        {/* Right side on desktop / Top on mobile: Icon + Title + Subtitle */}
+        <div className="flex items-center gap-3 sm:gap-4 w-full md:w-auto">
+          <div className="size-12 sm:size-14 rounded-2xl bg-primary/15 dark:bg-primary/25 flex items-center justify-center shrink-0 border border-primary/25 shadow-xs">
+            <DiscountTagIcon className="size-7 sm:size-8 text-primary" />
+          </div>
+          <div className="flex flex-col text-start">
+            <h2 className="text-base sm:text-lg md:text-xl font-black text-foreground tracking-tight">
+              {primaryOffer.title || "تخفیف‌های شگفت‌انگیز"}
+            </h2>
+            <p className="text-[11px] sm:text-xs text-muted-foreground mt-0.5">
+              {primaryOffer.description ||
+                "فقط برای مدت محدود، محصولات منتخب با تخفیف ویژه"}
+            </p>
+          </div>
+        </div>
+
+        {/* Left side on desktop / Bottom on mobile: Countdown Timer */}
+        <div className="flex items-center justify-center md:justify-end gap-2.5 sm:gap-3 w-full md:w-auto">
+          <CountdownTimer
+            endAt={primaryOffer.end_at}
+            onExpire={handleExpire}
+            size="md"
+          />
+        </div>
+      </div>
+
+      {/* ─── Swiper Carousel Area (Product Cards + Floating Navigation Arrows + Dots) ─── */}
+      <div className="relative w-full z-10">
+        {/* Floating Right Navigation Button (RTL: Previous / Back to start) */}
+        {isMounted && !isBeginning && (
+          <button
+            type="button"
+            onClick={handleSlidePrev}
+            aria-label="مشاهده محصولات قبلی"
+            className="hidden sm:flex absolute -right-3.5 top-1/2 -translate-y-1/2 z-20 size-10 rounded-full bg-card text-foreground shadow-lg border border-border/80 hover:border-primary hover:text-primary items-center justify-center transition-all hover:scale-110 active:scale-95 cursor-pointer"
+          >
+            <ChevronRight className="size-5" />
+          </button>
+        )}
+
+        {/* Floating Left Navigation Button (RTL: Next / Show more) */}
+        {isMounted && !isEnd && (
+          <button
+            type="button"
+            onClick={handleSlideNext}
+            aria-label="مشاهده محصولات بعدی"
+            className="hidden sm:flex absolute -left-3.5 top-1/2 -translate-y-1/2 z-20 size-10 rounded-full bg-card text-foreground shadow-lg border border-border/80 hover:border-primary hover:text-primary items-center justify-center transition-all hover:scale-110 active:scale-95 cursor-pointer"
+          >
+            <ChevronLeft className="size-5" />
+          </button>
+        )}
+
+        {!isMounted ? (
+          /* Pre-mount / SSR clean track: fixed-width cards prevent 100% width and full-screen height expansion on initial page load */
+          <div className="w-full flex gap-2.5 sm:gap-3.5 overflow-hidden py-1">
+            {displayProducts.slice(0, 6).map((product, index) => {
+              const isInCart = Boolean(
+                cart?.some((item) => String(item.id) === String(product.id)),
+              );
+              return (
+                <div
+                  key={product.id || index}
+                  className="w-[165px] sm:w-[195px] md:w-[220px] shrink-0 h-auto"
+                >
+                  <SpecialOfferProductCard
+                    product={product}
+                    isInCart={isInCart}
+                    onAddToCart={addToCart}
+                    onSelectProduct={setSelectedProduct}
+                  />
+                </div>
+              );
+            })}
+          </div>
+        ) : (
+          /* Swiper Slider Component */
+          <Swiper
+            dir="rtl"
+            modules={[Pagination, A11y]}
+            slidesPerView={1.8}
+            spaceBetween={10}
+            observer={true}
+            observeParents={true}
+            onSwiper={(swiper) => {
+              swiperRef.current = swiper;
+              setIsBeginning(swiper.isBeginning);
+              setIsEnd(swiper.isEnd);
+            }}
+            onSlideChange={(swiper) => {
+              setIsBeginning(swiper.isBeginning);
+              setIsEnd(swiper.isEnd);
+            }}
+            grabCursor={true}
+            pagination={{
+              clickable: true,
+              el: ".special-offers-pagination",
+              bulletClass:
+                "transition-all duration-300 rounded-full cursor-pointer inline-block bg-white/40 dark:bg-black/30 size-2",
+              bulletActiveClass: "!w-6 !h-2 !bg-card !rounded-full shadow-sm",
+            }}
+            breakpoints={{
+              320: {
+                slidesPerView: 1.8,
+                spaceBetween: 10,
+              },
+              420: {
+                slidesPerView: 2.2,
+                spaceBetween: 12,
+              },
+              640: {
+                slidesPerView: 3.2,
+                spaceBetween: 14,
+              },
+              768: {
+                slidesPerView: 3.8,
+                spaceBetween: 16,
+              },
+              1024: {
+                slidesPerView: 4.6,
+                spaceBetween: 16,
+              },
+              1280: {
+                slidesPerView: 5.5,
+                spaceBetween: 18,
+              },
+            }}
+            className="w-full py-1 special-offers-swiper [&_.swiper-wrapper]:items-stretch"
+          >
+            {displayProducts.map((product, index) => {
+              const isInCart = Boolean(
+                cart?.some((item) => String(item.id) === String(product.id)),
+              );
+              return (
+                <SwiperSlide key={product.id || index} className="h-auto">
+                  <SpecialOfferProductCard
+                    product={product}
+                    isInCart={isInCart}
+                    onAddToCart={addToCart}
+                    onSelectProduct={setSelectedProduct}
+                  />
+                </SwiperSlide>
+              );
+            })}
+          </Swiper>
+        )}
+
+        {/* Swiper Pagination Dots (Styling matching mockup) */}
+        <div className="special-offers-pagination flex items-center justify-center gap-1.5 mt-3 sm:mt-4 select-none min-h-[8px]" />
+      </div>
+    </section>
+  );
+}
+
+// Subcomponent for individual Special Offer Product Card
+function SpecialOfferProductCard({
+  product,
+  isInCart,
+  onAddToCart,
+  onSelectProduct,
+}: {
+  product: SpecialOfferProduct;
+  isInCart: boolean;
+  onAddToCart: (p: Product) => void;
+  onSelectProduct: (p: Product) => void;
+}) {
+  const discountPercent =
+    product.oldPrice && product.oldPrice > product.price
+      ? Math.round(
+          ((product.oldPrice - product.price) / product.oldPrice) * 100,
+        )
+      : 25;
+
+  const hasDiscount =
+    Boolean(product.oldPrice && product.oldPrice > product.price) ||
+    discountPercent > 0;
+  const calculatedOldPrice =
+    product.oldPrice && product.oldPrice > product.price
+      ? product.oldPrice
+      : Math.round(product.price * (1 + discountPercent / 100));
+
+  return (
+    <div className="h-full max-w-[260px] mx-auto bg-card text-card-foreground rounded-2xl border border-border/60 p-2.5 sm:p-3 flex flex-col justify-between shadow-sm hover:shadow-xl hover:border-primary/50 transition-all duration-300 group">
+      {/* Top: Product Image with Overlaid Discount Badge */}
+      <Link
+        href={`/product/${product.id}`}
+        onClick={() => onSelectProduct(product as unknown as Product)}
+        className="relative aspect-square w-full max-h-[220px] rounded-xl overflow-hidden bg-muted/20 mb-2.5 block cursor-pointer"
+      >
+        <ProductImage
+          src={product.image}
+          alt={product.name}
+          fill
+          sizes="(max-width: 640px) 165px, (max-width: 768px) 190px, 225px"
+          className="object-cover transition-transform duration-500 group-hover:scale-105"
+        />
+
+        {/* Overlaid Discount Badge (-30%) */}
+        {hasDiscount && (
+          <div className="absolute top-2 right-2 z-10 px-2 py-0.5 text-[10.5px] sm:text-[11px] font-black text-primary-foreground bg-primary rounded-lg shadow-sm">
+            {toPersianDigits(discountPercent)}٪-
+          </div>
+        )}
+      </Link>
+
+      {/* Middle: Title */}
+      <Link
+        href={`/product/${product.id}`}
+        onClick={() => onSelectProduct(product as unknown as Product)}
+        className="text-xs sm:text-[13px] font-extrabold text-foreground leading-snug line-clamp-1 group-hover:text-primary transition-colors text-start mb-1.5 block cursor-pointer"
+      >
+        {product.name}
+      </Link>
+
+      {/* Rating Row (★ 4.8 (124)) */}
+      <div className="flex items-center gap-1 mb-2.5">
+        <Star className="size-3.5 fill-amber-400 text-amber-400" />
+        <span className="text-[11px] font-black text-foreground">
+          {toPersianDigits((product.rating || 4.8).toFixed(1))}
+        </span>
+        <span className="text-[10px] font-medium text-muted-foreground">
+          ({toPersianDigits(124)})
+        </span>
+      </div>
+
+      {/* Bottom Row: Price + Add to Cart Button */}
+      <div className="mt-auto flex items-center justify-between pt-2 border-t border-border/40">
+        {/* Prices */}
+        <div className="flex flex-col text-start gap-0.5">
+          <span className="text-[10px] sm:text-[11px] text-muted-foreground line-through font-medium leading-none">
+            {toPersianDigits(
+              Math.round(calculatedOldPrice).toLocaleString("fa-IR"),
+            )}{" "}
+            تومان
+          </span>
+          <span className="text-xs sm:text-[13px] font-black text-foreground leading-none">
+            {toPersianDigits(
+              Math.round(product.price).toLocaleString("fa-IR"),
+            )}{" "}
+            تومان
           </span>
         </div>
 
-        {/* Center: Isolated Countdown Timer */}
-        <CountdownTimer endAt={primaryOffer?.end_at} onExpire={refetch} size="sm" />
-
-        {/* Left: View All link (همه <) */}
-        <Link
-          href="/products?isSpecial=true"
-          className="flex items-center gap-0.5 text-xs font-bold text-primary-foreground hover:opacity-85 transition-opacity"
+        {/* Add to Cart Button */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onAddToCart(product as unknown as Product);
+          }}
+          aria-label={`افزودن ${product.name} به سبد خرید`}
+          className={`size-8 sm:size-9 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-95 shadow-xs shrink-0 cursor-pointer ${
+            isInCart
+              ? "bg-primary text-primary-foreground"
+              : "bg-foreground text-background dark:bg-card-foreground dark:text-card hover:bg-primary dark:hover:bg-primary hover:text-primary-foreground"
+          }`}
+          title={isInCart ? "موجود در سبد خرید" : "افزودن به سبد خرید"}
         >
-          <span>همه</span>
-          <ChevronLeft className="size-3.5" />
-        </Link>
-      </div>
-
-      {/* ─── Main Content (Desktop flex-row with right column, Mobile vertical) ─── */}
-      <div className="flex flex-col md:flex-row items-stretch gap-2 md:gap-3">
-        {/* ─── Desktop Right Banner Column (hidden on mobile) ─── */}
-        <div className="hidden md:flex w-36 md:w-44 shrink-0 flex-col items-center justify-between py-2 sm:py-3 text-center">
-          {/* Top Graphic: Smiley % and Persian Typography */}
-          <div className="flex flex-col items-center gap-1">
-            <DigikalaPercentSmileIcon className="w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 text-primary-foreground drop-shadow-sm" />
-            <h2 className="text-base sm:text-lg md:text-xl font-black text-primary-foreground tracking-tight drop-shadow-xs">
-              شگفت‌انگیز
-            </h2>
-          </div>
-
-          {/* Countdown Timer: Isolated Component */}
-          <div className="flex flex-col items-center gap-1.5 my-3">
-            <CountdownTimer endAt={primaryOffer?.end_at} onExpire={refetch} size="md" />
-          </div>
-
-          {/* Navigate Button to Special Offers Catalog */}
-          <Link
-            href="/products?isSpecial=true"
-            className="flex items-center justify-center gap-1 bg-card hover:bg-card/90 text-primary text-[11px] sm:text-xs font-black px-3 py-2 rounded-xl transition-all shadow-xs hover:shadow active:scale-95 group w-full max-w-[130px]"
-          >
-            <span>مشاهده همه</span>
-            <ChevronLeft className="size-3.5 sm:size-4 text-primary group-hover:-translate-x-0.5 transition-transform" />
-          </Link>
-        </div>
-
-
-        {/* ─── Carousel Area (Desktop Left, Mobile Full Width) ─── */}
-        <div className="flex-1 min-w-0 relative flex items-center">
-          {/* Floating Left Scroll Chevron Button (Desktop / Tablet) */}
-          {canScrollLeft && (
-            <button
-              type="button"
-              onClick={() => scroll("left")}
-              aria-label="مشاهده محصولات بعدی"
-              className="hidden sm:flex absolute left-2 top-1/2 -translate-y-1/2 z-20 size-8 sm:size-9 rounded-full bg-card text-foreground hover:text-primary shadow-lg border border-border/80 items-center justify-center transition-all hover:scale-110 active:scale-95 cursor-pointer"
-            >
-              <ChevronLeft className="size-4 sm:size-5" />
-            </button>
+          {isInCart ? (
+            <Check className="size-4 stroke-[2.5]" />
+          ) : (
+            <ShoppingCart className="size-4" />
           )}
-
-          {/* Floating Right Scroll Chevron Button (Desktop / Tablet) */}
-          {canScrollRight && (
-            <button
-              type="button"
-              onClick={() => scroll("right")}
-              aria-label="مشاهده محصولات قبلی"
-              className="hidden sm:flex absolute right-2 top-1/2 -translate-y-1/2 z-20 size-8 sm:size-9 rounded-full bg-card text-foreground hover:text-primary shadow-lg border border-border/80 items-center justify-center transition-all hover:scale-110 active:scale-95 cursor-pointer"
-            >
-              <ChevronRight className="size-4 sm:size-5" />
-            </button>
-          )}
-
-          {/* Scrollable Track */}
-          <div
-            ref={carouselRef}
-            className="w-full flex items-stretch gap-2 sm:gap-2.5 overflow-x-auto scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden py-0.5"
-          >
-            {isLoading ? (
-              // Loading Skeleton Cards
-              [1, 2, 3, 4, 5].map((i) => (
-                <div
-                  key={i}
-                  className="w-[145px] sm:w-[165px] md:w-[185px] shrink-0 h-[290px] md:h-[310px] bg-card rounded-2xl p-3 flex flex-col justify-between animate-pulse border border-border/40"
-                >
-                  <div className="aspect-square w-full bg-muted/60 rounded-xl" />
-                  <div className="space-y-2 mt-2">
-                    <div className="h-3 bg-muted/60 rounded w-full" />
-                    <div className="h-3 bg-muted/60 rounded w-3/4" />
-                  </div>
-                  <div className="h-4 bg-muted/60 rounded w-1/2 mt-4 self-end" />
-                </div>
-              ))
-            ) : (
-              displayProducts.map((product, index) => {
-                // Calculate discount percent
-                const discountPercent =
-                  product.oldPrice && product.oldPrice > product.price
-                    ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
-                    : 15 // default nice discount if not explicitly calculated
-
-                return (
-                  <Link
-                    key={product.id || index}
-                    href={`/product/${product.id}`}
-                    onClick={() => setSelectedProduct(product as Product)}
-                    className="w-[145px] sm:w-[165px] md:w-[185px] shrink-0 bg-card text-card-foreground rounded-2xl border border-border/50 p-2.5 sm:p-3 flex flex-col justify-between shadow-xs hover:shadow-md hover:border-primary/50 transition-all group cursor-pointer"
-                  >
-                    {/* Top: Product Image */}
-                    <div className="relative aspect-square w-full mb-2 bg-card rounded-xl flex items-center justify-center overflow-hidden">
-                      <ProductImage
-                        src={product.image}
-                        alt={product.name}
-                        fill
-                        sizes="(max-width: 640px) 145px, (max-width: 768px) 165px, 185px"
-                        className="object-contain p-1 transition-transform duration-300 group-hover:scale-105"
-                      />
-                    </div>
-
-                    {/* Middle: Product Title (2 lines clamp) */}
-                    <h3 className="text-xs md:text-[13px] font-semibold text-foreground leading-snug line-clamp-2 h-9 text-start group-hover:text-primary transition-colors">
-                      {product.name}
-                    </h3>
-
-                    {/* Bottom: Pricing Section */}
-                    <div className="mt-auto pt-2">
-                      {/* Row 1: Discount Badge (Right) + Crossed Price (Left) */}
-                      <div className="flex items-center justify-between">
-                        <span className="bg-destructive text-destructive-foreground text-[10px] sm:text-[11px] font-black px-1.5 py-0.5 rounded-full leading-none shadow-xs">
-                          {toPersianDigits(discountPercent)}٪
-                        </span>
-                        {product.oldPrice && product.oldPrice > product.price ? (
-                          <span className="text-[10px] sm:text-[11px] text-muted-foreground line-through font-medium">
-                            {toPersianDigits(Math.round(product.oldPrice).toLocaleString("fa-IR"))}
-                          </span>
-                        ) : (
-                          <span className="text-[10px] sm:text-[11px] text-muted-foreground line-through font-medium">
-                            {toPersianDigits(
-                              Math.round(product.price * (1 + discountPercent / 100)).toLocaleString("fa-IR")
-                            )}
-                          </span>
-                        )}
-                      </div>
-
-                      {/* Row 2: Final Price + Toman Label aligned to Left/End */}
-                      <div className="flex items-center justify-end gap-1 mt-1 sm:mt-1.5">
-                        <span className="text-xs sm:text-sm md:text-base font-black text-foreground">
-                          {toPersianDigits(Math.round(product.price).toLocaleString("fa-IR"))}
-                        </span>
-                        <span className="text-[9px] sm:text-[10px] text-muted-foreground font-medium">تومان</span>
-                      </div>
-                    </div>
-                  </Link>
-                )
-              })
-            )}
-          </div>
-        </div>
+        </button>
       </div>
-    </section>
-  )
+    </div>
+  );
 }

@@ -50,7 +50,6 @@ export default function HomeView({ initialData }: HomeViewProps = {}) {
       <CategoriesGrid />
       <SpecialOffers
         initialOffers={initialData?.activeOffers}
-        initialProducts={initialData?.specialProducts}
       />
 
       {/* Best Sellers Section */}
