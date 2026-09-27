@@ -1,13 +1,13 @@
-"use client"
+"use client";
 
-import React, { useState, useEffect, useRef } from "react"
-import { useSearchParams, useRouter } from "next/navigation"
-import Link from "next/link"
-import { useLanguage } from "../LanguageContext"
-import { useApp } from "../AppContext"
-import { Input } from "../ui/input"
-import { Button } from "../ui/button"
-import ProductImage from "../ui/ProductImage"
+import React, { useState, useEffect, useRef } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { useLanguage } from "../LanguageContext";
+import { useApp } from "../AppContext";
+import { Input } from "../ui/input";
+import { Button } from "../ui/button";
+import ProductImage from "../ui/ProductImage";
 import {
   FileCheck,
   CreditCard,
@@ -34,9 +34,19 @@ import {
   ShieldCheck,
   HelpCircle,
   X,
-} from "lucide-react"
-import { useTrackOrder, useSubmitPaymentReceipt, OrderTrackingData } from "@/hooks/useOrders"
-import { formatShamsiDate, formatPersianPrice, toStandardDigits, toPersianDigits, cn } from "@/lib/utils"
+} from "lucide-react";
+import {
+  useTrackOrder,
+  useSubmitPaymentReceipt,
+  OrderTrackingData,
+} from "@/hooks/useOrders";
+import {
+  formatShamsiDate,
+  formatPersianPrice,
+  toStandardDigits,
+  toPersianDigits,
+  cn,
+} from "@/lib/utils";
 
 const DEMO_ORDERS: Record<string, OrderTrackingData> = {
   "ORD-10042": {
@@ -46,7 +56,8 @@ const DEMO_ORDERS: Record<string, OrderTrackingData> = {
     paymentMethod: "card",
     date: "۱۴۰۵/۰۳/۱۵",
     totalPrice: 5050000,
-    receiptUrl: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80",
+    receiptUrl:
+      "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80",
     rejectionReason: undefined,
     items: [
       {
@@ -54,14 +65,16 @@ const DEMO_ORDERS: Record<string, OrderTrackingData> = {
         name: "تابلو نقاشی رنگ‌روغن «افق طلایی»",
         price: 3200000,
         quantity: 1,
-        image: "https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?auto=format&fit=crop&w=400&q=80",
+        image:
+          "https://images.unsplash.com/photo-1578301978693-85fa9c0320b9?auto=format&fit=crop&w=400&q=80",
       },
       {
         id: "p2",
         name: "تابلو آبرنگ «باغ در سپیده‌دم»",
         price: 1850000,
         quantity: 1,
-        image: "https://images.unsplash.com/photo-1549887534-1541e9326642?auto=format&fit=crop&w=400&q=80",
+        image:
+          "https://images.unsplash.com/photo-1549887534-1541e9326642?auto=format&fit=crop&w=400&q=80",
       },
     ],
     shippingAddress: {
@@ -71,11 +84,31 @@ const DEMO_ORDERS: Record<string, OrderTrackingData> = {
       address: "تهران، خیابان ولیعصر، کوچه گلستان، پلاک ۱۲",
     },
     steps: [
-      { title: "statusReceived", desc: "سفارش شما در سیستم با موفقیت ثبت شد", completed: true },
-      { title: "statusPaymentReview", desc: "فیش واریز کارت به کارت بررسی و تایید گردید", completed: true },
-      { title: "statusProcessing", desc: "اثر هنری با بسته‌بندی نفیس و تخصصی گالری آماده‌سازی شد", completed: true },
-      { title: "statusShipped", desc: "تحویل به پست پیشتاز یا پیک اختصاصی گالری همراه با بارنامه", completed: true },
-      { title: "statusDelivered", desc: "اثر هنری با سلامت کامل تحویل خریدار محترم گردید", completed: true },
+      {
+        title: "statusReceived",
+        desc: "سفارش شما در سیستم با موفقیت ثبت شد",
+        completed: true,
+      },
+      {
+        title: "statusPaymentReview",
+        desc: "فیش واریز کارت به کارت بررسی و تایید گردید",
+        completed: true,
+      },
+      {
+        title: "statusProcessing",
+        desc: "اثر هنری با بسته‌بندی نفیس و تخصصی گالری آماده‌سازی شد",
+        completed: true,
+      },
+      {
+        title: "statusShipped",
+        desc: "تحویل به پست پیشتاز یا پیک اختصاصی گالری همراه با بارنامه",
+        completed: true,
+      },
+      {
+        title: "statusDelivered",
+        desc: "اثر هنری با سلامت کامل تحویل خریدار محترم گردید",
+        completed: true,
+      },
     ],
   },
   "ORD-10038": {
@@ -85,7 +118,8 @@ const DEMO_ORDERS: Record<string, OrderTrackingData> = {
     paymentMethod: "card",
     date: "۱۴۰۵/۰۴/۰۲",
     totalPrice: 7500000,
-    receiptUrl: "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80",
+    receiptUrl:
+      "https://images.unsplash.com/photo-1554224155-8d04cb21cd6c?auto=format&fit=crop&w=600&q=80",
     rejectionReason: undefined,
     items: [
       {
@@ -93,7 +127,8 @@ const DEMO_ORDERS: Record<string, OrderTrackingData> = {
         name: "مجسمه دکوراتیو دم وال | اکسسوری خاص و مدرن",
         price: 7500000,
         quantity: 1,
-        image: "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=400&q=80",
+        image:
+          "https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=400&q=80",
       },
     ],
     shippingAddress: {
@@ -103,139 +138,179 @@ const DEMO_ORDERS: Record<string, OrderTrackingData> = {
       address: "تهران، نیاوران، خیابان یاسر، کوچه مریم، پلاک ۸",
     },
     steps: [
-      { title: "statusReceived", desc: "سفارش شما در سیستم با موفقیت ثبت شد", completed: true },
-      { title: "statusPaymentReview", desc: "فیش واریز بررسی و تایید گردید", completed: true },
-      { title: "statusProcessing", desc: "اثر هنری با بسته‌بندی تخصصی گالری در حال آماده‌سازی است", completed: true },
-      { title: "statusShipped", desc: "تحویل به شرکت پست پیشتاز یا پیک اختصاصی گالری", completed: false },
-      { title: "statusDelivered", desc: "اثر هنری درب منزل تحویل داده خواهد شد", completed: false },
+      {
+        title: "statusReceived",
+        desc: "سفارش شما در سیستم با موفقیت ثبت شد",
+        completed: true,
+      },
+      {
+        title: "statusPaymentReview",
+        desc: "فیش واریز بررسی و تایید گردید",
+        completed: true,
+      },
+      {
+        title: "statusProcessing",
+        desc: "اثر هنری با بسته‌بندی تخصصی گالری در حال آماده‌سازی است",
+        completed: true,
+      },
+      {
+        title: "statusShipped",
+        desc: "تحویل به شرکت پست پیشتاز یا پیک اختصاصی گالری",
+        completed: false,
+      },
+      {
+        title: "statusDelivered",
+        desc: "اثر هنری درب منزل تحویل داده خواهد شد",
+        completed: false,
+      },
     ],
   },
-}
+};
 
 function normalizeOrderInput(input: string): string {
-  const cleaned = toStandardDigits(input).trim().replace(/^#+/, "").trim()
-  if (!cleaned) return ""
-  let upper = cleaned.toUpperCase()
+  const cleaned = toStandardDigits(input).trim().replace(/^#+/, "").trim();
+  if (!cleaned) return "";
+  let upper = cleaned.toUpperCase();
   if (!upper.startsWith("ORD-")) {
     if (upper.startsWith("ORD")) {
-      upper = `ORD-${upper.slice(3).replace(/^-+/, "")}`
+      upper = `ORD-${upper.slice(3).replace(/^-+/, "")}`;
     } else if (/^\d+$/.test(upper)) {
-      upper = `ORD-${upper}`
+      upper = `ORD-${upper}`;
     }
   }
-  return upper
+  return upper;
 }
 
 export default function TrackOrderView() {
-  const { t } = useLanguage()
-  const { showToast } = useApp()
-  const searchParams = useSearchParams()
-  const router = useRouter()
+  const { t } = useLanguage();
+  const { showToast } = useApp();
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
-  const [orderIdInput, setOrderIdInput] = useState("")
-  const [searchedOrder, setSearchedOrder] = useState<string>("")
-  const [copied, setCopied] = useState(false)
-  const [isItemsOpen, setIsItemsOpen] = useState(true)
+  const [orderIdInput, setOrderIdInput] = useState("");
+  const [searchedOrder, setSearchedOrder] = useState<string>("");
+  const [copied, setCopied] = useState(false);
+  const [isItemsOpen, setIsItemsOpen] = useState(true);
 
   // Receipt upload state
-  const [receiptFile, setReceiptFile] = useState<File | null>(null)
-  const [receiptPreview, setReceiptPreview] = useState<string | null>(null)
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [receiptPreview, setReceiptPreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const { data: trackData, isLoading, isError, error, refetch } = useTrackOrder(searchedOrder)
-  const submitReceiptMutation = useSubmitPaymentReceipt()
+  const {
+    data: trackData,
+    isLoading,
+    isError,
+    error,
+    refetch,
+  } = useTrackOrder(searchedOrder);
+  const submitReceiptMutation = useSubmitPaymentReceipt();
 
   // Read initial query parameter (?code=... or ?orderId=...)
   useEffect(() => {
-    const codeParam = searchParams.get("code") || searchParams.get("orderId") || searchParams.get("id") || searchParams.get("track")
+    const codeParam =
+      searchParams.get("code") ||
+      searchParams.get("orderId") ||
+      searchParams.get("id") ||
+      searchParams.get("track");
     if (codeParam && codeParam.trim()) {
-      const normalized = normalizeOrderInput(codeParam)
-      setOrderIdInput(normalized)
-      setSearchedOrder(normalized)
+      const normalized = normalizeOrderInput(codeParam);
+      setOrderIdInput(normalized);
+      setSearchedOrder(normalized);
     }
-  }, [searchParams])
+  }, [searchParams]);
 
   const handleTrackSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!orderIdInput.trim()) return
+    e.preventDefault();
+    if (!orderIdInput.trim()) return;
 
-    const normalized = normalizeOrderInput(orderIdInput)
-    setSearchedOrder(normalized)
-    router.replace(`/track-order?code=${encodeURIComponent(normalized)}`, { scroll: false })
-  }
+    const normalized = normalizeOrderInput(orderIdInput);
+    setSearchedOrder(normalized);
+    router.replace(`/track-order?code=${encodeURIComponent(normalized)}`, {
+      scroll: false,
+    });
+  };
 
   const handleQuickDemo = (code: string) => {
-    setOrderIdInput(code)
-    setSearchedOrder(code)
-    router.replace(`/track-order?code=${encodeURIComponent(code)}`, { scroll: false })
-  }
+    setOrderIdInput(code);
+    setSearchedOrder(code);
+    router.replace(`/track-order?code=${encodeURIComponent(code)}`, {
+      scroll: false,
+    });
+  };
 
   const handleCopyOrderId = (id: string) => {
-    navigator.clipboard.writeText(id)
-    setCopied(true)
-    showToast("کد سفارش کپی شد", "success")
-    setTimeout(() => setCopied(false), 2000)
-  }
+    navigator.clipboard.writeText(id);
+    setCopied(true);
+    showToast("کد سفارش کپی شد", "success");
+    setTimeout(() => setCopied(false), 2000);
+  };
 
   const handleClear = () => {
-    setOrderIdInput("")
-    setSearchedOrder("")
-    router.replace("/track-order", { scroll: false })
-  }
+    setOrderIdInput("");
+    setSearchedOrder("");
+    router.replace("/track-order", { scroll: false });
+  };
 
   // Handle Receipt Upload Selection
   const handleReceiptChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const file = e.target.files?.[0];
+    if (!file) return;
 
-    const allowedTypes = ["image/jpeg", "image/jpg", "image/png"]
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png"];
     if (!allowedTypes.includes(file.type.toLowerCase())) {
-      showToast("فرمت فایل باید JPG, JPEG یا PNG باشد", "error")
-      return
+      showToast("فرمت فایل باید JPG, JPEG یا PNG باشد", "error");
+      return;
     }
 
     if (file.size > 5 * 1024 * 1024) {
-      showToast("حجم فایل نباید بیشتر از ۵ مگابایت باشد", "error")
-      return
+      showToast("حجم فایل نباید بیشتر از ۵ مگابایت باشد", "error");
+      return;
     }
 
-    setReceiptFile(file)
-    const reader = new FileReader()
+    setReceiptFile(file);
+    const reader = new FileReader();
     reader.onloadend = () => {
-      setReceiptPreview(reader.result as string)
-    }
-    reader.readAsDataURL(file)
-  }
+      setReceiptPreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
 
   const handleSubmitReceipt = async (orderId: string) => {
     if (!receiptFile) {
-      showToast("لطفاً ابتدا تصویر فیش واریز را انتخاب کنید", "error")
-      return
+      showToast("لطفاً ابتدا تصویر فیش واریز را انتخاب کنید", "error");
+      return;
     }
 
     try {
       await submitReceiptMutation.mutateAsync({
         orderId,
         file: receiptFile,
-      })
-      showToast("تصویر فیش واریز با موفقیت ارسال شد و در انتظار بررسی قرار گرفت", "success")
-      setReceiptFile(null)
-      setReceiptPreview(null)
+      });
+      showToast(
+        "تصویر فیش واریز با موفقیت ارسال شد و در انتظار بررسی قرار گرفت",
+        "success",
+      );
+      setReceiptFile(null);
+      setReceiptPreview(null);
       if (fileInputRef.current) {
-        fileInputRef.current.value = ""
+        fileInputRef.current.value = "";
       }
-      refetch()
+      refetch();
     } catch (err: any) {
-      const msg = err?.data?.message || err?.message || "خطا در بارگذاری فیش واریز. لطفاً مجدداً تلاش کنید."
-      showToast(msg, "error")
+      const msg =
+        err?.data?.message ||
+        err?.message ||
+        "خطا در بارگذاری فیش واریز. لطفاً مجدداً تلاش کنید.";
+      showToast(msg, "error");
     }
-  }
+  };
 
   // Determine active data (Backend live data or demo order fallback)
-  const isDemo = searchedOrder in DEMO_ORDERS
+  const isDemo = searchedOrder in DEMO_ORDERS;
   const activeOrder: OrderTrackingData | null =
-    trackData || (isDemo ? DEMO_ORDERS[searchedOrder] : null)
-  const showNotFoundError = isError && !isDemo
+    trackData || (isDemo ? DEMO_ORDERS[searchedOrder] : null);
+  const showNotFoundError = isError && !isDemo;
 
   const iconMap: Record<string, any> = {
     statusReceived: FileCheck,
@@ -244,22 +319,47 @@ export default function TrackOrderView() {
     statusShipped: Truck,
     statusDelivered: Home,
     statusCancelled: XCircle,
-  }
+  };
 
   interface TimelineStepItem {
-    title: string
-    desc: string
-    icon: any
-    completed: boolean
+    title: string;
+    desc: string;
+    icon: any;
+    completed: boolean;
   }
 
   const defaultSteps: TimelineStepItem[] = [
-    { title: "statusReceived", desc: "سفارش در سیستم ثبت شده است", icon: FileCheck, completed: true },
-    { title: "statusPaymentReview", desc: "بررسی فیش واریز کارت به کارت", icon: CreditCard, completed: true },
-    { title: "statusProcessing", desc: "اثر هنری با بسته‌بندی تخصصی گالری در حال آماده‌سازی", icon: Package, completed: true },
-    { title: "statusShipped", desc: "تحویل به پست پیشتاز یا پیک اختصاصی گالری", icon: Truck, completed: false },
-    { title: "statusDelivered", desc: "اثر هنری درب منزل تحویل داده خواهد شد", icon: Home, completed: false },
-  ]
+    {
+      title: "statusReceived",
+      desc: "سفارش در سیستم ثبت شده است",
+      icon: FileCheck,
+      completed: true,
+    },
+    {
+      title: "statusPaymentReview",
+      desc: "بررسی فیش واریز کارت به کارت",
+      icon: CreditCard,
+      completed: true,
+    },
+    {
+      title: "statusProcessing",
+      desc: "اثر هنری با بسته‌بندی تخصصی گالری در حال آماده‌سازی",
+      icon: Package,
+      completed: true,
+    },
+    {
+      title: "statusShipped",
+      desc: "تحویل به پست پیشتاز یا پیک اختصاصی گالری",
+      icon: Truck,
+      completed: false,
+    },
+    {
+      title: "statusDelivered",
+      desc: "اثر هنری درب منزل تحویل داده خواهد شد",
+      icon: Home,
+      completed: false,
+    },
+  ];
 
   const trackingSteps: TimelineStepItem[] = activeOrder?.steps?.length
     ? activeOrder.steps.map((step) => ({
@@ -268,61 +368,70 @@ export default function TrackOrderView() {
         icon: iconMap[step.title] || FileCheck,
         completed: step.completed,
       }))
-    : defaultSteps
-
+    : defaultSteps;
 
   // Map order statuses to localized badges
   const getStatusBadge = (status?: string, paymentStatus?: string) => {
     if (status === "cancelled") {
       return {
         label: "لغو شده",
-        className: "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30",
+        className:
+          "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30",
         icon: XCircle,
-      }
+      };
     }
     if (status === "delivered" || status === "completed") {
       return {
         label: "تحویل داده شده",
-        className: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
+        className:
+          "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/30",
         icon: CheckCircle2,
-      }
+      };
     }
     if (status === "shipped") {
       return {
         label: "ارسال شده (در مسیر)",
-        className: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/30",
+        className:
+          "bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-indigo-500/30",
         icon: Truck,
-      }
+      };
     }
     if (status === "processing") {
       return {
         label: "در حال بسته‌بندی و آماده‌سازی",
-        className: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30",
+        className:
+          "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/30",
         icon: Package,
-      }
+      };
     }
     if (paymentStatus === "payment_rejected") {
       return {
         label: "فیش واریز رد شده",
-        className: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30",
+        className:
+          "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/30",
         icon: AlertCircle,
-      }
+      };
     }
     if (paymentStatus === "payment_pending_review") {
       return {
         label: "در انتظار تایید فیش واریز",
-        className: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30",
+        className:
+          "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30",
         icon: Clock,
-      }
+      };
     }
     return {
       label: "در انتظار پرداخت",
-      className: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30",
+      className:
+        "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/30",
       icon: Clock,
-    }
-  }
+    };
+  };
 
-  const statusBadge = getStatusBadge(activeOrder?.status, activeOrder?.paymentStatus)
+  const statusBadge = getStatusBadge(
+    activeOrder?.status,
+    activeOrder?.paymentStatus,
+  );
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-12 md:py-16">
@@ -335,13 +444,17 @@ export default function TrackOrderView() {
           {t("trackOrderTitle")}
         </h1>
         <p className="text-xs md:text-sm text-muted-foreground max-w-md mx-auto leading-relaxed">
-          شماره سفارش (مانند ORD-10042 یا کد ۶ رقمی) دریافتی را وارد کنید تا از آخرین وضعیت اثر هنری خود مطلع شوید.
+          شماره سفارش (مانند ORD-10042 یا کد ۶ رقمی) دریافتی را وارد کنید تا از
+          آخرین وضعیت اثر هنری خود مطلع شوید.
         </p>
       </div>
 
       {/* Input Form Card */}
       <div className="bg-card border border-border/60 rounded-3xl p-4 md:p-6 shadow-sm mb-6">
-        <form onSubmit={handleTrackSubmit} className="flex flex-col sm:flex-row gap-3">
+        <form
+          onSubmit={handleTrackSubmit}
+          className="flex flex-col sm:flex-row gap-3"
+        >
           <div className="relative flex-1">
             <Input
               type="text"
@@ -379,30 +492,6 @@ export default function TrackOrderView() {
             )}
           </Button>
         </form>
-
-        {/* Demo Quick Chips */}
-        <div className="mt-4 pt-4 border-t border-border/40 flex flex-wrap items-center justify-between gap-2 text-xs">
-          <span className="text-muted-foreground font-medium flex items-center gap-1.5">
-            <HelpCircle className="size-3.5" />
-            کدهای نمونه جهت آزمایش:
-          </span>
-          <div className="flex flex-wrap gap-2">
-            <button
-              type="button"
-              onClick={() => handleQuickDemo("ORD-10042")}
-              className="px-2.5 py-1 rounded-xl bg-muted/40 hover:bg-muted text-foreground border border-border/60 transition-colors cursor-pointer font-bold dir-ltr"
-            >
-              ORD-10042 (تحویل شده)
-            </button>
-            <button
-              type="button"
-              onClick={() => handleQuickDemo("ORD-10038")}
-              className="px-2.5 py-1 rounded-xl bg-muted/40 hover:bg-muted text-foreground border border-border/60 transition-colors cursor-pointer font-bold dir-ltr"
-            >
-              ORD-10038 (در حال بسته‌بندی)
-            </button>
-          </div>
-        </div>
       </div>
 
       {/* Error state */}
@@ -415,7 +504,8 @@ export default function TrackOrderView() {
             {(error as any)?.message || "سفارشی با این کد پیگیری یافت نشد"}
           </h3>
           <p className="text-xs text-muted-foreground max-w-sm mb-4 leading-relaxed">
-            لطفاً از صحت کد وارد شده اطمینان حاصل فرمایید یا پیشوند ORD- را بررسی نمایید.
+            لطفاً از صحت کد وارد شده اطمینان حاصل فرمایید یا پیشوند ORD- را
+            بررسی نمایید.
           </p>
           <div className="flex items-center gap-3">
             <Button
@@ -445,7 +535,9 @@ export default function TrackOrderView() {
             {/* Top row with Order ID, Copy button, and Status Badge */}
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/50 pb-5 mb-6">
               <div className="flex flex-col">
-                <span className="text-[11px] font-bold text-muted-foreground mb-1">{t("orderId")}</span>
+                <span className="text-[11px] font-bold text-muted-foreground mb-1">
+                  {t("orderId")}
+                </span>
                 <div className="flex items-center gap-2">
                   <span className="text-base md:text-lg font-black text-foreground tracking-wider dir-ltr">
                     {activeOrder.orderId}
@@ -456,7 +548,11 @@ export default function TrackOrderView() {
                     className="size-7 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
                     title="کپی شماره سفارش"
                   >
-                    {copied ? <Check className="size-3.5 text-emerald-500" /> : <Copy className="size-3.5" />}
+                    {copied ? (
+                      <Check className="size-3.5 text-emerald-500" />
+                    ) : (
+                      <Copy className="size-3.5" />
+                    )}
                   </button>
                 </div>
               </div>
@@ -465,7 +561,7 @@ export default function TrackOrderView() {
                 <span
                   className={cn(
                     "px-3 py-1.5 rounded-full border text-xs font-black flex items-center gap-1.5",
-                    statusBadge.className
+                    statusBadge.className,
                   )}
                 >
                   <statusBadge.icon className="size-3.5 shrink-0" />
@@ -479,7 +575,9 @@ export default function TrackOrderView() {
                   className="size-8 flex items-center justify-center rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/40 transition-colors"
                   title="بروزرسانی وضعیت"
                 >
-                  <RotateCcw className={cn("size-3.5", isLoading && "animate-spin")} />
+                  <RotateCcw
+                    className={cn("size-3.5", isLoading && "animate-spin")}
+                  />
                 </button>
               </div>
             </div>
@@ -487,21 +585,29 @@ export default function TrackOrderView() {
             {/* Quick Metadata Info Grid */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8 bg-muted/20 rounded-2xl p-4 border border-border/40 text-xs">
               <div>
-                <span className="text-muted-foreground block mb-0.5">تاریخ ثبت سفارش</span>
+                <span className="text-muted-foreground block mb-0.5">
+                  تاریخ ثبت سفارش
+                </span>
                 <span className="font-bold text-foreground">
                   {formatShamsiDate(activeOrder.date, "medium")}
                 </span>
               </div>
               <div>
-                <span className="text-muted-foreground block mb-0.5">مبلغ کل فاکتور</span>
+                <span className="text-muted-foreground block mb-0.5">
+                  مبلغ کل فاکتور
+                </span>
                 <span className="font-black text-primary">
                   {formatPersianPrice(activeOrder.totalPrice)}
                 </span>
               </div>
               <div className="col-span-2 sm:col-span-1">
-                <span className="text-muted-foreground block mb-0.5">روش پرداخت</span>
+                <span className="text-muted-foreground block mb-0.5">
+                  روش پرداخت
+                </span>
                 <span className="font-bold text-foreground">
-                  {activeOrder.paymentMethod === "online" ? "پرداخت آنلاین شاپرک" : "کارت به کارت بانکی"}
+                  {activeOrder.paymentMethod === "online"
+                    ? "پرداخت آنلاین شاپرک"
+                    : "کارت به کارت بانکی"}
                 </span>
               </div>
             </div>
@@ -513,10 +619,13 @@ export default function TrackOrderView() {
                 <div className="flex flex-col gap-1">
                   <span className="font-bold">فیش واریزی شما تایید نشد</span>
                   <span>
-                    علت: {activeOrder.rejectionReason || "اطلاعات فیش با مبلغ فاکتور یا شماره حساب همخوانی ندارد."}
+                    علت:{" "}
+                    {activeOrder.rejectionReason ||
+                      "اطلاعات فیش با مبلغ فاکتور یا شماره حساب همخوانی ندارد."}
                   </span>
                   <span className="text-[11px] opacity-80 mt-1">
-                    لطفاً در بخش زیر تصویر جدید و واضح فیش را جهت بررسی مجدد ارسال فرمایید.
+                    لطفاً در بخش زیر تصویر جدید و واضح فیش را جهت بررسی مجدد
+                    ارسال فرمایید.
                   </span>
                 </div>
               </div>
@@ -529,7 +638,9 @@ export default function TrackOrderView() {
                 <div className="flex flex-col gap-1">
                   <span className="font-bold">این سفارش لغو گردیده است</span>
                   <span>
-                    در صورتی که مبلغی کسر شده باشد، تا ۷۲ ساعت کاری به حساب مبدا عودت داده خواهد شد. جهت اطلاعات بیشتر با پشتیبانی تماس حاصل فرمایید.
+                    در صورتی که مبلغی کسر شده باشد، تا ۷۲ ساعت کاری به حساب مبدا
+                    عودت داده خواهد شد. جهت اطلاعات بیشتر با پشتیبانی تماس حاصل
+                    فرمایید.
                   </span>
                 </div>
               </div>
@@ -541,18 +652,22 @@ export default function TrackOrderView() {
               <div className="absolute top-4 bottom-4 right-8 w-[2px] bg-border/80 -translate-x-1/2 z-0" />
 
               {trackingSteps.map((step, idx) => {
-                const IconComponent = step.icon
-                const isCurrent = step.completed && !trackingSteps[idx + 1]?.completed
+                const IconComponent = step.icon;
+                const isCurrent =
+                  step.completed && !trackingSteps[idx + 1]?.completed;
 
                 return (
-                  <div key={idx} className="flex items-start gap-4 relative z-10">
+                  <div
+                    key={idx}
+                    className="flex items-start gap-4 relative z-10"
+                  >
                     {/* Step indicator bubble */}
                     <div
                       className={cn(
                         "flex size-12 items-center justify-center rounded-2xl shrink-0 transition-all shadow-sm",
                         step.completed
                           ? "bg-primary text-primary-foreground shadow-primary/25"
-                          : "bg-muted/80 text-muted-foreground border border-border/80"
+                          : "bg-muted/80 text-muted-foreground border border-border/80",
                       )}
                     >
                       <IconComponent className="size-5" />
@@ -564,7 +679,9 @@ export default function TrackOrderView() {
                         <span
                           className={cn(
                             "text-xs md:text-sm font-black",
-                            step.completed ? "text-foreground" : "text-muted-foreground"
+                            step.completed
+                              ? "text-foreground"
+                              : "text-muted-foreground",
                           )}
                         >
                           {t(step.title) || step.title}
@@ -591,33 +708,44 @@ export default function TrackOrderView() {
                       )}
                     </div>
                   </div>
-                )
+                );
               })}
             </div>
           </div>
 
           {/* Payment Receipt Upload Section (if pending payment or rejected) */}
-          {(activeOrder.paymentStatus === "pending_payment" || activeOrder.paymentStatus === "payment_rejected") && (
+          {(activeOrder.paymentStatus === "pending_payment" ||
+            activeOrder.paymentStatus === "payment_rejected") && (
             <div className="border border-amber-500/30 bg-amber-500/5 rounded-3xl p-6 md:p-8 shadow-sm">
               <div className="flex items-center gap-2.5 mb-3 text-amber-600 dark:text-amber-400">
                 <CreditCard className="size-5 shrink-0" />
-                <h3 className="text-sm md:text-base font-black">بارگذاری فیش واریز کارت به کارت</h3>
+                <h3 className="text-sm md:text-base font-black">
+                  بارگذاری فیش واریز کارت به کارت
+                </h3>
               </div>
               <p className="text-xs text-muted-foreground mb-4 leading-relaxed">
-                لطفاً مبلغ فاکتور را به شماره کارت زیر واریز نموده و تصویر فیش یا اسکرین‌شات تراکنش را جهت تایید و آغاز بسته‌بندی بارگذاری کنید:
+                لطفاً مبلغ فاکتور را به شماره کارت زیر واریز نموده و تصویر فیش
+                یا اسکرین‌شات تراکنش را جهت تایید و آغاز بسته‌بندی بارگذاری
+                کنید:
               </p>
 
               {/* Card info banner */}
               <div className="bg-background border border-border/60 rounded-2xl p-4 mb-5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
                 <div>
-                  <span className="text-muted-foreground block text-[11px]">شماره کارت گالری آرتیسا:</span>
+                  <span className="text-muted-foreground block text-[11px]">
+                    شماره کارت گالری آرتیسا:
+                  </span>
                   <span className="font-black text-foreground text-sm tracking-wider dir-ltr block mt-0.5">
                     ۶۰۳۷ - ۹۹۷۵ - ۹۸۷۶ - ۵۴۳۲
                   </span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground block text-[11px]">به نام:</span>
-                  <span className="font-bold text-foreground">گالری هنری آرتیسا</span>
+                  <span className="text-muted-foreground block text-[11px]">
+                    به نام:
+                  </span>
+                  <span className="font-bold text-foreground">
+                    گالری هنری آرتیسا
+                  </span>
                 </div>
               </div>
 
@@ -657,7 +785,9 @@ export default function TrackOrderView() {
                         {receiptFile?.name}
                       </span>
                       <span className="text-[11px] text-muted-foreground block mt-0.5">
-                        {receiptFile ? `${(receiptFile.size / 1024).toFixed(0)} کیلوبایت` : ""}
+                        {receiptFile
+                          ? `${(receiptFile.size / 1024).toFixed(0)} کیلوبایت`
+                          : ""}
                       </span>
                     </div>
                     <div className="flex gap-2">
@@ -666,9 +796,10 @@ export default function TrackOrderView() {
                         variant="outline"
                         size="sm"
                         onClick={() => {
-                          setReceiptFile(null)
-                          setReceiptPreview(null)
-                          if (fileInputRef.current) fileInputRef.current.value = ""
+                          setReceiptFile(null);
+                          setReceiptPreview(null);
+                          if (fileInputRef.current)
+                            fileInputRef.current.value = "";
                         }}
                         className="rounded-xl cursor-pointer text-xs"
                       >
@@ -698,34 +829,37 @@ export default function TrackOrderView() {
           )}
 
           {/* Uploaded Receipt Preview if exists and not rejected */}
-          {activeOrder.receiptUrl && activeOrder.paymentStatus !== "payment_rejected" && (
-            <div className="border border-border/60 bg-card rounded-3xl p-5 shadow-sm flex items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-3">
-                <img
-                  src={activeOrder.receiptUrl}
-                  alt="فیش پرداخت"
-                  className="size-12 rounded-xl object-cover border border-border shrink-0"
-                />
-                <div>
-                  <span className="font-bold text-foreground block">تصویر فیش واریز ارسالی</span>
-                  <span className="text-muted-foreground text-[11px] block mt-0.5">
-                    {activeOrder.paymentStatus === "payment_approved"
-                      ? "تایید شده توسط بخش مالی"
-                      : "در صف بررسی توسط پشتیبانی گالری"}
-                  </span>
+          {activeOrder.receiptUrl &&
+            activeOrder.paymentStatus !== "payment_rejected" && (
+              <div className="border border-border/60 bg-card rounded-3xl p-5 shadow-sm flex items-center justify-between gap-3 text-xs">
+                <div className="flex items-center gap-3">
+                  <img
+                    src={activeOrder.receiptUrl}
+                    alt="فیش پرداخت"
+                    className="size-12 rounded-xl object-cover border border-border shrink-0"
+                  />
+                  <div>
+                    <span className="font-bold text-foreground block">
+                      تصویر فیش واریز ارسالی
+                    </span>
+                    <span className="text-muted-foreground text-[11px] block mt-0.5">
+                      {activeOrder.paymentStatus === "payment_approved"
+                        ? "تایید شده توسط بخش مالی"
+                        : "در صف بررسی توسط پشتیبانی گالری"}
+                    </span>
+                  </div>
                 </div>
+                <a
+                  href={activeOrder.receiptUrl}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3 py-1.5 rounded-xl border border-border/60 hover:bg-muted/40 text-foreground transition-colors flex items-center gap-1 text-xs font-bold"
+                >
+                  <span>مشاهده فیش</span>
+                  <ExternalLink className="size-3" />
+                </a>
               </div>
-              <a
-                href={activeOrder.receiptUrl}
-                target="_blank"
-                rel="noreferrer"
-                className="px-3 py-1.5 rounded-xl border border-border/60 hover:bg-muted/40 text-foreground transition-colors flex items-center gap-1 text-xs font-bold"
-              >
-                <span>مشاهده فیش</span>
-                <ExternalLink className="size-3" />
-              </a>
-            </div>
-          )}
+            )}
 
           {/* Purchased Items Collapsible Card */}
           {activeOrder.items && activeOrder.items.length > 0 && (
@@ -742,7 +876,11 @@ export default function TrackOrderView() {
                     ({toPersianDigits(activeOrder.items.length)} قلم)
                   </span>
                 </div>
-                {isItemsOpen ? <ChevronUp className="size-4" /> : <ChevronDown className="size-4" />}
+                {isItemsOpen ? (
+                  <ChevronUp className="size-4" />
+                ) : (
+                  <ChevronDown className="size-4" />
+                )}
               </button>
 
               {isItemsOpen && (
@@ -760,11 +898,15 @@ export default function TrackOrderView() {
                         />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h4 className="text-xs font-bold text-foreground truncate">{item.name}</h4>
+                        <h4 className="text-xs font-bold text-foreground truncate">
+                          {item.name}
+                        </h4>
                         <div className="flex items-center gap-3 text-[11px] text-muted-foreground mt-1">
                           <span>تعداد: {toPersianDigits(item.quantity)}</span>
                           <span>•</span>
-                          <span>قیمت واحد: {formatPersianPrice(item.price)}</span>
+                          <span>
+                            قیمت واحد: {formatPersianPrice(item.price)}
+                          </span>
                         </div>
                       </div>
                       <div className="text-xs font-black text-primary shrink-0">
@@ -812,7 +954,10 @@ export default function TrackOrderView() {
           <div className="border border-border/40 bg-muted/10 rounded-3xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-muted-foreground">
             <div className="flex items-center gap-2.5">
               <ShieldCheck className="size-5 text-emerald-500 shrink-0" />
-              <span>کلیه مرسولات گالری دارای بسته‌بندی ضدضربه و بیمه سلامت حمل هستند.</span>
+              <span>
+                کلیه مرسولات گالری دارای بسته‌بندی ضدضربه و بیمه سلامت حمل
+                هستند.
+              </span>
             </div>
             <Link
               href="/contact-us"
@@ -824,5 +969,5 @@ export default function TrackOrderView() {
         </div>
       )}
     </div>
-  )
+  );
 }
