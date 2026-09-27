@@ -301,20 +301,33 @@ export default function CheckoutView() {
           </div>
         </div>
 
-        <div className="flex w-full gap-4">
+        <div className="flex flex-col sm:flex-row w-full gap-3">
           <Button
             variant="outline"
             className="flex-1 rounded-xl cursor-pointer"
+            onClick={() => router.push("/")}
           >
-            <Link href="/">بازگشت به خانه</Link>
+            بازگشت به فروشگاه
           </Button>
-          <Button className="flex-1 rounded-xl cursor-pointer">
-            <Link href="/profile">پیگیری سفارشات</Link>
+          <Button
+            className="flex-1 rounded-xl cursor-pointer font-bold bg-primary text-white"
+            onClick={() => router.push(`/track-order?code=${encodeURIComponent(createdOrderId || "")}`)}
+          >
+            رهگیری آنلاین سفارش
           </Button>
+        </div>
+        <div className="mt-4 text-center">
+          <Link
+            href="/profile"
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors underline"
+          >
+            مشاهده سابقه سفارش‌ها در حساب کاربری
+          </Link>
         </div>
       </div>
     );
   }
+
 
   // Empty Cart Guard
   if (cart.length === 0 && checkoutStep === 1) {

@@ -1,8 +1,10 @@
 "use client"
 
 import React, { useState } from "react"
+import Link from "next/link"
 import { useLanguage } from "../LanguageContext"
-import { Package, ChevronDown, ChevronUp, AlertTriangle, Upload, CheckCircle2, Clock, XCircle, Loader2 } from "lucide-react"
+import { Package, ChevronDown, ChevronUp, AlertTriangle, Upload, CheckCircle2, Clock, XCircle, Loader2, Truck } from "lucide-react"
+
 import { useUserOrders, useSubmitPaymentReceipt } from "@/hooks/useOrders"
 import { useApp } from "../AppContext"
 import { Button } from "../ui/button"
@@ -300,6 +302,16 @@ export default function OrderHistory() {
                     </span>
                   </div>
                 ))}
+
+                <div className="pt-3 mt-1 border-t border-border/40 flex justify-end">
+                  <Link
+                    href={`/track-order?code=${encodeURIComponent(order.id)}`}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary text-xs font-bold transition-colors cursor-pointer"
+                  >
+                    <Truck className="size-3.5" />
+                    <span>رهگیری آنلاین این سفارش</span>
+                  </Link>
+                </div>
               </div>
             )}
           </div>

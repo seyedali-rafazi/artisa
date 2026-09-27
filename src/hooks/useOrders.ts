@@ -54,12 +54,21 @@ export interface OrderTrackingData {
   orderId: string;
   status: string;
   paymentStatus?: string;
+  paymentMethod?: string;
   date: string;
   totalPrice: number;
   receiptUrl?: string;
   rejectionReason?: string;
+  items?: OrderItemPayload[];
+  shippingAddress?: {
+    fullName: string;
+    phone: string;
+    postalCode?: string;
+    address: string;
+  };
   steps: TrackingStep[];
 }
+
 
 export function useCreateOrder() {
   const queryClient = useQueryClient();

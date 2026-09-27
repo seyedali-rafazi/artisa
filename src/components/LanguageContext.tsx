@@ -105,13 +105,20 @@ const translations: Record<string, string> = {
 
   // Track Order
   trackOrderTitle: "رهگیری وضعیت سفارش",
-  trackInputPlaceholder: "شماره سفارش خود را وارد کنید...",
-  trackSubmit: "بررسی وضعیت",
+  trackInputPlaceholder: "شماره سفارش (مانند ORD-10042)...",
+  trackSubmit: "رهگیری سفارش",
   orderStatus: "وضعیت سفارش:",
   statusReceived: "سفارش ثبت شده",
+  statusPaymentReview: "بررسی و تایید پرداخت",
   statusProcessing: "در حال آماده‌سازی و بسته‌بندی",
-  statusShipped: "تحویل به پست/پیک",
+  statusShipped: "تحویل به پست یا پیک اختصاصی",
   statusDelivered: "تحویل داده شده",
+  paymentPendingReview: "در انتظار بررسی فیش واریز",
+  paymentApproved: "پرداخت تایید شده",
+  paymentRejected: "فیش واریزی رد شده",
+  paymentPending: "در انتظار پرداخت",
+
+
 
   // Footer
   newsletterTitle: "عضویت در خبرنامه آرتیسا",
