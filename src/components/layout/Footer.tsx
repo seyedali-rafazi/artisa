@@ -70,9 +70,9 @@ export default function Footer() {
       </div>
 
       {/* Main Links Area */}
-      <div className="max-w-7xl mx-auto px-4 py-12 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
+      <div className="max-w-7xl mx-auto px-4 py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-8">
         {/* Brand details */}
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 sm:col-span-2 lg:col-span-4">
           <div className="flex items-center gap-2.5">
             <Image
               src="/logo.png"
@@ -119,7 +119,7 @@ export default function Footer() {
         </div>
 
         {/* Column 2: Quick Links */}
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 lg:col-span-2">
           <h4 className="text-sm font-bold text-foreground">دسترسی سریع</h4>
           <ul className="flex flex-col gap-2.5 text-xs text-muted-foreground">
             <li>
@@ -146,7 +146,7 @@ export default function Footer() {
         </div>
 
         {/* Column 3: Customer Service */}
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-3 lg:col-span-2">
           <h4 className="text-sm font-bold text-foreground">خدمات مشتریان</h4>
           <ul className="flex flex-col gap-2.5 text-xs text-muted-foreground">
             <li>
@@ -168,7 +168,7 @@ export default function Footer() {
         </div>
 
         {/* Column 4: Contact Info */}
-        <div className="flex flex-col gap-4 text-xs text-muted-foreground">
+        <div className="flex flex-col gap-4 text-xs text-muted-foreground lg:col-span-2">
           <h4 className="text-sm font-bold text-foreground">اطلاعات تماس</h4>
 
           <div className="flex items-center gap-2">
@@ -182,6 +182,35 @@ export default function Footer() {
           <div className="flex items-center gap-2">
             <Clock className="size-4 text-primary shrink-0" />
             <span>شنبه تا جمعه ۸:۰۰ الی ۲۰:۰۰</span>
+          </div>
+        </div>
+
+        {/* Column 5: Trust Badges / Enamad */}
+        <div className="flex flex-col gap-3 lg:col-span-2">
+          <h4 className="text-sm font-bold text-foreground">نماد اعتماد الکترونیکی</h4>
+          <p className="text-xs text-muted-foreground leading-5">
+            تایید شده توسط مرکز توسعه تجارت الکترونیکی وزارت صمت
+          </p>
+          <div className="flex items-center pt-1">
+            <a
+              referrerPolicy="origin"
+              target="_blank"
+              href="https://trustseal.enamad.ir/?id=7352328&Code=7BqlwwHJpl8BrEYtSYJy57I9ZTYMjBPg"
+              className="inline-flex items-center justify-center p-2.5 bg-white rounded-2xl border border-border shadow-xs hover:shadow-md hover:border-primary/40 transition-all duration-300 group"
+              title="نماد اعتماد الکترونیکی گالری آرتیسا"
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                referrerPolicy="origin"
+                src="https://trustseal.enamad.ir/logo.aspx?id=7352328&Code=7BqlwwHJpl8BrEYtSYJy57I9ZTYMjBPg"
+                alt="نماد اعتماد الکترونیکی"
+                style={{ cursor: "pointer" }}
+                {...{ code: "7BqlwwHJpl8BrEYtSYJy57I9ZTYMjBPg" }}
+                className="w-20 h-auto object-contain transition-transform duration-300 group-hover:scale-105"
+                width={80}
+                height={88}
+              />
+            </a>
           </div>
         </div>
       </div>
