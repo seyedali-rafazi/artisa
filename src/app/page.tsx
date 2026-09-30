@@ -17,7 +17,7 @@ async function getHomeInitialData(): Promise<HomeInitialData> {
   const isrOptions = { next: { revalidate: 300 } };
 
   try {
-    const [bannersRes, bestSellersRes, offersRes, blogRes] = await Promise.allSettled([
+    const [bannersRes, bestSellersRes, offersRes, blogRes, newProductsRes] = await Promise.allSettled([
       fetch(`${backendUrl}/api/v1/banners`, isrOptions).then((r) => (r.ok ? r.json() : null)),
       fetch(`${backendUrl}/api/v1/products?isBestSeller=true&limit=8`, isrOptions).then((r) =>
         r.ok ? r.json() : null
@@ -26,6 +26,9 @@ async function getHomeInitialData(): Promise<HomeInitialData> {
         r.ok ? r.json() : null
       ),
       fetch(`${backendUrl}/api/v1/blog/articles`, isrOptions).then((r) => (r.ok ? r.json() : null)),
+      fetch(`${backendUrl}/api/v1/products?sort_by=created_at&sort_order=desc&limit=12`, isrOptions).then((r) =>
+        r.ok ? r.json() : null
+      ),
     ]);
 
     const banners =
@@ -43,6 +46,11 @@ async function getHomeInitialData(): Promise<HomeInitialData> {
         ? offersRes.value.data || offersRes.value
         : undefined;
 
+    const newProducts =
+      newProductsRes.status === "fulfilled" && newProductsRes.value
+        ? newProductsRes.value.data || newProductsRes.value
+        : undefined;
+
     let blogArticles = undefined;
     if (blogRes.status === "fulfilled" && blogRes.value) {
       const val = blogRes.value;
@@ -55,6 +63,7 @@ async function getHomeInitialData(): Promise<HomeInitialData> {
       banners: Array.isArray(banners) ? banners : undefined,
       bestSellers: bestSellers?.items ? bestSellers : undefined,
       activeOffers: Array.isArray(activeOffers) ? activeOffers : undefined,
+      newProducts: newProducts?.items ? newProducts : undefined,
       blogArticles,
     };
   } catch (error) {

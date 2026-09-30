@@ -62,6 +62,10 @@ const translations: Record<string, string> = {
   bestSellersTitle: "پرفروش‌ترین آثار آرتیسا",
   bestSellersSubtitle: "انتخاب‌های محبوب هنردوستان در این ماه",
 
+  // New Products
+  newProductsTitle: "محصولات جدید آرتیسا",
+  newProductsSubtitle: "تازه‌ترین آثار هنری و تابلوهای نقاشی اضافه شده به گالری",
+
   // Blog
   blogTitle: "مجله هنر آرتیسا",
   blogSubtitle: "مقالات، ایده‌ها و راهنمای چیدمان هنری برای خانه شما",

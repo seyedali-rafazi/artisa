@@ -8,14 +8,18 @@ import ProductImage from "../ui/ProductImage"
 import { 
   Star, 
   ShoppingCart, 
-  Heart 
+  Heart,
+  Sparkles
 } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 interface ProductBoxProps {
   product: Product
+  badgeText?: string
+  className?: string
 }
 
-function ProductBoxComponent({ product }: ProductBoxProps) {
+function ProductBoxComponent({ product, badgeText, className }: ProductBoxProps) {
   const { 
     addToCart, 
     cart, 
@@ -55,7 +59,10 @@ function ProductBoxComponent({ product }: ProductBoxProps) {
     <Link
       href={`/product/${product.id}`}
       onClick={handleProductClick}
-      className="group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm hover:shadow-md hover:border-primary/40 transition-all duration-300 cursor-pointer"
+      className={cn(
+        "group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm hover:shadow-md hover:border-primary/40 transition-all duration-300 cursor-pointer h-full",
+        className
+      )}
     >
       {/* Product Image and Overlay Tags */}
       <div className="relative aspect-square w-full bg-muted/20 overflow-hidden">
@@ -67,12 +74,17 @@ function ProductBoxComponent({ product }: ProductBoxProps) {
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
 
-        {/* Discount Badge */}
-        {hasDiscount && discountPercent > 0 && (
+        {/* Discount or Custom Badge */}
+        {hasDiscount && discountPercent > 0 ? (
           <div className="absolute top-3 right-3 z-10 px-2 py-1 text-[10px] font-black text-white bg-primary rounded-lg shadow-md">
             {`${discountPercent}٪ تخفیف`}
           </div>
-        )}
+        ) : badgeText ? (
+          <div className="absolute top-3 right-3 z-10 px-2.5 py-1 text-[10px] font-bold text-white bg-emerald-600/90 dark:bg-emerald-500/90 rounded-lg shadow-md backdrop-blur-xs flex items-center gap-1">
+            <Sparkles className="size-2.5" />
+            <span>{badgeText}</span>
+          </div>
+        ) : null}
 
         {/* Floating Icons Overlay / Favorite Button */}
         <div className="absolute top-3 left-3 z-10 flex flex-col gap-2">

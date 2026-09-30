@@ -6,6 +6,7 @@ import { useApp } from "@/components/AppContext";
 import HeroSlider from "@/components/home/HeroSlider";
 import CategoriesGrid from "@/components/home/CategoriesGrid";
 import SpecialOffers from "@/components/home/SpecialOffers";
+import NewProductsSection from "@/components/home/NewProductsSection";
 import BlogSection from "@/components/home/BlogSection";
 import ProductBox from "@/components/home/ProductBox";
 import { useProducts, ProductsPaginatedResponse } from "@/hooks/useProducts";
@@ -18,6 +19,7 @@ export interface HomeInitialData {
   bestSellers?: ProductsPaginatedResponse;
   activeOffers?: SpecialOffer[];
   specialProducts?: ProductsPaginatedResponse;
+  newProducts?: ProductsPaginatedResponse;
   blogArticles?: ArticleItem[];
 }
 
@@ -51,6 +53,9 @@ export default function HomeView({ initialData }: HomeViewProps = {}) {
       <SpecialOffers
         initialOffers={initialData?.activeOffers}
       />
+
+      {/* New Products of Artisa Section (Swiper with Scrollbar) */}
+      <NewProductsSection initialProducts={initialData?.newProducts} />
 
       {/* Best Sellers Section */}
       <section className="w-full">
