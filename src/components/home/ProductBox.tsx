@@ -119,10 +119,12 @@ function ProductBoxComponent({ product, badgeText, className }: ProductBoxProps)
           {product.category}
         </span>
 
-        {/* Title */}
-        <h3 className="text-xs md:text-sm font-extrabold text-foreground line-clamp-2 hover:text-primary transition-colors mb-2 leading-5">
-          {product.name}
-        </h3>
+        {/* Title (Fixed height, vertically centered, up to 2 lines with ellipsis) */}
+        <div className="h-10 md:h-11 flex flex-col justify-center mb-2">
+          <h3 className="text-xs md:text-sm font-extrabold text-foreground line-clamp-2 hover:text-primary transition-colors leading-5 text-start break-words" title={product.name}>
+            {product.name}
+          </h3>
+        </div>
 
         {/* Rating and Stars */}
         <div className="flex items-center gap-1 mb-3">

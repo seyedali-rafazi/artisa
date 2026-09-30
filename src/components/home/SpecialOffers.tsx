@@ -473,13 +473,18 @@ function SpecialOfferProductCard({
         )}
       </Link>
 
-      {/* Middle: Title */}
+      {/* Middle: Title (Fixed height, vertically centered, up to 2 lines with ellipsis) */}
       <Link
         href={`/product/${product.id}`}
         onClick={() => onSelectProduct(product as unknown as Product)}
-        className="text-xs sm:text-[13px] font-extrabold text-foreground leading-snug line-clamp-1 group-hover:text-primary transition-colors text-start mb-1.5 block cursor-pointer"
+        className="h-10 sm:h-11 flex flex-col justify-center mb-1.5 cursor-pointer"
+        title={product.name}
       >
-        {product.name}
+        <span className="text-xs sm:text-[13px] font-extrabold text-foreground leading-snug line-clamp-2 group-hover:text-primary transition-colors text-start block break-words">
+          {product.name.length > 35
+            ? product.name.slice(0, 35) + "..."
+            : product.name}
+        </span>
       </Link>
 
       {/* Rating Row (★ 4.8 (124)) */}
@@ -506,9 +511,7 @@ function SpecialOfferProductCard({
             </span>
           )}
           <span className="text-xs sm:text-[13px] font-black text-foreground leading-none">
-            {toPersianDigits(
-              Math.round(product.price).toLocaleString("fa-IR"),
-            )}{" "}
+            {toPersianDigits(Math.round(product.price).toLocaleString("fa-IR"))}{" "}
             تومان
           </span>
         </div>
