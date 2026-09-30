@@ -1,20 +1,15 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import Link from "next/link";
-import { useApp, Product } from "../AppContext";
-import ProductImage from "../ui/ProductImage";
+import { Product } from "../AppContext";
+import ProductBox from "./ProductBox";
 import {
   ChevronLeft,
   ChevronRight,
-  Star,
-  ShoppingCart,
-  Check,
 } from "lucide-react";
 import {
   useActiveSpecialOffers,
   SpecialOffer,
-  SpecialOfferProduct,
 } from "@/hooks/useSpecialOffers";
 import { toPersianDigits } from "@/lib/utils";
 
@@ -181,7 +176,6 @@ interface SpecialOffersProps {
 export default function SpecialOffers({
   initialOffers,
 }: SpecialOffersProps = {}) {
-  const { setSelectedProduct, addToCart, cart } = useApp();
   const [isExpired, setIsExpired] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
 
@@ -328,25 +322,18 @@ export default function SpecialOffers({
 
         {!isMounted ? (
           /* Pre-mount / SSR clean track: fixed-width cards prevent 100% width and full-screen height expansion on initial page load */
-          <div className="w-full flex gap-2.5 sm:gap-3.5 overflow-hidden py-1">
-            {displayProducts.slice(0, 6).map((product, index) => {
-              const isInCart = Boolean(
-                cart?.some((item) => String(item.id) === String(product.id)),
-              );
-              return (
-                <div
-                  key={product.id || index}
-                  className="w-[165px] sm:w-[195px] md:w-[220px] shrink-0 h-auto"
-                >
-                  <SpecialOfferProductCard
-                    product={product}
-                    isInCart={isInCart}
-                    onAddToCart={addToCart}
-                    onSelectProduct={setSelectedProduct}
-                  />
-                </div>
-              );
-            })}
+          <div className="w-full flex gap-2.5 sm:gap-3.5 overflow-hidden py-1 items-stretch">
+            {displayProducts.slice(0, 6).map((product, index) => (
+              <div
+                key={product.id || index}
+                className="w-[165px] sm:w-[195px] md:w-[220px] shrink-0 flex flex-col"
+              >
+                <ProductBox
+                  product={product as unknown as Product}
+                  className="h-full flex-1"
+                />
+              </div>
+            ))}
           </div>
         ) : (
           /* Swiper Slider Component */
@@ -402,21 +389,17 @@ export default function SpecialOffers({
             }}
             className="w-full py-1 special-offers-swiper [&_.swiper-wrapper]:items-stretch"
           >
-            {displayProducts.map((product, index) => {
-              const isInCart = Boolean(
-                cart?.some((item) => String(item.id) === String(product.id)),
-              );
-              return (
-                <SwiperSlide key={product.id || index} className="h-auto">
-                  <SpecialOfferProductCard
-                    product={product}
-                    isInCart={isInCart}
-                    onAddToCart={addToCart}
-                    onSelectProduct={setSelectedProduct}
-                  />
-                </SwiperSlide>
-              );
-            })}
+            {displayProducts.map((product, index) => (
+              <SwiperSlide
+                key={product.id || index}
+                className="!h-auto flex flex-col"
+              >
+                <ProductBox
+                  product={product as unknown as Product}
+                  className="h-full flex-1"
+                />
+              </SwiperSlide>
+            ))}
           </Swiper>
         )}
 
@@ -424,121 +407,5 @@ export default function SpecialOffers({
         <div className="special-offers-pagination flex items-center justify-center gap-1.5 mt-3 sm:mt-4 select-none min-h-[8px]" />
       </div>
     </section>
-  );
-}
-
-// Subcomponent for individual Special Offer Product Card
-function SpecialOfferProductCard({
-  product,
-  isInCart,
-  onAddToCart,
-  onSelectProduct,
-}: {
-  product: SpecialOfferProduct;
-  isInCart: boolean;
-  onAddToCart: (p: Product) => void;
-  onSelectProduct: (p: Product) => void;
-}) {
-  const hasDiscount = Boolean(
-    product.oldPrice && product.oldPrice > product.price,
-  );
-
-  const discountPercent = hasDiscount
-    ? Math.round(
-        ((product.oldPrice! - product.price) / product.oldPrice!) * 100,
-      )
-    : 0;
-
-  return (
-    <div className="h-full max-w-[260px] mx-auto bg-card text-card-foreground rounded-2xl border border-border/60 p-2.5 sm:p-3 flex flex-col justify-between shadow-sm hover:shadow-xl hover:border-primary/50 transition-all duration-300 group">
-      {/* Top: Product Image with Overlaid Discount Badge */}
-      <Link
-        href={`/product/${product.id}`}
-        onClick={() => onSelectProduct(product as unknown as Product)}
-        className="relative aspect-square w-full max-h-[220px] rounded-xl overflow-hidden bg-muted/20 mb-2.5 block cursor-pointer"
-      >
-        <ProductImage
-          src={product.image}
-          alt={product.name}
-          fill
-          sizes="(max-width: 640px) 165px, (max-width: 768px) 190px, 225px"
-          className="object-cover transition-transform duration-500 group-hover:scale-105"
-        />
-
-        {/* Overlaid Discount Badge */}
-        {hasDiscount && discountPercent > 0 && (
-          <div className="absolute top-2 right-2 z-10 px-2 py-0.5 text-[10.5px] sm:text-[11px] font-black text-primary-foreground bg-primary rounded-lg shadow-sm">
-            {toPersianDigits(discountPercent)}٪-
-          </div>
-        )}
-      </Link>
-
-      {/* Middle: Title (Fixed height, vertically centered, up to 2 lines with ellipsis) */}
-      <Link
-        href={`/product/${product.id}`}
-        onClick={() => onSelectProduct(product as unknown as Product)}
-        className="h-10 sm:h-11 flex flex-col justify-center mb-1.5 cursor-pointer"
-        title={product.name}
-      >
-        <span className="text-xs sm:text-[13px] font-extrabold text-foreground leading-snug line-clamp-2 group-hover:text-primary transition-colors text-start block break-words">
-          {product.name.length > 35
-            ? product.name.slice(0, 35) + "..."
-            : product.name}
-        </span>
-      </Link>
-
-      {/* Rating Row (★ 4.8 (124)) */}
-      <div className="flex items-center gap-1 mb-2.5">
-        <Star className="size-3.5 fill-amber-400 text-amber-400" />
-        <span className="text-[11px] font-black text-foreground">
-          {toPersianDigits((product.rating || 4.8).toFixed(1))}
-        </span>
-        <span className="text-[10px] font-medium text-muted-foreground">
-          ({toPersianDigits(124)})
-        </span>
-      </div>
-
-      {/* Bottom Row: Price + Add to Cart Button */}
-      <div className="mt-auto flex items-center justify-between pt-2 border-t border-border/40">
-        {/* Prices */}
-        <div className="flex flex-col text-start justify-center min-h-[34px] gap-0.5">
-          {hasDiscount && product.oldPrice && (
-            <span className="text-[10px] sm:text-[11px] text-muted-foreground line-through font-medium leading-none">
-              {toPersianDigits(
-                Math.round(product.oldPrice).toLocaleString("fa-IR"),
-              )}{" "}
-              تومان
-            </span>
-          )}
-          <span className="text-xs sm:text-[13px] font-black text-foreground leading-none">
-            {toPersianDigits(Math.round(product.price).toLocaleString("fa-IR"))}{" "}
-            تومان
-          </span>
-        </div>
-
-        {/* Add to Cart Button */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onAddToCart(product as unknown as Product);
-          }}
-          aria-label={`افزودن ${product.name} به سبد خرید`}
-          className={`size-8 sm:size-9 rounded-xl flex items-center justify-center transition-all duration-200 active:scale-95 shadow-xs shrink-0 cursor-pointer ${
-            isInCart
-              ? "bg-primary text-primary-foreground"
-              : "bg-foreground text-background dark:bg-card-foreground dark:text-card hover:bg-primary dark:hover:bg-primary hover:text-primary-foreground"
-          }`}
-          title={isInCart ? "موجود در سبد خرید" : "افزودن به سبد خرید"}
-        >
-          {isInCart ? (
-            <Check className="size-4 stroke-[2.5]" />
-          ) : (
-            <ShoppingCart className="size-4" />
-          )}
-        </button>
-      </div>
-    </div>
   );
 }

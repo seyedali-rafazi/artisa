@@ -135,15 +135,15 @@ export default function NewProductsSection({
 
         {!isMounted ? (
           /* Pre-mount / SSR clean track: fixed-width cards prevent 100% width and full-screen height expansion on initial page load */
-          <div className="w-full flex gap-2.5 sm:gap-3.5 overflow-hidden py-1">
+          <div className="w-full flex gap-2.5 sm:gap-3.5 overflow-hidden py-1 items-stretch">
             {products.slice(0, 6).map((product) => (
               <div
                 key={product.id}
-                className="w-[165px] sm:w-[195px] md:w-[220px] shrink-0 h-auto"
+                className="w-[165px] sm:w-[195px] md:w-[220px] shrink-0 flex flex-col"
               >
                 <ProductBox
                   product={product}
-                  className="h-full"
+                  className="h-full flex-1"
                 />
               </div>
             ))}
@@ -204,10 +204,10 @@ export default function NewProductsSection({
             className="w-full py-1 new-products-swiper [&_.swiper-wrapper]:items-stretch"
           >
             {products.map((product) => (
-              <SwiperSlide key={product.id} className="h-auto">
+              <SwiperSlide key={product.id} className="!h-auto flex flex-col">
                 <ProductBox
                   product={product}
-                  className="h-full"
+                  className="h-full flex-1"
                 />
               </SwiperSlide>
             ))}

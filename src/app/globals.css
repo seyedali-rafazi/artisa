@@ -184,4 +184,19 @@
   .swiper:not(.swiper-initialized) .swiper-slide {
     width: 220px !important;
   }
-}
+}
+
+/* Swiper equal height slides support */
+.new-products-swiper .swiper-wrapper,
+.special-offers-swiper .swiper-wrapper {
+  display: flex !important;
+  align-items: stretch !important;
+}
+
+.new-products-swiper .swiper-slide,
+.special-offers-swiper .swiper-slide {
+  height: auto !important;
+  display: flex !important;
+  flex-direction: column !important;
+}
+

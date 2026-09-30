@@ -1,68 +1,67 @@
-"use client"
+"use client";
 
-import React from "react"
-import Link from "next/link"
-import { useApp, Product } from "../AppContext"
-import { Button } from "../ui/button"
-import ProductImage from "../ui/ProductImage"
-import { 
-  Star, 
-  ShoppingCart, 
-  Heart,
-  Sparkles
-} from "lucide-react"
-import { cn, isProductNew } from "@/lib/utils"
+import React from "react";
+import Link from "next/link";
+import { useApp, Product } from "../AppContext";
+import { Button } from "../ui/button";
+import ProductImage from "../ui/ProductImage";
+import { Star, ShoppingCart, Heart, Sparkles } from "lucide-react";
+import { cn, isProductNew } from "@/lib/utils";
 
 interface ProductBoxProps {
-  product: Product
-  badgeText?: string
-  className?: string
+  product: Product;
+  badgeText?: string;
+  className?: string;
 }
 
-function ProductBoxComponent({ product, badgeText, className }: ProductBoxProps) {
-  const { 
-    addToCart, 
-    cart, 
-    setSelectedProduct,
-    isFavorited,
-    toggleFavorite,
-  } = useApp()
+function ProductBoxComponent({
+  product,
+  badgeText,
+  className,
+}: ProductBoxProps) {
+  const { addToCart, cart, setSelectedProduct, isFavorited, toggleFavorite } =
+    useApp();
 
-  const isInCart = !!cart.find((item) => item.id === product.id)
-  const favorited = isFavorited(product.id)
+  const isInCart = !!cart.find((item) => item.id === product.id);
+  const favorited = isFavorited(product.id);
 
-  const isNew = isProductNew(product, 10)
-  const hasDiscount = Boolean(product.oldPrice && product.oldPrice > product.price)
+  const isNew = isProductNew(product, 10);
+  const hasDiscount = Boolean(
+    product.oldPrice && product.oldPrice > product.price,
+  );
   const discountPercent = hasDiscount
-    ? Math.round(((product.oldPrice! - product.price) / product.oldPrice!) * 100)
-    : 0
+    ? Math.round(
+        ((product.oldPrice! - product.price) / product.oldPrice!) * 100,
+      )
+    : 0;
 
   const formatPrice = (amount: number) => {
-    return `${amount.toLocaleString("fa-IR")} تومان`
-  }
+    return `${Math.round(amount).toLocaleString("fa-IR")} تومان`;
+  };
 
   const handleProductClick = () => {
-    setSelectedProduct(product)
-  }
+    setSelectedProduct(product);
+  };
 
   const handleAddToCart = (e: React.MouseEvent) => {
-    e.stopPropagation()
-    addToCart(product)
-  }
+    e.preventDefault();
+    e.stopPropagation();
+    addToCart(product);
+  };
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
-    e.preventDefault()
-    e.stopPropagation()
-    toggleFavorite(product)
-  }
+    e.preventDefault();
+    e.stopPropagation();
+    toggleFavorite(product);
+  };
 
   return (
     <Link
       href={`/product/${product.id}`}
       onClick={handleProductClick}
       className={cn(
-        "group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-sm hover:shadow-md hover:border-primary/40 transition-all duration-300 cursor-pointer h-full",
-        className
+        "group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-sm hover:shadow-md hover:border-primary/40 transition-all duration-300 cursor-pointer h-full flex-1",
+        className,
       )}
     >
       {/* Product Image and Overlay Tags */}
@@ -79,7 +78,7 @@ function ProductBoxComponent({ product, badgeText, className }: ProductBoxProps)
         <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-1.5 pointer-events-none">
           {hasDiscount && discountPercent > 0 && (
             <div className="px-2 py-1 text-[10px] font-black text-white bg-primary rounded-lg shadow-md">
-              {`${discountPercent}٪ تخفیف`}
+              {`${discountPercent.toLocaleString("fa-IR")}٪ تخفیف`}
             </div>
           )}
 
@@ -96,16 +95,26 @@ function ProductBoxComponent({ product, badgeText, className }: ProductBoxProps)
           <button
             onClick={handleFavoriteClick}
             type="button"
-            aria-label={favorited ? `حذف ${product.name} از علاقه‌مندی‌ها` : `افزودن ${product.name} به علاقه‌مندی‌ها`}
+            aria-label={
+              favorited
+                ? `حذف ${product.name} از علاقه‌مندی‌ها`
+                : `افزودن ${product.name} به علاقه‌مندی‌ها`
+            }
             aria-pressed={favorited}
             className={`flex size-8 items-center justify-center rounded-xl bg-white/90 dark:bg-neutral-800/90 text-foreground hover:scale-110 active:scale-95 shadow-md backdrop-blur-sm transition-all duration-200 cursor-pointer ${
-              favorited ? "text-rose-500 bg-rose-50 dark:bg-rose-950/40" : "hover:text-rose-500"
+              favorited
+                ? "text-rose-500 bg-rose-50 dark:bg-rose-950/40"
+                : "hover:text-rose-500"
             }`}
-            title={favorited ? "حذف از علاقه‌مندی‌ها" : "افزودن به علاقه‌مندی‌ها"}
+            title={
+              favorited ? "حذف از علاقه‌مندی‌ها" : "افزودن به علاقه‌مندی‌ها"
+            }
           >
             <Heart
               className={`size-4 transition-all duration-300 ${
-                favorited ? "fill-rose-500 text-rose-500 scale-110" : "text-neutral-600 dark:text-neutral-300"
+                favorited
+                  ? "fill-rose-500 text-rose-500 scale-110"
+                  : "text-neutral-600 dark:text-neutral-300"
               }`}
             />
           </button>
@@ -115,13 +124,16 @@ function ProductBoxComponent({ product, badgeText, className }: ProductBoxProps)
       {/* Product Info */}
       <div className="flex flex-col flex-1 p-4">
         {/* Category */}
-        <span className="text-[10px] font-bold text-muted-foreground uppercase mb-1">
-          {product.category}
+        <span className="text-[10px] font-bold text-muted-foreground uppercase mb-1 line-clamp-1 min-h-[15px]">
+          {product.category || "\u00A0"}
         </span>
 
         {/* Title (Fixed height, vertically centered, up to 2 lines with ellipsis) */}
         <div className="h-10 md:h-11 flex flex-col justify-center mb-2">
-          <h3 className="text-xs md:text-sm font-extrabold text-foreground line-clamp-2 hover:text-primary transition-colors leading-5 text-start break-words" title={product.name}>
+          <h3
+            className="text-xs md:text-sm font-extrabold text-foreground line-clamp-2 hover:text-primary transition-colors leading-5 text-start break-words"
+            title={product.name}
+          >
             {product.name}
           </h3>
         </div>
@@ -130,23 +142,25 @@ function ProductBoxComponent({ product, badgeText, className }: ProductBoxProps)
         <div className="flex items-center gap-1 mb-3">
           <div className="flex text-amber-400">
             {[...Array(5)].map((_, i) => (
-              <Star 
-                key={i} 
-                className={`size-3.5 ${i < Math.floor(product.rating) ? "fill-amber-400" : "text-border"}`} 
+              <Star
+                key={i}
+                className={`size-3.5 ${i < Math.floor(product.rating ?? 5) ? "fill-amber-400" : "text-border"}`}
               />
             ))}
           </div>
-          <span className="text-[10px] font-extrabold text-muted-foreground">({product.rating.toLocaleString("fa-IR")})</span>
+          <span className="text-[10px] font-extrabold text-muted-foreground">
+            ({(product.rating ?? 5).toLocaleString("fa-IR")})
+          </span>
         </div>
 
-        {/* Price Row */}
-        <div className="mt-auto flex flex-col gap-1 mb-4">
+        {/* Price Row (Fixed consistent min-height with justify-end so prices and buttons always align) */}
+        <div className="mt-auto flex flex-col justify-end min-h-[38px] md:min-h-[42px] gap-0.5 mb-4">
           {hasDiscount && (
-            <span className="text-[10px] text-muted-foreground line-through decoration-primary/45">
+            <span className="text-[10px] text-muted-foreground line-through decoration-primary/45 leading-tight">
               {formatPrice(product.oldPrice!)}
             </span>
           )}
-          <span className="text-xs md:text-sm font-black text-primary">
+          <span className="text-xs md:text-sm font-black text-primary leading-tight">
             {formatPrice(product.price)}
           </span>
         </div>
@@ -165,8 +179,8 @@ function ProductBoxComponent({ product, badgeText, className }: ProductBoxProps)
         </Button>
       </div>
     </Link>
-  )
+  );
 }
 
-const ProductBox = React.memo(ProductBoxComponent)
-export default ProductBox
+const ProductBox = React.memo(ProductBoxComponent);
+export default ProductBox;
