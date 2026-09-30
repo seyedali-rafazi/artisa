@@ -439,20 +439,15 @@ function SpecialOfferProductCard({
   onAddToCart: (p: Product) => void;
   onSelectProduct: (p: Product) => void;
 }) {
-  const discountPercent =
-    product.oldPrice && product.oldPrice > product.price
-      ? Math.round(
-          ((product.oldPrice - product.price) / product.oldPrice) * 100,
-        )
-      : 25;
+  const hasDiscount = Boolean(
+    product.oldPrice && product.oldPrice > product.price,
+  );
 
-  const hasDiscount =
-    Boolean(product.oldPrice && product.oldPrice > product.price) ||
-    discountPercent > 0;
-  const calculatedOldPrice =
-    product.oldPrice && product.oldPrice > product.price
-      ? product.oldPrice
-      : Math.round(product.price * (1 + discountPercent / 100));
+  const discountPercent = hasDiscount
+    ? Math.round(
+        ((product.oldPrice! - product.price) / product.oldPrice!) * 100,
+      )
+    : 0;
 
   return (
     <div className="h-full max-w-[260px] mx-auto bg-card text-card-foreground rounded-2xl border border-border/60 p-2.5 sm:p-3 flex flex-col justify-between shadow-sm hover:shadow-xl hover:border-primary/50 transition-all duration-300 group">
@@ -470,8 +465,8 @@ function SpecialOfferProductCard({
           className="object-cover transition-transform duration-500 group-hover:scale-105"
         />
 
-        {/* Overlaid Discount Badge (-30%) */}
-        {hasDiscount && (
+        {/* Overlaid Discount Badge */}
+        {hasDiscount && discountPercent > 0 && (
           <div className="absolute top-2 right-2 z-10 px-2 py-0.5 text-[10.5px] sm:text-[11px] font-black text-primary-foreground bg-primary rounded-lg shadow-sm">
             {toPersianDigits(discountPercent)}٪-
           </div>
@@ -501,13 +496,15 @@ function SpecialOfferProductCard({
       {/* Bottom Row: Price + Add to Cart Button */}
       <div className="mt-auto flex items-center justify-between pt-2 border-t border-border/40">
         {/* Prices */}
-        <div className="flex flex-col text-start gap-0.5">
-          <span className="text-[10px] sm:text-[11px] text-muted-foreground line-through font-medium leading-none">
-            {toPersianDigits(
-              Math.round(calculatedOldPrice).toLocaleString("fa-IR"),
-            )}{" "}
-            تومان
-          </span>
+        <div className="flex flex-col text-start justify-center min-h-[34px] gap-0.5">
+          {hasDiscount && product.oldPrice && (
+            <span className="text-[10px] sm:text-[11px] text-muted-foreground line-through font-medium leading-none">
+              {toPersianDigits(
+                Math.round(product.oldPrice).toLocaleString("fa-IR"),
+              )}{" "}
+              تومان
+            </span>
+          )}
           <span className="text-xs sm:text-[13px] font-black text-foreground leading-none">
             {toPersianDigits(
               Math.round(product.price).toLocaleString("fa-IR"),
