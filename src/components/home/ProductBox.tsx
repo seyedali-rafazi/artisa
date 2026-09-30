@@ -60,7 +60,7 @@ function ProductBoxComponent({
       href={`/product/${product.id}`}
       onClick={handleProductClick}
       className={cn(
-        "group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-sm hover:shadow-md hover:border-primary/40 transition-all duration-300 cursor-pointer h-full flex-1",
+        "group relative flex flex-col overflow-hidden rounded-2xl border border-border bg-card text-card-foreground shadow-xs hover:shadow-md hover:border-primary/40 transition-[border-color,box-shadow] duration-200 cursor-pointer h-full flex-1",
         className,
       )}
     >
@@ -70,20 +70,20 @@ function ProductBoxComponent({
           src={product.image}
           alt={product.name}
           fill
-          sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 280px"
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+          sizes="(max-width: 640px) 190px, (max-width: 1024px) 240px, 280px"
+          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
 
         {/* Top-Right Overlay Badges (Discount and/or New Tag) */}
         <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-1.5 pointer-events-none">
           {hasDiscount && discountPercent > 0 && (
-            <div className="px-2 py-1 text-[10px] font-black text-white bg-primary rounded-lg shadow-md">
+            <div className="px-2 py-1 text-[10px] font-black text-white bg-primary rounded-lg shadow-xs">
               {`${discountPercent.toLocaleString("fa-IR")}٪ تخفیف`}
             </div>
           )}
 
           {(isNew || badgeText) && (
-            <div className="px-2.5 py-1 text-[10px] font-bold text-white bg-emerald-600/95 dark:bg-emerald-500/90 rounded-lg shadow-md backdrop-blur-xs flex items-center gap-1">
+            <div className="px-2.5 py-1 text-[10px] font-bold text-white bg-emerald-600 dark:bg-emerald-500 rounded-lg shadow-xs flex items-center gap-1">
               <Sparkles className="size-2.5" />
               <span>{badgeText || "جدید"}</span>
             </div>
@@ -101,7 +101,7 @@ function ProductBoxComponent({
                 : `افزودن ${product.name} به علاقه‌مندی‌ها`
             }
             aria-pressed={favorited}
-            className={`flex size-8 items-center justify-center rounded-xl bg-white/90 dark:bg-neutral-800/90 text-foreground hover:scale-110 active:scale-95 shadow-md backdrop-blur-sm transition-all duration-200 cursor-pointer ${
+            className={`flex size-8 items-center justify-center rounded-xl bg-card text-foreground hover:scale-110 active:scale-95 shadow-xs border border-border/40 transition-transform duration-150 cursor-pointer ${
               favorited
                 ? "text-rose-500 bg-rose-50 dark:bg-rose-950/40"
                 : "hover:text-rose-500"
@@ -111,7 +111,7 @@ function ProductBoxComponent({
             }
           >
             <Heart
-              className={`size-4 transition-all duration-300 ${
+              className={`size-4 transition-colors duration-150 ${
                 favorited
                   ? "fill-rose-500 text-rose-500 scale-110"
                   : "text-neutral-600 dark:text-neutral-300"
@@ -170,7 +170,7 @@ function ProductBoxComponent({
           onClick={handleAddToCart}
           variant={isInCart ? "outline" : "default"}
           size="sm"
-          className="w-full gap-1.5 rounded-xl font-bold cursor-pointer transition-all hover:scale-[1.02]"
+          className="w-full gap-1.5 rounded-xl font-bold cursor-pointer transition-transform duration-150 hover:scale-[1.02] active:scale-95"
         >
           <ShoppingCart className="size-4" />
           <span className="text-xs">

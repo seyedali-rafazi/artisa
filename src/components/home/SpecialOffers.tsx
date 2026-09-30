@@ -15,10 +15,11 @@ import { toPersianDigits } from "@/lib/utils";
 
 // Swiper imports
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination, A11y } from "swiper/modules";
+import { Pagination, A11y, FreeMode } from "swiper/modules";
 import type { Swiper as SwiperClass } from "swiper";
 import "swiper/css";
 import "swiper/css/pagination";
+import "swiper/css/free-mode";
 
 export function DiscountTagIcon({
   size = 64,
@@ -262,12 +263,12 @@ export default function SpecialOffers({
       aria-label="تخفیف‌های شگفت‌انگیز"
       className="w-full mt-8 sm:mt-12 rounded-3xl bg-gradient-to-l from-primary via-[#C19B53] to-primary-dark dark:from-primary/95 dark:via-[#A37E3A] dark:to-primary-dark p-4 sm:p-6 md:p-7 text-primary-foreground shadow-xl relative overflow-hidden select-none"
     >
-      {/* Ambient luxury light effect */}
-      <div className="absolute -top-32 -right-32 size-80 bg-white/20 dark:bg-white/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-32 -left-32 size-80 bg-black/15 dark:bg-black/25 rounded-full blur-3xl pointer-events-none" />
+      {/* Ambient luxury light effect - zero-cost radial gradients replacing heavy live blur filters */}
+      <div className="absolute -top-32 -right-32 size-80 bg-[radial-gradient(circle,rgba(255,255,255,0.2)_0%,transparent_70%)] dark:bg-[radial-gradient(circle,rgba(255,255,255,0.1)_0%,transparent_70%)] rounded-full pointer-events-none" />
+      <div className="absolute -bottom-32 -left-32 size-80 bg-[radial-gradient(circle,rgba(0,0,0,0.18)_0%,transparent_70%)] dark:bg-[radial-gradient(circle,rgba(0,0,0,0.3)_0%,transparent_70%)] rounded-full pointer-events-none" />
 
       {/* ─── Top Banner Bar (Elevated Card with Title, Description, and Countdown Timer) ─── */}
-      <div className="w-full rounded-2xl md:rounded-3xl bg-card/95 text-card-foreground backdrop-blur-md border border-white/30 dark:border-white/10 p-4 sm:p-5 md:p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm relative z-10 mb-4 sm:mb-6">
+      <div className="w-full rounded-2xl md:rounded-3xl bg-card text-card-foreground border border-white/30 dark:border-white/10 p-4 sm:p-5 md:p-6 flex flex-col md:flex-row items-center justify-between gap-4 shadow-sm relative z-10 mb-4 sm:mb-6">
         {/* Right side on desktop / Top on mobile: Icon + Title + Subtitle */}
         <div className="flex items-center gap-3 sm:gap-4 w-full md:w-auto">
           <div className="size-12 sm:size-14 rounded-2xl bg-primary/15 dark:bg-primary/25 flex items-center justify-center shrink-0 border border-primary/25 shadow-xs">
@@ -339,11 +340,20 @@ export default function SpecialOffers({
           /* Swiper Slider Component */
           <Swiper
             dir="rtl"
-            modules={[Pagination, A11y]}
+            modules={[Pagination, A11y, FreeMode]}
             slidesPerView={1.8}
             spaceBetween={10}
-            observer={true}
-            observeParents={true}
+            freeMode={{
+              enabled: true,
+              momentum: true,
+              momentumRatio: 0.75,
+              sticky: true,
+            }}
+            watchSlidesProgress={true}
+            touchReleaseOnEdges={true}
+            resistance={true}
+            resistanceRatio={0.7}
+            speed={400}
             onSwiper={(swiper) => {
               swiperRef.current = swiper;
               setIsBeginning(swiper.isBeginning);

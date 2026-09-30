@@ -186,12 +186,16 @@
   }
 }
 
-/* Swiper equal height slides support */
+/* Swiper equal height slides & 60FPS GPU acceleration */
 .new-products-swiper .swiper-wrapper,
 .special-offers-swiper .swiper-wrapper,
 .best-sellers-swiper .swiper-wrapper {
   display: flex !important;
   align-items: stretch !important;
+  will-change: transform;
+  transform: translate3d(0, 0, 0);
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
 }
 
 .new-products-swiper .swiper-slide,
@@ -200,5 +204,17 @@
   height: auto !important;
   display: flex !important;
   flex-direction: column !important;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  transform: translateZ(0);
+  contain: content;
 }
+
+/* Touch responsiveness optimization for horizontal sliders */
+.new-products-swiper,
+.special-offers-swiper,
+.best-sellers-swiper {
+  touch-action: pan-y;
+}
+
 

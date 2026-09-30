@@ -9,10 +9,11 @@ import { Flame, ChevronLeft, ChevronRight } from "lucide-react";
 
 // Swiper imports matching NewProductsSection & SpecialOffers
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination, A11y } from "swiper/modules";
+import { Pagination, A11y, FreeMode } from "swiper/modules";
 import type { Swiper as SwiperClass } from "swiper";
 import "swiper/css";
 import "swiper/css/pagination";
+import "swiper/css/free-mode";
 
 interface BestSellersSectionProps {
   initialProducts?: ProductsPaginatedResponse;
@@ -92,11 +93,6 @@ export default function BestSellersSection({
               {t("bestSellersTitle") || "پرفروش‌ترین آثار آرتیسا"}
             </h2>
           </div>
-          {t("bestSellersSubtitle") && (
-            <p className="text-xs text-muted-foreground mr-10">
-              {t("bestSellersSubtitle")}
-            </p>
-          )}
         </div>
 
         {/* Header Action: View All Link */}
@@ -145,10 +141,7 @@ export default function BestSellersSection({
                 key={product.id}
                 className="w-[165px] sm:w-[195px] md:w-[220px] shrink-0 flex flex-col"
               >
-                <ProductBox
-                  product={product}
-                  className="h-full flex-1"
-                />
+                <ProductBox product={product} className="h-full flex-1" />
               </div>
             ))}
           </div>
@@ -156,11 +149,20 @@ export default function BestSellersSection({
           /* Swiper Slider Component matching NewProductsSection */
           <Swiper
             dir="rtl"
-            modules={[Pagination, A11y]}
+            modules={[Pagination, A11y, FreeMode]}
             slidesPerView={1.8}
             spaceBetween={10}
-            observer={true}
-            observeParents={true}
+            freeMode={{
+              enabled: true,
+              momentum: true,
+              momentumRatio: 0.75,
+              sticky: true,
+            }}
+            watchSlidesProgress={true}
+            touchReleaseOnEdges={true}
+            resistance={true}
+            resistanceRatio={0.7}
+            speed={400}
             onSwiper={(swiper) => {
               swiperRef.current = swiper;
               setIsBeginning(swiper.isBeginning);
@@ -209,10 +211,7 @@ export default function BestSellersSection({
           >
             {products.map((product) => (
               <SwiperSlide key={product.id} className="!h-auto flex flex-col">
-                <ProductBox
-                  product={product}
-                  className="h-full flex-1"
-                />
+                <ProductBox product={product} className="h-full flex-1" />
               </SwiperSlide>
             ))}
           </Swiper>
