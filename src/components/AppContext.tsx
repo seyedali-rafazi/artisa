@@ -30,6 +30,10 @@ export interface Product {
   rating: number
   isSpecial?: boolean
   isBestSeller?: boolean
+  isNew?: boolean
+  isNewProduct?: boolean
+  createdAt?: string
+  created_at?: string
   description?: string
   descriptionEn?: string
   specifications?: Record<string, string>

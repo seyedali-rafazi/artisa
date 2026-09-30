@@ -143,7 +143,6 @@ export default function NewProductsSection({
               >
                 <ProductBox
                   product={product}
-                  badgeText="جدید"
                   className="h-full"
                 />
               </div>
@@ -208,7 +207,6 @@ export default function NewProductsSection({
               <SwiperSlide key={product.id} className="h-auto">
                 <ProductBox
                   product={product}
-                  badgeText="جدید"
                   className="h-full"
                 />
               </SwiperSlide>

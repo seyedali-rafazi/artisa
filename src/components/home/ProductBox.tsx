@@ -11,7 +11,7 @@ import {
   Heart,
   Sparkles
 } from "lucide-react"
-import { cn } from "@/lib/utils"
+import { cn, isProductNew } from "@/lib/utils"
 
 interface ProductBoxProps {
   product: Product
@@ -31,6 +31,7 @@ function ProductBoxComponent({ product, badgeText, className }: ProductBoxProps)
   const isInCart = !!cart.find((item) => item.id === product.id)
   const favorited = isFavorited(product.id)
 
+  const isNew = isProductNew(product, 10)
   const hasDiscount = Boolean(product.oldPrice && product.oldPrice > product.price)
   const discountPercent = hasDiscount
     ? Math.round(((product.oldPrice! - product.price) / product.oldPrice!) * 100)
@@ -74,17 +75,21 @@ function ProductBoxComponent({ product, badgeText, className }: ProductBoxProps)
           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
         />
 
-        {/* Discount or Custom Badge */}
-        {hasDiscount && discountPercent > 0 ? (
-          <div className="absolute top-3 right-3 z-10 px-2 py-1 text-[10px] font-black text-white bg-primary rounded-lg shadow-md">
-            {`${discountPercent}٪ تخفیف`}
-          </div>
-        ) : badgeText ? (
-          <div className="absolute top-3 right-3 z-10 px-2.5 py-1 text-[10px] font-bold text-white bg-emerald-600/90 dark:bg-emerald-500/90 rounded-lg shadow-md backdrop-blur-xs flex items-center gap-1">
-            <Sparkles className="size-2.5" />
-            <span>{badgeText}</span>
-          </div>
-        ) : null}
+        {/* Top-Right Overlay Badges (Discount and/or New Tag) */}
+        <div className="absolute top-3 right-3 z-10 flex flex-col items-end gap-1.5 pointer-events-none">
+          {hasDiscount && discountPercent > 0 && (
+            <div className="px-2 py-1 text-[10px] font-black text-white bg-primary rounded-lg shadow-md">
+              {`${discountPercent}٪ تخفیف`}
+            </div>
+          )}
+
+          {(isNew || badgeText) && (
+            <div className="px-2.5 py-1 text-[10px] font-bold text-white bg-emerald-600/95 dark:bg-emerald-500/90 rounded-lg shadow-md backdrop-blur-xs flex items-center gap-1">
+              <Sparkles className="size-2.5" />
+              <span>{badgeText || "جدید"}</span>
+            </div>
+          )}
+        </div>
 
         {/* Floating Icons Overlay / Favorite Button */}
         <div className="absolute top-3 left-3 z-10 flex flex-col gap-2">

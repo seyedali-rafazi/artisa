@@ -98,3 +98,48 @@ export function formatPersianPrice(amount: number | string | undefined | null): 
   return `${toPersianDigits(num.toLocaleString("fa-IR"))} تومان`
 }
 
+/**
+ * Checks if a product was published within the last `days` (default 10 days).
+ * Evaluates:
+ * 1. Explicit boolean flag from backend (isNew or isNewProduct)
+ * 2. ISO / timestamp date string (createdAt or created_at)
+ * 3. Fallback to MongoDB ObjectId creation timestamp (first 4 bytes of 24-hex string)
+ */
+export function isProductNew(
+  product?: {
+    id?: string;
+    isNew?: boolean;
+    isNewProduct?: boolean;
+    createdAt?: string;
+    created_at?: string;
+  } | null,
+  days: number = 10
+): boolean {
+  if (!product) return false;
+
+  // 1. Explicit backend boolean flags
+  if (typeof product.isNew === "boolean") return product.isNew;
+  if (typeof product.isNewProduct === "boolean") return product.isNewProduct;
+
+  // 2. Date string from backend (createdAt or created_at)
+  const dateStr = product.createdAt || product.created_at;
+  if (dateStr) {
+    const productDate = new Date(dateStr).getTime();
+    if (!isNaN(productDate)) {
+      const diffMs = Date.now() - productDate;
+      return diffMs >= 0 && diffMs <= days * 24 * 60 * 60 * 1000;
+    }
+  }
+
+  // 3. Fallback: Extract creation timestamp from 24-character hex MongoDB ObjectId
+  if (product.id && /^[0-9a-fA-F]{24}$/.test(product.id)) {
+    const timestampMs = parseInt(product.id.substring(0, 8), 16) * 1000;
+    if (!isNaN(timestampMs)) {
+      const diffMs = Date.now() - timestampMs;
+      return diffMs >= 0 && diffMs <= days * 24 * 60 * 60 * 1000;
+    }
+  }
+
+  return false;
+}
+
