@@ -188,13 +188,15 @@
 
 /* Swiper equal height slides support */
 .new-products-swiper .swiper-wrapper,
-.special-offers-swiper .swiper-wrapper {
+.special-offers-swiper .swiper-wrapper,
+.best-sellers-swiper .swiper-wrapper {
   display: flex !important;
   align-items: stretch !important;
 }
 
 .new-products-swiper .swiper-slide,
-.special-offers-swiper .swiper-slide {
+.special-offers-swiper .swiper-slide,
+.best-sellers-swiper .swiper-slide {
   height: auto !important;
   display: flex !important;
   flex-direction: column !important;

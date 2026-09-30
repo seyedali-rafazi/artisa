@@ -19,7 +19,7 @@ async function getHomeInitialData(): Promise<HomeInitialData> {
   try {
     const [bannersRes, bestSellersRes, offersRes, blogRes, newProductsRes] = await Promise.allSettled([
       fetch(`${backendUrl}/api/v1/banners`, isrOptions).then((r) => (r.ok ? r.json() : null)),
-      fetch(`${backendUrl}/api/v1/products?isBestSeller=true&limit=8`, isrOptions).then((r) =>
+      fetch(`${backendUrl}/api/v1/products?isBestSeller=true&limit=12`, isrOptions).then((r) =>
         r.ok ? r.json() : null
       ),
       fetch(`${backendUrl}/api/v1/special-offers/active`, { next: { revalidate: 10 } }).then((r) =>
