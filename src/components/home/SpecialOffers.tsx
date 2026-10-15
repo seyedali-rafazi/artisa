@@ -15,10 +15,9 @@ import { toPersianDigits } from "@/lib/utils";
 
 // Swiper imports
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination, A11y, FreeMode } from "swiper/modules";
+import { A11y, FreeMode } from "swiper/modules";
 import type { Swiper as SwiperClass } from "swiper";
 import "swiper/css";
-import "swiper/css/pagination";
 import "swiper/css/free-mode";
 
 export function DiscountTagIcon({
@@ -340,7 +339,7 @@ export default function SpecialOffers({
           /* Swiper Slider Component */
           <Swiper
             dir="rtl"
-            modules={[Pagination, A11y, FreeMode]}
+            modules={[A11y, FreeMode]}
             slidesPerView={1.8}
             spaceBetween={10}
             freeMode={{
@@ -364,13 +363,6 @@ export default function SpecialOffers({
               setIsEnd(swiper.isEnd);
             }}
             grabCursor={true}
-            pagination={{
-              clickable: true,
-              el: ".special-offers-pagination",
-              bulletClass:
-                "transition-all duration-300 rounded-full cursor-pointer inline-block bg-white/40 dark:bg-black/30 size-2",
-              bulletActiveClass: "!w-6 !h-2 !bg-card !rounded-full shadow-sm",
-            }}
             breakpoints={{
               320: {
                 slidesPerView: 1.8,
@@ -413,8 +405,7 @@ export default function SpecialOffers({
           </Swiper>
         )}
 
-        {/* Swiper Pagination Dots (Styling matching mockup) */}
-        <div className="special-offers-pagination flex items-center justify-center gap-1.5 mt-3 sm:mt-4 select-none min-h-[8px]" />
+
       </div>
     </section>
   );

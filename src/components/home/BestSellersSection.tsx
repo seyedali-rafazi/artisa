@@ -9,10 +9,9 @@ import { Flame, ChevronLeft, ChevronRight } from "lucide-react";
 
 // Swiper imports matching NewProductsSection & SpecialOffers
 import { Swiper, SwiperSlide } from "swiper/react";
-import { Pagination, A11y, FreeMode } from "swiper/modules";
+import { A11y, FreeMode } from "swiper/modules";
 import type { Swiper as SwiperClass } from "swiper";
 import "swiper/css";
-import "swiper/css/pagination";
 import "swiper/css/free-mode";
 
 interface BestSellersSectionProps {
@@ -149,7 +148,7 @@ export default function BestSellersSection({
           /* Swiper Slider Component matching NewProductsSection */
           <Swiper
             dir="rtl"
-            modules={[Pagination, A11y, FreeMode]}
+            modules={[A11y, FreeMode]}
             slidesPerView={1.8}
             spaceBetween={10}
             freeMode={{
@@ -173,14 +172,6 @@ export default function BestSellersSection({
               setIsEnd(swiper.isEnd);
             }}
             grabCursor={true}
-            pagination={{
-              clickable: true,
-              el: ".best-sellers-pagination",
-              bulletClass:
-                "transition-all duration-300 rounded-full cursor-pointer inline-block bg-muted-foreground/30 dark:bg-muted-foreground/20 size-2",
-              bulletActiveClass:
-                "!w-6 !h-2 !bg-primary !rounded-full shadow-sm",
-            }}
             breakpoints={{
               320: {
                 slidesPerView: 1.8,
@@ -217,8 +208,7 @@ export default function BestSellersSection({
           </Swiper>
         )}
 
-        {/* Swiper Pagination Dots */}
-        <div className="best-sellers-pagination flex items-center justify-center gap-1.5 mt-3 sm:mt-4 select-none min-h-[8px]" />
+
       </div>
     </section>
   );
